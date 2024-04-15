@@ -11,7 +11,7 @@ import itertools
 import matplotlib.pyplot as plt
 import numpy as np
 import re
-from tqdm import tqdm
+from rhythmnblues import utils
 
 
 class Length:
@@ -102,7 +102,7 @@ class KmerFreqs(KmerBase):
         '''Calculates k-mer frequencies for every row in `data`.'''
         print(f"Calculating {self.k}-mer frequencies...")
         freqs = []
-        for _, row in tqdm(data.df.iterrows()):
+        for _, row in utils.progress(data.df.iterrows()):
             freqs.append(self.calculate_per_sequence(row['sequence'])) 
         return np.stack(freqs)
     
@@ -218,7 +218,7 @@ class KmerScore(KmerBase):
         '''Calculates k-mer score for every row in `data`.'''
         print(f"Calculating {self.k}-mer scores...")
         scores = []
-        for _, row in tqdm(data.df.iterrows()):
+        for _, row in utils.progress(data.df.iterrows()):
             scores.append(self.calculate_per_sequence(row['sequence']))
         return scores
     
@@ -256,7 +256,7 @@ class ORFCoordinates:
     `min_length`: `int`
         Minimum required length for an ORF.'''
 
-    def __init__(self, min_length=30):
+    def __init__(self, min_length=75):
         '''Initializes `ORFCoordinates` object.'''
         self.min_length = min_length
         self.name = ['ORF (start)', 'ORF (end)']
@@ -265,7 +265,7 @@ class ORFCoordinates:
         '''Calculates ORF for every row in `data`.'''
         print("Finding Open Reading Frames...")
         orfs = []
-        for _, row in tqdm(data.df.iterrows()):
+        for _, row in utils.progress(data.df.iterrows()):
             orfs.append(self.calculate_per_sequence(row['sequence']))
         return orfs
     
@@ -421,7 +421,7 @@ class FickettTestcode:
         '''Calculates Fickett score for every row in `data`.'''
         print("Calculating Fickett TESTCODE...")
         scores = []
-        for _, row in tqdm(data.df.iterrows()):
+        for _, row in utils.progress(data.df.iterrows()):
             scores.append(self.calculate_per_sequence(row['sequence']))
         return scores
 
@@ -529,7 +529,7 @@ class MLCDS:
         all_seqs = data.df.groupby('label')['sequence']
         all_seqs = all_seqs.apply(lambda x: "!".join(x.tolist()))
         for i, label in enumerate(['pcrna', 'ncrna']):
-            for p in tqdm(range(6, len(all_seqs[label])+1)):
+            for p in utils.progress(range(6, len(all_seqs[label])+1)):
                 try:
                     i_left_kmer = self.kmers[all_seqs[label][p-6:p-3]]
                     i_right_kmer = self.kmers[all_seqs[label][p-3:p]]
@@ -550,7 +550,7 @@ class MLCDS:
         '''Calculates MLCDS for every row in `data`.'''
         mlcds = []
         print("Calculating MLCDS...")
-        for _, row in tqdm(data.df.iterrows()):
+        for _, row in utils.progress(data.df.iterrows()):
             mlcds.append(self.calculate_per_sequence(row['sequence']))
         return mlcds
 
@@ -758,7 +758,7 @@ class MLCDSKmerFreqs(KmerFreqs):
         print(f"Calculating MLCDS {self.k}-mer frequencies...")
         data.check_columns(['MLCDS1 (start)', 'MLCDS1 (end)'])
         freqs = []
-        for _, row in tqdm(data.df.iterrows()):
+        for _, row in utils.progress(data.df.iterrows()):
             start, end = int(row['MLCDS1 (start)']), int(row['MLCDS1 (end)'])
             dir = 1 if start < end else -1
             mlcds = row['sequence'][start:end:dir]
@@ -811,7 +811,7 @@ def count_kmers(sequence, kmers, k):
 
     counts = np.zeros(max(kmers.values())+1)
 
-    for i in tqdm(range(k,len(sequence)+1)):
+    for i in utils.progress(range(k,len(sequence)+1)):
         try:
             counts[kmers[sequence[i-k:i]]] += 1
         except KeyError:

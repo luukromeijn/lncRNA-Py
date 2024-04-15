@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from Bio import SeqIO
+from Bio.Seq import Seq 
+from Bio.SeqRecord import SeqRecord
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
@@ -120,6 +122,16 @@ class Data:
         data = self.df[[column for column in self.df.columns
                         if column not in except_columns]]
         data.to_hdf(path_or_buf, index=False, key='data', mode='w', **kwargs)
+
+    def to_fasta(self, pc_filepath, nc_filepath):
+        '''Writes sequence data to two FASTA files containing protein-coding
+        (`pc_filepath`) and non-coding (`nc_filepath`) transcripts.'''
+        paths = {'pcrna': pc_filepath, 'ncrna': nc_filepath}
+        for label in paths:
+            data = self.df[self.df['label']==label]
+            seqs = [SeqRecord(Seq(seq),id) for id, seq in 
+                    zip(data['id'].values, data['sequence'].values)]
+            SeqIO.write(seqs, paths[label], 'fasta')
 
     def calculate_feature(self, feature_extractor):
         '''Adds feature(s) from `feature_extractor` as column(s) to `Data`.'''
@@ -300,7 +312,7 @@ class Data:
         ratio = (length - certain) / length
         self.df = self.df[(ratio <= tolerance)]
 
-    def sample(self, pc=None, nc=None, N=None, replace=False):
+    def sample(self, pc=None, nc=None, N=None, replace=False, seed=None):
         '''Returns a randomly sampled `Data` object.
         
         Arguments
@@ -315,7 +327,9 @@ class Data:
             fractions.
         `replace`: `bool`
             Whether or not to sample with replacement. Required if `N` or 
-            `pc+nc` exceeds the number of samples in the `Data` object.'''
+            `pc+nc` exceeds the number of samples in the `Data` object.
+        `seed`: `int`
+            Seed for random number generator.'''
 
         pcrna = self.df[self.df['label']=='pcrna']
         ncrna = self.df[self.df['label']=='ncrna']

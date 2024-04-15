@@ -31,30 +31,26 @@ datasets = {
     ]
 }
 
-
-# Initializing datasets
-for name in datasets:
-    pf = 'data/sequences/'
-    data = Data(pf+datasets[name][0], pf+datasets[name][1]) # Load
-    data.calculate_feature(Length()) # Calculate length of sequences
-    data.filter_outliers('length', [100,10000]) # Set 100 as min length
-    data.filter_outliers('length', 4) # Allow 4 standard deviations from mean
-    N = min(data.num_coding_noncoding()) 
-    data = data.sample(N,N) # Force majority/minority class to equal #samples
-    datasets[name] = data
-
-
 models = {
-    'CPAT': partial(CPAT, 'data/features/fickett_paper.txt'),
-    'CNCI': CNCI,
-    'PLEK': PLEK,
-    'CNIT': CNIT
+    'CPAT': lambda dat: CPAT('data/features/fickett_paper.txt', dat),
+    'CNCI': lambda dat: CNCI(dat),
+    'PLEK': lambda dat: PLEK(),
+    'CNIT': lambda dat: CNIT(dat),
 }
 
+def get_dataset(name):
+    pf = 'data/sequences/'
+    pc_filepath, nc_filepath = datasets[name]
+    data = Data(pf+pc_filepath, pf+nc_filepath) # Load
+    data.calculate_feature(Length()) # Calculate length of sequences
+    data.filter_outliers('length', [100,10000]) # Set 100 as min length
+    data.filter_outliers('length', 4) # Allow 4 stds from mean
+    N = min(data.num_coding_noncoding()) 
+    return data.sample(N,N,seed=42) # Force class balance
 
 for train_name in datasets:
 
-    train_data = datasets[train_name]
+    train_data = get_dataset(train_name)
 
     for model_name in models:
 
@@ -62,7 +58,11 @@ for train_name in datasets:
         model.fit(train_data)
 
         for test_name in datasets:
-            test_data = datasets[test_name]
+
+            test_data = get_dataset(test_name)
             classification = model.predict(test_data)
-            print(train_name, model_name, test_name, 
-                  accuracy_score(test_data.df['label'], classification))
+            score = accuracy_score(test_data.df['label'], classification)
+            print(train_name, model_name, test_name, score)
+            file = open('output.txt', 'a')
+            file.writelines([f'{train_name} {model_name} {test_name} {score}\n'])
+            file.close()

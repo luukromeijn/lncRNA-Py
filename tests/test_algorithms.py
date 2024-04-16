@@ -6,6 +6,7 @@ algorithms = [
     ('cnci', lambda data: CNCI(data)),
     ('cnit', lambda data: CNIT(data)),
     ('plek', lambda data: PLEK()),
+    ('cpc2', lambda data: CPC2('tests/data/fickett_paper.txt')),
 ]
 
 @pytest.fixture(scope="class", params=algorithms, ids=[n for n,_ in algorithms])

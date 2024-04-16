@@ -40,6 +40,23 @@ class TestNoError:
         feature = ORFCoverage()
         feature.calculate(data_hdf)
 
+    def test_orf_protein(self, data):
+        data.calculate_feature(ORFCoordinates())
+        feature = ORFProtein()
+        feature.calculate(data)
+
+    def test_orf_protein_analysis(self, data):
+        data.calculate_feature(ORFCoordinates())
+        data.calculate_feature(ORFProtein())
+        feature = ORFProteinAnalysis()
+        feature.calculate(data)
+
+    def test_orf_isoelectric(self, data):
+        data.calculate_feature(ORFCoordinates())
+        data.calculate_feature(ORFProtein())
+        feature = ORFIsoelectric()
+        feature.calculate(data)
+
     def test_fickett(self, data):
         feature = FickettTestcode('tests/data/fickett_paper.txt')
         feature.calculate(data)
@@ -123,3 +140,18 @@ def test_mlcds_reading_frames(data, dir, offset):
 ])
 def test_count_kmers(sequence, truth):
     assert (count_kmers(sequence, {'ACT':0, 'CTG':1}, k=3) == truth).all()
+
+@pytest.mark.parametrize('nt_seq,aa_seq',[
+    ('', '') # Emtpy ORF
+])
+def test_orf_protein_edge_cases(nt_seq, aa_seq):
+    assert ORFProtein().calculate_per_sequence(nt_seq) == aa_seq
+
+@pytest.mark.parametrize('aa_seq',[
+    '',  # Empty
+    'X', # Unknown amino acid
+])
+def test_orf_protein_analysis_edge_cases(aa_seq):
+    analysis = ORFProteinAnalysis()
+    for feature in analysis.calculate_per_sequence(aa_seq):
+        assert np.isnan(feature)

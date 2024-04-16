@@ -11,6 +11,8 @@ import itertools
 import matplotlib.pyplot as plt
 import numpy as np
 import re
+from Bio.Seq import Seq
+from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from rhythmnblues import utils
 
 
@@ -333,7 +335,7 @@ class ORFCoverage:
     Attributes
     ----------
     `name`: `list[str]`
-            Column names for ORF length ('ORF length').'''    
+        Column names for ORF length ('ORF length').'''    
 
     def __init__(self):
         '''Initializes `ORFCoverage` object.'''
@@ -343,7 +345,97 @@ class ORFCoverage:
         '''Calculates ORF coverage for every row in `data`.'''
         data.check_columns(['ORF length', 'length']) 
         return data.df['ORF length'] / data.df['length']
+
+
+class ORFProtein:
+    '''Translates ORF of transcript into amino acid sequence.
     
+    Attributes
+    ----------
+    `name`: `str`
+        Column name for ORF protein ('ORF protein').'''
+    
+    def __init__(self):
+        '''Initializes `ORFProtein` object.'''
+        self.name = 'ORF protein'
+
+    def calculate(self, data):
+        '''Calculates ORF protein for every row in `data`.'''
+        print("Translating transcript ORFs into amino acids...")
+        seqs = []
+        data.check_columns(['ORF (start)', 'ORF (end)', 'sequence'])
+        for i, row in utils.progress(data.df.iterrows()):
+            orf = row['sequence'][row['ORF (start)']:row['ORF (end)']]
+            seqs.append(self.calculate_per_sequence(orf))
+        return seqs
+    
+    def calculate_per_sequence(self, sequence):
+        '''Translates a given `sequence` into a amino-acid sequence.'''
+        return str(Seq(sequence[:-3]).translate()) # Exclude stop codon
+
+
+class ORFProteinAnalysis:
+    '''Calculates features for the protein encoded by the ORF using methods from
+    `Bio.SeqUtils.ProtParam.ProteinAnalysis`.
+
+    Attributes
+    ----------
+    `features`: `dict`
+        Dictionary with to-be-calculated features, with names (`str`) as keys,
+        and corresponding methods of `ProteinAnalysis` as values.
+    `name`: `list[str]`
+        Column names for ORF features (inferred from `features`).'''
+
+    def __init__(self, features={
+        'pI': ProteinAnalysis.isoelectric_point,
+        'MW': ProteinAnalysis.molecular_weight,
+        'aromaticity': ProteinAnalysis.aromaticity,
+        'instability': ProteinAnalysis.instability_index,
+        'gravy': ProteinAnalysis.gravy,
+    }):
+        '''Initializes `ORFProteinAnalysis` object. 
+        
+        Arguments
+        ---------
+        `features`: `dict`
+            Dictionary with to-be-calculated features, with names (`str`) as 
+            keys, and corresponding methods of `ProteinAnalysis` as values.
+            Default is:
+            * Isoelectric point (pI)
+            * Molecular weight (MW)
+            * Aromaticity
+            * Instability index
+            * Gravy'''
+        
+        self.features = features
+        self.name = [f'ORF {feature}' for feature in features]
+
+    def calculate(self, data):
+        '''Calculates ORF protein feature(s) for all rows in `data`.'''
+        print("Calculating features of ORF protein...")
+        results = []
+        data.check_columns(['ORF protein'])
+        for i, row in utils.progress(data.df.iterrows()):
+            results.append(self.calculate_per_sequence(row['ORF protein']))
+        return results
+    
+    def calculate_per_sequence(self, sequence):
+        '''Calculates ORF protein feature(s) for a given amino acid 
+        `sequence`.'''
+        if len(sequence) == 0 or 'X' in sequence:
+            return [np.nan for name in self.features]
+        else:
+            sequence = ProteinAnalysis(sequence)
+            return [self.features[name](sequence) for name in self.features]
+        
+
+class ORFIsoelectric(ORFProteinAnalysis):
+    '''Theoretical isoelectric point of the protein encoded by the ORF.'''
+
+    def __init__(self):
+        '''Initializes `IsoelectricPoint` object.'''
+        super().__init__(features={'pI':ProteinAnalysis.isoelectric_point})
+
 
 class FickettTestcode:
     '''Calculates the Fickett TESTCODE statistic as used by CPAT. Summarizes 
@@ -803,7 +895,7 @@ class MLCDSLengthStd:
         columns = [f'MLCDS{i} length'  for i in range(1,7)]
         data.check_columns(columns)
         return data.df[columns].std(axis=1)
-    
+        
 
 def count_kmers(sequence, kmers, k):
     '''Returns an array of frequencies k-mer counts in `sequence`. Uses k-mer 

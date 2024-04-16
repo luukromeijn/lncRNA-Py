@@ -193,7 +193,7 @@ class Data:
         means = self.df.groupby('label')[feature_names].mean()
         pcrna_means = means.loc['pcrna']
         ncrna_means = means.loc['ncrna']
-        ttest = ttest_ind(coding, non_coding)
+        ttest = ttest_ind(coding, non_coding, nan_policy='omit')
         statistics = ttest.statistic
         p_values = ttest.pvalue
         return pd.DataFrame({'mean (pcrna)': pcrna_means,

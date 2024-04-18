@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 from matplotlib.figure import Figure
 from sklearn.decomposition import PCA
+from Bio import SeqIO
 from rhythmnblues.data import Data
 from rhythmnblues.feature_extraction import Length
 
@@ -27,11 +28,16 @@ def test_init_hdf(data_hdf):
 def test_to_hdf(data, tmp_path):
     data.to_hdf(str(tmp_path) + '/test.h5')
 
-def test_to_fasta(data, tmp_path):
+def test_to_fasta_split(data, tmp_path):
     tmp_path = str(tmp_path)
     data.to_fasta(tmp_path + '/pc.fasta', tmp_path + '/nc.fasta')
     new_data = Data(tmp_path + '/pc.fasta', tmp_path + '/nc.fasta')
     assert data.num_coding_noncoding() == new_data.num_coding_noncoding()
+
+def test_to_fasta_one(data, tmp_path):
+    tmp_path = str(tmp_path) + '/all.fasta'
+    data.to_fasta(filepath=tmp_path)
+    assert len([s for s in SeqIO.parse(tmp_path, 'fasta')]) == 19
 
 def test_num_coding_noncoding(data):
     coding, noncoding = data.num_coding_noncoding()

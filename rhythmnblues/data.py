@@ -97,6 +97,12 @@ class Data:
 
         return pd.DataFrame(data)
     
+    def _write_fasta(self, data, filepath):
+        '''Writes sequences in `data` to `filepath` in FASTA format.'''
+        seqs = [SeqRecord(Seq(seq),id) for id, seq in 
+                zip(data['id'].values, data['sequence'].values)]
+        SeqIO.write(seqs, filepath, 'fasta')
+    
     def num_coding_noncoding(self):
         '''Returns a tuple of which the elements are the number of coding and 
         non-coding sequences in the `Data` object, respectively.'''
@@ -123,15 +129,18 @@ class Data:
                         if column not in except_columns]]
         data.to_hdf(path_or_buf, index=False, key='data', mode='w', **kwargs)
 
-    def to_fasta(self, pc_filepath, nc_filepath):
-        '''Writes sequence data to two FASTA files containing protein-coding
-        (`pc_filepath`) and non-coding (`nc_filepath`) transcripts.'''
-        paths = {'pcrna': pc_filepath, 'ncrna': nc_filepath}
-        for label in paths:
-            data = self.df[self.df['label']==label]
-            seqs = [SeqRecord(Seq(seq),id) for id, seq in 
-                    zip(data['id'].values, data['sequence'].values)]
-            SeqIO.write(seqs, paths[label], 'fasta')
+    def to_fasta(self, pc_filepath=None, nc_filepath=None, filepath=None):
+        '''Writes sequence data to FASTA files(s). Either writes to two separate
+        files for coding and non-coding transcripts to `pc_filepath` and `
+        `nc_filepath`, respectively, or writes to a single `filepath`.'''
+
+        if filepath is None:
+            paths = {'pcrna': pc_filepath, 'ncrna': nc_filepath}
+            for label in paths:
+                data = self.df[self.df['label']==label]
+                self._write_fasta(data, paths[label])
+        else:
+            self._write_fasta(self.df, filepath)
 
     def calculate_feature(self, feature_extractor):
         '''Adds feature(s) from `feature_extractor` as column(s) to `Data`.'''

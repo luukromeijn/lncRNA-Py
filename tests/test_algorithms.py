@@ -25,9 +25,10 @@ def test_algorithm_fit_predict(algorithm, data):
     alg_instance.fit(data)
     alg_instance.predict(data)
 
-def test_cpc_fit_predict(data):
+@pytest.mark.parametrize('alg',[CPC, iSeeRNA])
+def test_fit_predict_no_blast(data, alg):
     # Bypasses blastx by skipping feature extraction
-    algorithm = CPC('dummy_string')
+    algorithm = alg('dummy_string')
     data.df[algorithm.used_features] = (
         np.random.random((len(data), len(algorithm.used_features)))
     )

@@ -284,7 +284,7 @@ class CPC2(Algorithm):
 
 
 class FEELnc(Algorithm):
-    '''TODO
+    '''FlExible Extraction of LncRNAs (FEELnc)
     
     References
     ----------
@@ -325,4 +325,38 @@ class FEELnc(Algorithm):
                     '12-mer score']
         model = make_pipeline(StandardScaler(), 
                               RandomForestClassifier(n_estimators=500)) 
+        super().__init__(feature_extractors, features, model)
+
+
+class iSeeRNA(Algorithm):
+    '''Adaptation of the iSeeRNA algorithm. An important difference is that the
+    conservation score feature is replaced by the number of BLASTX hits.
+    
+    References
+    ----------
+    iSeeRNA: Sun et al. (2013) https://doi.org/10.1186/1471-2164-14-S2-S7'''
+
+    def __init__(self, database, **kwargs):
+        '''Initializes iSeeRNA algorithm for given BLAST protein database.
+        
+        Arguments
+        ---------
+        `database`: `str`
+            Path to local BLAST database or name of official BLAST database 
+            (when running remotely).
+        `**kwargs`
+            Any keyword argument accepted by `BLASTXSearch` object.'''
+        
+        feature_extractors = (
+            Length(),
+            ORFCoordinates(),
+            ORFLength(),
+            ORFCoverage(),
+            BLASTXSearch(database, **kwargs), # Replaces conservation score
+            KmerFreqs(k=2),
+            KmerFreqs(k=3)
+        )
+        features = ['ORF length', 'ORF coverage', 'BLASTX hits', 'GC', 'CT', 
+                    'TAG', 'TGT', 'ACG', 'TCG']
+        model = make_pipeline(StandardScaler(), SVC())
         super().__init__(feature_extractors, features, model)

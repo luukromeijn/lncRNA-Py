@@ -288,6 +288,25 @@ class Data:
         
         return fig
     
+    def plot_feature_correlation(self, feature_names, filepath=None):
+        '''Plots heatmap of absolute correlation values.'''
+        correlation = self.feature_correlation(feature_names)
+        fig, ax = plt.subplots()
+        plot = ax.imshow(np.abs(correlation))
+        s = 10 - 0.09*len(feature_names)
+        ax.set_xticks(np.arange(len(feature_names)), feature_names, fontsize=s, 
+                      rotation=90)
+        ax.set_yticks(np.arange(len(feature_names)), feature_names, fontsize=s)
+        fig.colorbar(plot)
+        fig.tight_layout()
+        if filepath is not None:
+            fig.savefig(filepath)
+        return fig
+    
+    def feature_correlation(self, feature_names):
+        '''Calculates the correlation between features in `feature_names`.'''
+        return self.df[feature_names].corr()[feature_names]
+    
     def filter_outliers(self, feature_name, tolerance):
         '''Removes data entries for which the value of `feature_name` falls
         outside of the tolerated range.

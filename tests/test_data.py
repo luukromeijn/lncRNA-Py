@@ -92,6 +92,11 @@ def test_plot_feature_space_pca(data):
     data.df[dummy_features] = np.random.random((len(data.df), 20))
     assert type(data.plot_feature_space(dummy_features, dim_red=PCA()))==Figure
 
+def test_plot_feature_correlation(data):
+    dummy_features = [str(i) for i in range(20)]
+    data.df[dummy_features] = np.random.random((len(data.df), 20))
+    assert type(data.plot_feature_correlation(dummy_features))==Figure
+
 def test_filter_outliers(data):
     data.df['test'] = 10
     data.df['test'].iloc[0] = 20

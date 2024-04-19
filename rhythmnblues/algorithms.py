@@ -6,12 +6,14 @@ works should be considered as loose adaptations. We do not guarantee that our
 implementations achieve the exact same performance as that of the original 
 works.'''
 
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
+from rhythmnblues.data import Data
 from rhythmnblues.feature_extraction import *
 
 
@@ -213,6 +215,41 @@ class CNIT(Algorithm):
         super().__init__(feature_extractors, features, model)
 
 
+class CPC(Algorithm):
+    '''Adaptation of Coding Potential Calculator (CPC). This adaptation differs
+    in two ways from the original: 1) we use ORF length instead of the log-odds
+    score; 2) we do not make us of the ORF integrity feature, as all identified 
+    ORFs will have a start and stop codon.
+    
+    References
+    ----------
+    CPC: Kong et al. (2007) https://doi.org/10.1093/nar/gkm391'''
+
+    def __init__(self, database, **kwargs):
+        '''Initializes CPC algorithm for given BLAST protein database.
+        
+        Arguments
+        ---------
+        `database`: `str`
+            Path to local BLAST database or name of official BLAST database 
+            (when running remotely).
+        `**kwargs`
+            Any keyword argument accepted by `BLASTXSearch` object.'''
+        
+        feature_extractors = (
+            Length(),
+            ORFCoordinates(),
+            ORFLength(),
+            ORFCoverage(),
+            BLASTXSearch(database, **kwargs)
+        )
+        features = ['ORF length', 'ORF coverage', 'BLASTX hits', 
+                    'BLASTX hit score', 'BLASTX frame score']
+        model = make_pipeline(SimpleImputer(missing_values=np.nan), 
+                              StandardScaler(), SVC())
+        super().__init__(feature_extractors, features, model)
+
+
 class CPC2(Algorithm):
     '''Adaptation of Coding Potential Calculator version 2 (CPC2). An important
     difference between this implementation and the original is that we do not
@@ -243,4 +280,49 @@ class CPC2(Algorithm):
         features = ['Fickett TESTCODE', 'ORF length', 'ORF pI']
         model = make_pipeline(SimpleImputer(missing_values=np.nan), 
                               StandardScaler(), SVC())
+        super().__init__(feature_extractors, features, model)
+
+
+class FEELnc(Algorithm):
+    '''TODO
+    
+    References
+    ----------
+    FEELnc: Wucher et al. (2017) https://doi.org/10.1093/nar/gkw1306'''
+
+    def __init__(self, kmer_refs):
+        '''Initializes FEELnc algorithm for given `kmer_refs`, which is either a
+        list of strings specifying the filepaths to k-mer bias reference files
+        or a `Data` object from which the k-mer biases should be calculated.'''
+
+        if type(kmer_refs) == Data:
+            kmer_refs = [kmer_refs]*6
+        elif type(kmer_refs) != list:
+            raise TypeError()
+        elif len(kmer_refs != 6): 
+            raise ValueError()
+        
+        feature_extractors = (
+            Length(),
+            ORFCoordinates(relaxation=0),
+            ORFCoordinates(relaxation=1),
+            ORFCoordinates(relaxation=2),
+            ORFCoordinates(relaxation=3),
+            ORFCoordinates(relaxation=4),
+            ORFLength(range(5)),
+            ORFCoverage(range(5)),
+            KmerScore(kmer_refs[0], k=1),
+            KmerScore(kmer_refs[1], k=2),
+            KmerScore(kmer_refs[2], k=3),
+            KmerScore(kmer_refs[3], k=6),
+            KmerScore(kmer_refs[4], k=9),
+            KmerScore(kmer_refs[5], k=12),
+        )
+
+        features = ['length', 'ORF coverage', 'ORF1 coverage', 'ORF2 coverage',
+                    'ORF3 coverage', 'ORF4 coverage', '1-mer score', 
+                    '2-mer score', '3-mer score', '6-mer score', '9-mer score',
+                    '12-mer score']
+        model = make_pipeline(StandardScaler(), 
+                              RandomForestClassifier(n_estimators=500)) 
         super().__init__(feature_extractors, features, model)

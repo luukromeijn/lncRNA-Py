@@ -106,18 +106,37 @@ def test_kmer_base():
     for i in range(6):
         assert len(KmerBase(i).kmers) == 4**i
 
-@pytest.mark.parametrize('sequence,start,end',[
-    ("AATGATGTGAC", 1, 10), # ORF subsequence
-    ("ATGATGTGA", 0, 9), # Double start codon presence
-    ("ATGATTGA", -1, -1), # No triplets between start and stop
-    ("ATGATGAGA", -1, -1), # No stop codon
-    ("ATGATGACCTGATGA", 0, 12), # Double start & double stop codon
+@pytest.mark.parametrize('sequence,answers',[
+    # ORF subsequence
+    ("AATGATGTGAC",     [[ 1,10],[ 1,10],[ 1,10]]), 
+    # Double start 
+    ("ATGATGTGA",       [[ 0, 9],[ 0, 9],[ 0, 9]]), 
+    # No triplets between start and stop
+    ("ATGATTGAC",       [[-1,-1],[ 0, 9],[ 2, 8]]), 
+    # No stop codon
+    ("ATGCCGAG",        [[-1,-1],[ 0, 6],[-1,-1]]),
+    # No start codon & double stop
+    ("GACGTGACTGA",     [[-1,-1],[-1,-1],[ 2,11]]), 
+    # Double start & double stop codon
+    ("ATGATGACCTGATGA", [[ 0,12],[ 0,12],[ 0,12]]), 
 ])
-def test_orf_coordinates_special_cases(sequence, start, end):
-    feature = ORFCoordinates(min_length=1)
-    p_start, p_end = feature.calculate_per_sequence(sequence)
-    assert p_start == start
-    assert p_end == end
+def test_orf_coordinates_special_cases(sequence, answers):
+    for relaxation, answer in enumerate(answers):
+        feature = ORFCoordinates(min_length=1, relaxation=relaxation)
+        p_start, p_end = feature.calculate_per_sequence(sequence)
+        assert p_start == answer[0]
+        assert p_end == answer[1]
+        assert (p_end - p_start) % 3 == 0 # Must always be mutiple of triplet
+
+def test_orf_coordinates_relaxation_3_4(data):
+    for r in range(5):
+        data.calculate_feature(ORFCoordinates(min_length=1, relaxation=r))
+    for i, row in data.df.iterrows():
+        length3 = (row['ORF3 (end)'] - row['ORF3 (start)'])
+        length4 = (row['ORF4 (end)'] - row['ORF4 (start)'])
+        assert length3 % 3 == 0
+        assert length4 % 3 == 0
+        assert length4 >= length3
 
 def test_orf_lengths_codons(data):
     '''ORF lengths must be divisor of three (because of codons)'''
@@ -155,3 +174,9 @@ def test_orf_protein_analysis_edge_cases(aa_seq):
     analysis = ORFProteinAnalysis()
     for feature in analysis.calculate_per_sequence(aa_seq):
         assert np.isnan(feature)
+
+def test_orf_column_names():
+    assert orf_column_names(['length'], 0)[0] == 'ORF length'
+    assert orf_column_names(['length'], 1)[0] == 'ORF1 length'
+    assert orf_column_names(['length'], [1,2])[1] == 'ORF2 length'
+    assert orf_column_names(['length', 'coverage'],[1,2])[-1] == 'ORF2 coverage'

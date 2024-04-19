@@ -7,15 +7,16 @@ this feature will have.
 * A `calculate` method with a `Data` object as argument, returning a list or
 array of the same length as the `Data` object.'''
 
-import re
-import os
 import itertools
+import os
+import re
 import subprocess
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from Bio.Seq import Seq
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
+
 from rhythmnblues import utils
 
 
@@ -179,7 +180,8 @@ class KmerScore(KmerBase):
        
     References
     ----------
-    CPAT: Wang et al. (2013) https://doi.org/10.1093/nar/gkt006'''
+    CPAT: Wang et al. (2013) https://doi.org/10.1093/nar/gkt006
+    FEELnc: Wucher et al. (2017) https://doi.org/10.1093/nar/gkw1306'''
 
     def __init__(self, data, k, export_path=None):
         '''Initializes `KmerScore` object, calculates log-ratios of k-mer 
@@ -252,31 +254,93 @@ class KmerScore(KmerBase):
     
 
 class ORFCoordinates:
-    '''Determines Open Reading Frame (ORF) coordinates.
+    '''Determines Open Reading Frame (ORF) coordinates, similar to NCBI's 
+    ORFFinder (https://www.ncbi.nlm.nih.gov/orffinder/)
     
     Attributes
     ----------
     `name`: `list[str]`
         Column names for ORF coordinates ('ORF (start)', 'ORF (end)').
     `min_length`: `int`
-        Minimum required length for an ORF.'''
+        Minimum required length for an ORF.
+    `relaxation`: `int`
+        Relaxation type of the ORF algorithm, as defined by FEELnc. 
+        * 0: Start and stop codon is required.
+        * 1: Start codon is required.
+        * 2: Stop codon is required.
+        * 3: Start or stop codon is required.
+        * 4: If no ORF found, use full-length transcript.
 
-    def __init__(self, min_length=75):
-        '''Initializes `ORFCoordinates` object.'''
+    References
+    ----------
+    FEELnc: Wucher et al. (2017) https://doi.org/10.1093/nar/gkw1306'''
+
+    def __init__(self, min_length=75, relaxation=0):
+        '''Initializes `ORFCoordinates` object.
+        
+        Arguments
+        ---------
+        `min_length`: `int`
+            Minimum required length for an ORF (default=75).
+        `relaxation`: `int`
+            Relaxation type of the ORF algorithm, as defined by FEELnc. 
+            * 0: Start and stop codon is required (= default).
+            * 1: Start codon is required.
+            * 2: Stop codon is required.
+            * 3: Start or stop codon is required.
+            * 4: If no ORF found, use full-length transcript.
+
+        References
+        ----------
+        FEELnc: Wucher et al. (2017) https://doi.org/10.1093/nar/gkw1306'''
+
         self.min_length = min_length
-        self.name = ['ORF (start)', 'ORF (end)']
+        self.relaxation = relaxation
+        suffix = '' if relaxation == 0 else str(relaxation)
+        self.name = [f'ORF{suffix} (start)', f'ORF{suffix} (end)']
 
     def calculate(self, data):
         '''Calculates ORF for every row in `data`.'''
         print("Finding Open Reading Frames...")
-        orfs = []
-        for _, row in utils.progress(data.df.iterrows()):
-            orfs.append(self.calculate_per_sequence(row['sequence']))
+
+        # Relaxation 0, 1, and 2: calculate per sequence
+        if self.relaxation < 3:
+            orfs = []
+            for _, row in utils.progress(data.df.iterrows()):
+                orfs.append(self.calculate_per_sequence(row['sequence']))
+
+        # Relaxation 3: Start OR stop codon (= longest of ORF1 and ORF2)
+        elif self.relaxation == 3: 
+            columns = ['ORF1 (start)','ORF1 (end)','ORF2 (start)','ORF2 (end)']
+            data.check_columns(columns)
+            values = data.df[columns].values
+            condition = (values[:,1]-values[:,0] <= 
+                         values[:,3]-values[:,2]).astype(int)
+            indices = np.stack((0 + 2*condition, 1 + 2*condition),axis=1)
+            orfs = values[np.arange(len(data))[:, None], indices]
+
+        # Relaxation 4: If no ORF found, return sequence length
+        elif self.relaxation == 4: # 
+            columns = ['ORF3 (start)', 'ORF3 (end)']
+            data.check_columns(columns)
+            values = data.df[columns].values
+            lengths = (Length().calculate(data).values / 3).astype(int)*3
+            values = np.concatenate(
+                (values, np.zeros((len(data),1), dtype=int), lengths[:, None]), 
+                axis=1
+            )
+            condition = ((values[:,0] == -1) & (values[:,1] == -1)).astype(int)
+            indices = np.stack((0 + 2*condition, 1 + 2*condition),axis=1)
+            orfs = values[np.arange(len(data))[:, None], indices]
+
         return orfs
     
     def calculate_per_sequence(self, sequence): 
         '''Returns start (incl.) and stop (excl.) position of longest ORF in
         `sequence`.'''
+
+        if self.relaxation not in [0,1,2]:
+            raise ValueError("Only use this method for 0 <= relaxation < 3")
 
         start_codons, stop_codons = [], []
         for i in range(len(sequence)-2): # Loop through sequence
@@ -285,6 +349,13 @@ class ORFCoordinates:
                 start_codons.append(i)
             elif codon in ['TAA', 'TAG', 'TGA']:
                 stop_codons.append(i+3)
+
+        if self.relaxation == 1: # Stop codon not required...
+            # ... add final three positions as possible stop positions
+            stop_codons = stop_codons + [len(sequence)-i for i in range(3)]
+        elif self.relaxation == 2: # Start codon not required...
+            # ... add first three positions as possible start positions
+            start_codons = start_codons + [i for i in range(3)]
 
         # If no start/stop codons found, no ORF    
         if len(start_codons) < 0 or len(stop_codons) < 0:
@@ -312,24 +383,37 @@ class ORFCoordinates:
             return -1, -1
         else:
             return start_codons[start_i,0], stop_codons[0,stop_i]
-    
+        
     
 class ORFLength:
     '''Calculates length of Open Reading Frame (ORF) based on coordinates.
     
     Attributes
     ----------
+    `relaxation`: `list`|`int`
+        The relaxation level(s) of the ORFs for which this feature must be 
+        calculated (default is 0).
     `name`: `list[str]`
-            Column names for ORF length ('ORF length').'''
+        Column names for ORF length (given relaxation type).'''
 
-    def __init__(self):
-        '''Initializes `ORFLength` object.'''
-        self.name = 'ORF length'
+    def __init__(self, relaxation=0):
+        '''Initializes `ORFLength` object.
+        
+        Arguments
+        ---------
+        `relaxation`: `list`|`int`
+            The relaxation level(s) of the ORFs for which this feature must be 
+            calculated (default is 0).'''
+        
+        self.relaxation = relaxation
+        self.name = orf_column_names(['length'], relaxation)
 
     def calculate(self, data):
         '''Calculates ORF length for every row in `data`.'''
-        data.check_columns(['ORF (end)', 'ORF (start)'])  
-        return data.df['ORF (end)'] - data.df['ORF (start)'] 
+        data.check_columns(orf_column_names(['(end)', '(start)'], 
+                                            self.relaxation))
+        return (data.df[orf_column_names(['(end)'],self.relaxation)].values - 
+                data.df[orf_column_names(['(start)'],self.relaxation)].values) 
     
 
 class ORFCoverage:
@@ -337,17 +421,30 @@ class ORFCoverage:
 
     Attributes
     ----------
+    `relaxation`: `list`|`int`
+        The relaxation level(s) of the ORFs for which this feature must be 
+        calculated (default is 0).
     `name`: `list[str]`
         Column names for ORF length ('ORF length').'''    
 
-    def __init__(self):
-        '''Initializes `ORFCoverage` object.'''
-        self.name = 'ORF coverage'
+    def __init__(self, relaxation=0):
+        '''Initializes `ORFCoverage` object.
+        
+        Arguments
+        ---------
+        `relaxation`: `list`|`int`
+            The relaxation level(s) of the ORFs for which this feature must be 
+            calculated (default is 0).'''
+        
+        self.relaxation = relaxation
+        self.name = orf_column_names(['coverage'], relaxation)
 
     def calculate(self, data):
         '''Calculates ORF coverage for every row in `data`.'''
-        data.check_columns(['ORF length', 'length']) 
-        return data.df['ORF length'] / data.df['length']
+        data.check_columns(orf_column_names(['length'], self.relaxation))
+        data.check_columns(['length']) 
+        return (data.df[orf_column_names(['length'],self.relaxation)].values /
+                data.df[['length']].values)
 
 
 class ORFProtein:
@@ -569,7 +666,6 @@ class FickettTestcode:
         return occ_freqs / (len(sequence))
     
 
-# NOTE: should the ANT matrix also be calculated using the different orientation?
 class MLCDS:
     '''Determines Most-Like Coding Sequence (MLCDS) coordinates based on 
     Adjoined Nucleotide Triplets (ANT), as proposed by CNCI. Calculates six 
@@ -1028,3 +1124,22 @@ def count_kmers(sequence, kmers, k):
             continue
 
     return counts
+
+
+def orf_column_names(columns, relaxation):
+    '''Generate column names for the ORF features in `columns`, for a specific
+    `relaxation` type.
+    
+    Arguments
+    ---------
+    `columns`: `list[str]`
+        List of ORF feature names (e.g. 'length')
+    `relaxation`: `list`|`int`
+        Relaxation type(s) for the to-be-generated columns.'''
+    
+    relaxation = [relaxation] if type(relaxation) == int else relaxation
+    names = []
+    for r in relaxation:
+        suffix = r if r > 0 else ''
+        names += [f'ORF{suffix} {name}' for name in columns]
+    return names

@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 from Bio.Seq import Seq
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
-
+from Bio.SeqUtils.lcc import lcc_simp
 from rhythmnblues import utils
 
 
@@ -492,6 +492,9 @@ class ORFProteinAnalysis:
         'aromaticity': ProteinAnalysis.aromaticity,
         'instability': ProteinAnalysis.instability_index,
         'gravy': ProteinAnalysis.gravy,
+        'helix': lambda x: ProteinAnalysis.secondary_structure_fraction(x)[0],
+        'turn': lambda x: ProteinAnalysis.secondary_structure_fraction(x)[1],
+        'sheet': lambda x: ProteinAnalysis.secondary_structure_fraction(x)[2],
     }):
         '''Initializes `ORFProteinAnalysis` object. 
         
@@ -501,11 +504,14 @@ class ORFProteinAnalysis:
             Dictionary with to-be-calculated features, with names (`str`) as 
             keys, and corresponding methods of `ProteinAnalysis` as values.
             Default is:
-            * Isoelectric point (pI)
+            * Isoelectric point (pI) 
             * Molecular weight (MW)
             * Aromaticity
             * Instability index
-            * Gravy'''
+            * Gravy
+            * Helix (ratio of associated amino acids) 
+            * Turn (ratio of associated amino acids) 
+            * Sheet (ratio of associated amino acids) '''
         
         self.features = features
         self.name = [f'ORF {feature}' for feature in features]
@@ -535,6 +541,43 @@ class ORFIsoelectric(ORFProteinAnalysis):
     def __init__(self):
         '''Initializes `IsoelectricPoint` object.'''
         super().__init__(features={'pI':ProteinAnalysis.isoelectric_point})
+
+
+class ORFAminoAcidFreqs:
+    '''Calculates occurrence frequencies in the protein encoded by an ORF 
+    for all amino acids.
+    
+    Attributes
+    ----------
+    `amino_acids`: `str`
+        All 20 possible amino acid symbols.
+    `name`: `list[str]`
+        List of column names for ORF amino acid frequencies.
+        
+    References
+    ----------
+    CONC: Blake et al. (2006) https://doi.org/10.1371/journal.pgen.0020029'''
+
+    def __init__(self):
+        '''Initializes `ORFAminoAcidFreqs` object.'''
+        self.amino_aicds = 'ACDEFGHIKLMNPQRSTVWY'
+        self.name = [f'{symbol} (ORF,aa)' for symbol in self.amino_aicds]
+
+    def calculate(self, data):
+        '''Calculates ORF amino acid frequencies for all rows in `data`.'''
+        print("Calculating ORF amino acids frequencies...")
+        data.check_columns(['ORF protein'])
+        freqs = []
+        for _, row in utils.progress(data.df.iterrows()):
+            freqs.append(self.calculate_per_sequence(row['ORF protein'])) 
+        return np.stack(freqs)
+    
+    def calculate_per_sequence(self, protein):
+        '''Calculates ORF amino acid frequencies for a given `protein`.'''
+        occ_freqs = np.array(
+            [len(re.findall(aa, protein)) for aa in self.amino_aicds]
+        )
+        return occ_freqs / (len(protein))
 
 
 class FickettTestcode:
@@ -1109,6 +1152,26 @@ class BLASTXSearch:
         identity = blast_result['identity'].sum()
 
         return [len(blast_result), hit_score, frame_score, identity]
+    
+
+class Complexity:
+    '''TODO'''
+
+    def __init__(self):
+        '''TODO'''
+        self.name = 'Complexity'
+
+    def calculate(self, data):
+        '''TODO'''
+        print("Calculating local composition complexity of sequences...")
+        results = []
+        for _, row in utils.progress(data.df.iterrows()):
+            results.append(self.calculate_per_sequence(row['sequence']))
+        return results
+
+    def calculate_per_sequence(self, sequence):
+        '''Calculates the complexity for a given `sequence`.'''
+        return lcc_simp(sequence)
 
 
 def count_kmers(sequence, kmers, k):

@@ -57,6 +57,11 @@ class TestNoError:
         feature = ORFIsoelectric()
         feature.calculate(data)
 
+    def test_orf_amino_acids_freqs(self, data):
+        data.calculate_feature(ORFCoordinates())
+        data.calculate_feature(ORFProtein())
+        data.calculate_feature(ORFAminoAcidFreqs())
+
     def test_fickett(self, data):
         feature = FickettTestcode('tests/data/fickett_paper.txt')
         feature.calculate(data)
@@ -100,6 +105,10 @@ class TestNoError:
         cols = [f"MLCDS{i} length" for i in range(1,7)]
         data.df[cols] = np.random.randint(1,99,(len(data.df), 6))
         feature = MLCDSLengthStd()
+        feature.calculate(data)
+
+    def test_complexity(self, data):
+        feature = Complexity()
         feature.calculate(data)
 
 def test_kmer_base():

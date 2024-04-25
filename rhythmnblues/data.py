@@ -255,6 +255,25 @@ class Data:
 
         return fig
     
+    def plot_feature_scatter(self, x_feature_name, y_feature_name, 
+                             filepath=None):
+        '''Returns a scatter plot with `x_feature_name` on the x-axis plotted
+        against `y_feature_name` on the y-axis.'''
+
+        self.check_columns([x_feature_name, y_feature_name])
+        fig, ax = plt.subplots()
+        for label in ['pcrna', 'ncrna']:
+            ax.scatter(x_feature_name, y_feature_name, 
+                        data=self.df[self.df['label']==label], label=label)
+        ax.set_xlabel(x_feature_name)
+        ax.set_ylabel(y_feature_name)
+        fig.legend()
+        fig.tight_layout()
+        if filepath is not None:
+            fig.savefig(filepath)
+
+        return fig
+    
     def plot_feature_space(self, feature_names, filepath=None, dim_red=TSNE()):
         '''Returns a visualization of the feature space of the data, reducing
         the dimensionality to 2.'''

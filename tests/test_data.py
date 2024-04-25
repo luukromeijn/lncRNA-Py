@@ -87,6 +87,10 @@ def test_plot_feature_boxplot(data_hdf):
 def test_plot_feature_density(data_hdf):
     assert type(data_hdf.plot_feature_density('length')) == Figure
 
+def test_plot_feature_space(data_hdf):
+    data_hdf.df['length 2'] = Length().calculate(data_hdf)
+    assert type(data_hdf.plot_feature_scatter('length', 'length 2')) == Figure
+
 def test_plot_feature_space_pca(data):
     dummy_features = [str(i) for i in range(20)]
     data.df[dummy_features] = np.random.random((len(data.df), 20))

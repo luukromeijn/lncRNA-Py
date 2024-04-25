@@ -1380,6 +1380,37 @@ class BLASTXSearch:
         identity = blast_result['identity'].sum()
 
         return [len(blast_result), hit_score, frame_score, identity]
+
+
+class BLASTXBinary:
+    '''Calculates whether or not the number of BLASTX hits surpasses a preset 
+    threshold.
+    
+    Attributes
+    ----------
+    `threshold`: `int`
+        Minimum number of BLASTX hits to be surpassed to return True (default is
+        0).
+    `name`: `str`
+        Name of `BLASTXBinary` feature ('BLASTX hits > {threshold}')
+    '''
+
+    def __init__(self, threshold=0):
+        '''Initializes `BLASTXBinary` object.
+        
+        Arguments
+        ---------
+        `threshold`: `int`
+            Minimum number of BLASTX hits to be surpassed to return True 
+            (default is 0).
+        '''
+        self.name = f'BLASTX hits > {threshold}'
+        self.threshold = threshold
+
+    def calculate(self, data):
+        '''Calculates the BLASTX binary feature for every row in `data`'''
+        data.check_columns(['BLASTX hits'])
+        return (data.df['BLASTX hits'] > self.threshold).astype(int)
     
 
 class Complexity:

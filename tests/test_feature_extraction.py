@@ -120,6 +120,11 @@ class TestNoError:
         feature = MLCDSLengthStd()
         feature.calculate(data)
 
+    def test_blastx_binary(self, data):
+        data.df['BLASTX hits'] = np.random.randint(0,10,len(data))
+        feature = BLASTXBinary(threshold=0)
+        feature.calculate(data)
+
     def test_complexity(self, data):
         feature = Complexity()
         feature.calculate(data)

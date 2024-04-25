@@ -170,9 +170,9 @@ class KmerFreqs(KmerFreqsBase):
             Step size of sliding window during calculation.
         '''
         super().__init__(k, apply_to, stride)
-        prefix = '' if apply_to == 'sequence' else apply_to + ' '
-        suffix = '' if stride == 1 else f' s={stride}'
-        self.name = [prefix + kmer + suffix for kmer in self.kmers]
+        suffix = '' if apply_to == 'sequence' else  f' ({apply_to})'
+        suffix = suffix if stride == 1 else f'{suffix} s={stride}'
+        self.name = [kmer + suffix for kmer in self.kmers]
 
     def calculate(self, data):
         '''Calculates k-mer frequencies for every row in `data`.'''
@@ -1212,6 +1212,7 @@ class MLCDSKmerFreqs(KmerFreqsBase):
             Length of to-be-generated nucleotide combinations in the vocabulary.
         '''
         super().__init__(k, 'MLCDS1', 1)
+        self.name = [f'{kmer} ({self.apply_to})' for kmer in self.kmers]
 
     def calculate(self, data):
         '''Calculates MLCDS k-mer frequencies for every row in `data`.'''

@@ -138,7 +138,7 @@ class CNCI(Algorithm):
         )
         # CNCI leaves out stop codons in codon bias
         features = ['MLCDS1 length', 'MLCDS1 score', 'MLCDS length-percentage', 
-                    'MLCDS score-distance'] + [f'{kmer} (MLCDS)' for kmer in 
+                    'MLCDS score-distance'] + [f'{kmer} (MLCDS1)' for kmer in 
                    codon_extractor.kmers if kmer not in ['TAA', 'TGA', 'TAG']]
         model = make_pipeline(StandardScaler(), SVC())
         super().__init__(feature_extractors, features, model)
@@ -210,7 +210,7 @@ class CNIT(Algorithm):
             codon_extractor,
         )
         features = (['MLCDS1 score', 'MLCDS score (std)', 'MLCDS length (std)'] 
-                    + [f'{kmer} (MLCDS)' for kmer in codon_extractor.kmers])
+                    + [f'{kmer} (MLCDS1)' for kmer in codon_extractor.kmers])
         model = make_pipeline(StandardScaler(),XGBClassifier(n_estimators=1000))
         super().__init__(feature_extractors, features, model)
 

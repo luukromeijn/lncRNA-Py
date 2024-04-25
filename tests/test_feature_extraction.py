@@ -25,6 +25,19 @@ class TestNoError:
         feature = KmerScore(data, k)
         feature.calculate(data)
 
+    @pytest.mark.parametrize('dist_type,apply_to,stride',[
+        ['euc', 'sequence', 1],
+        ['log', 'sequence', 1],
+        ['euc', 'ORF', 3],
+        ['log', 'ORF', 3],
+    ])
+    def test_kmer_distance_and_ratio(self, data, dist_type, apply_to, stride):
+        data.calculate_feature(ORFCoordinates())
+        feature = KmerDistance(data, 3, dist_type, apply_to, stride)
+        data.calculate_feature(feature)
+        feature = KmerDistanceRatio(3, dist_type, apply_to, stride)
+        data.calculate_feature(feature)
+
     def test_orf_coordinates(self, data):
         feature = ORFCoordinates()
         feature.calculate(data)
@@ -111,6 +124,13 @@ class TestNoError:
         feature = Complexity()
         feature.calculate(data)
 
+    def test_entropy(self, data):
+        cols = [str(i) for i in range(10)]
+        data.df[cols] = np.random.random((len(data), 10))
+        feature = FeatureEntropy('Test Entropy', cols)
+        feature.calculate(data)
+
+
 def test_kmer_base():
     for i in range(6):
         assert len(KmerBase(i).kmers) == 4**i
@@ -189,3 +209,15 @@ def test_orf_column_names():
     assert orf_column_names(['length'], 1)[0] == 'ORF1 length'
     assert orf_column_names(['length'], [1,2])[1] == 'ORF2 length'
     assert orf_column_names(['length', 'coverage'],[1,2])[-1] == 'ORF2 coverage'
+
+def test_kmer_freqs_base():
+    feature = KmerFreqsBase(3, 'sequence', 1)
+    freqs = feature.calculate_kmer_freqs('ACTG')
+    assert freqs[feature.kmers['ACT']]*(2+1e-7) == 1
+    assert freqs[feature.kmers['AAA']]*(2+1e-7) == 0
+    assert freqs[feature.kmers['CTG']]*(2+1e-7) == 1
+    feature = KmerFreqsBase(3, 'sequence', 3)
+    freqs = feature.calculate_kmer_freqs('ACTG')
+    assert freqs[feature.kmers['ACT']]*(1+1e-7) == 1
+    assert freqs[feature.kmers['AAA']]*(1+1e-7) == 0
+    assert freqs[feature.kmers['CTG']]*(1+1e-7) == 0

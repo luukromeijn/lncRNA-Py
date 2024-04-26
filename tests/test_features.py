@@ -3,6 +3,7 @@ import numpy as np
 from rhythmnblues.features import *
 from rhythmnblues.features.kmer import KmerBase, KmerFreqsBase, count_kmers
 from rhythmnblues.features.orf import orf_column_names
+from rhythmnblues.features.sse import get_hl_sse_sequence
 
 class TestNoError:
     '''For every feature, simply check whether the calculate method can be run
@@ -37,8 +38,6 @@ class TestNoError:
     def test_kmer_distance_and_ratio(self, data, dist_type, apply_to, stride):
         data.calculate_feature(ORFCoordinates())
         feature = KmerDistance(data, 3, dist_type, apply_to, stride)
-        data.calculate_feature(feature)
-        feature = KmerDistanceRatio(3, dist_type, apply_to, stride)
         data.calculate_feature(feature)
 
     def test_orf_coordinates(self, data):
@@ -138,6 +137,16 @@ class TestNoError:
         feature = FeatureEntropy('Test Entropy', cols)
         feature.calculate(data)
 
+    def test_sse(self, data):
+        feature = SSE()
+        feature.calculate(data.sample(1,1))
+
+    def test_up_frequency(self, data):
+        feature = UPFrequency()
+        data = data.sample(1,1)
+        data.calculate_feature(SSE())
+        feature.calculate(data)
+
 
 def test_kmer_base():
     for i in range(6):
@@ -229,3 +238,10 @@ def test_kmer_freqs_base():
     assert freqs[feature.kmers['ACT']]*(1+1e-7) == 1
     assert freqs[feature.kmers['AAA']]*(1+1e-7) == 0
     assert freqs[feature.kmers['CTG']]*(1+1e-7) == 0
+
+@pytest.mark.parametrize('type',['acguD', 'acguS', 'acgu-ACGU'])
+def test_get_hl_sse_sequence(data, type):
+    data.df = data.df.iloc[[0]]
+    data.calculate_feature(SSE())
+    for _, row in data.df.iterrows():
+        get_hl_sse_sequence(row, type)

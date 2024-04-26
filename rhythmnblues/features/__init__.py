@@ -11,7 +11,7 @@ from rhythmnblues.features.blast import BLASTXSearch, BLASTXBinary
 from rhythmnblues.features.fickett import FickettTestcode
 from rhythmnblues.features.general import Length, Complexity, FeatureEntropy
 from rhythmnblues.features.kmer import (
-    KmerDistance, KmerDistanceRatio, KmerFreqs, KmerFreqsPLEK, KmerScore
+    KmerDistance, KmerFreqs, KmerFreqsPLEK, KmerScore
 )
 from rhythmnblues.features.mlcds import (
     MLCDS, MLCDSKmerFreqs, MLCDSLength, MLCDSLengthPercentage, MLCDSLengthStd, 
@@ -21,3 +21,7 @@ from rhythmnblues.features.orf import (
     ORFAminoAcidFreqs, ORFCoordinates, ORFCoverage, ORFIsoelectric, ORFLength, 
     ORFProtein, ORFProteinAnalysis
 )
+try: # Allows ViennaRNA package to be optional
+    from rhythmnblues.features.sse import SSE, UPFrequency
+except ModuleNotFoundError:
+    pass

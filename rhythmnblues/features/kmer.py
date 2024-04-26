@@ -5,6 +5,7 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 from rhythmnblues import utils
+from rhythmnblues.features.sse import get_hl_sse_sequence, HL_SSE_NAMES
 
 
 # NOTE currently only used by KmerScore, might move there
@@ -30,28 +31,33 @@ class KmerBase:
     ----------
     `k`: `int`
         Length of to-be-generated nucleotide combinations in the vocabulary.
+    `alphabet`: `str`
+        Alphabet of characters that the k-mers exist of (default is 'ACGT').
     `uncertain`: `str`
         Optional character that indicates any base that falls outside of ACGT.
     `k-mers`: `dict[str:int]`
         Dictionary containing k-mers (keys) and corresponding indices (values).
     '''
 
-    def __init__(self, k, uncertain=''):
+    def __init__(self, k, alphabet='ACGT', uncertain=''):
         '''Initializes `KmerBase` object. 
         
         Arguments
         ---------
         `k`: `int`
             Length of to-be-generated nucleotide combinations in the vocabulary.
+        `alphabet`: `str`
+            Alphabet of characters that the k-mers exist of (default is 'ACGT'). 
         `uncertain`: `str`
             Optional character that indicates any base that falls outside of 
             ACGT (default is `''`).'''
         
         self.k = k
         self.uncertain = uncertain
+        self.alphabet = alphabet
         self.kmers = {
             ''.join(list(kmer)):i for i, kmer in enumerate(
-                itertools.product('ACGT' + uncertain, repeat=self.k)
+                itertools.product(alphabet + uncertain, repeat=self.k)
             )
         }
 
@@ -60,7 +66,7 @@ class KmerBase:
         '''Replaces non-ACGT bases in `sequence` with `self.uncertain`.'''
         
         if self.uncertain != '':
-            return re.sub('[^ACGT]', self.uncertain, sequence)
+            return re.sub(f'[^{self.alphabet}]', self.uncertain, sequence)
         else: 
             return sequence
         
@@ -77,6 +83,8 @@ class KmerFreqsBase(KmerBase):
         full transcript, can also be 'ORF'). 
     `stride`: `int`
         Step size of sliding window during calculation.
+    `alphabet`: `str`
+        Alphabet of characters that the k-mers exist of.
     `uncertain`: `str`
         Optional character that indicates any base that falls outside of ACGT.
     `k-mers`: `dict[str:int]`
@@ -84,7 +92,7 @@ class KmerFreqsBase(KmerBase):
     `name`: `list[str]`
         Column names for frequency features (= all k-mers).'''
 
-    def __init__(self, k, apply_to, stride):
+    def __init__(self, k, apply_to, stride, alphabet='ACGT'):
         '''Initializes `KmerFreqsBase` object.
         
         Arguments
@@ -95,9 +103,12 @@ class KmerFreqsBase(KmerBase):
             Indicates what (sub)sequence to apply the calculation to (default is 
             full transcript, can also be 'ORF'). 
         `stride`: `int`
-            Step size of sliding window during calculation.'''
+            Step size of sliding window during calculation.
+        `alphabet`: `str`
+            Alphabet of characters that the k-mers exist of (default is 'ACGT').
+            '''
         
-        super().__init__(k)
+        super().__init__(k, alphabet)
         self.apply_to = apply_to
         self.stride = stride
 
@@ -105,7 +116,9 @@ class KmerFreqsBase(KmerBase):
         '''Extract sequence from `data_row` for which distance should be 
         calculated based on `apply_to` attribute.'''
         sequence = data_row['sequence']
-        if self.apply_to != 'sequence':
+        if self.apply_to in HL_SSE_NAMES:
+            sequence = get_hl_sse_sequence(data_row, self.apply_to)
+        elif self.apply_to != 'sequence':
             sequence = sequence[data_row[f'{self.apply_to} (start)']:
                                 data_row[f'{self.apply_to} (end)']]
         return sequence
@@ -135,6 +148,8 @@ class KmerFreqs(KmerFreqsBase):
         full transcript, can also be 'ORF'). 
     `stride`: `int`
         Step size of sliding window during calculation.
+    `alphabet`: `str`
+        Alphabet of characters that the k-mers exist of (default is 'ACGT').
     `uncertain`: `str`
         Optional character that indicates any base that falls outside of ACGT.
     `k-mers`: `dict[str:int]`
@@ -142,7 +157,7 @@ class KmerFreqs(KmerFreqsBase):
     `name`: `list[str]`
         Column names for frequency features (= all k-mers).'''
 
-    def __init__(self, k, apply_to='sequence', stride=1):
+    def __init__(self, k, apply_to='sequence', stride=1, alphabet='ACGT'):
         '''Initializes `KmerFreqs` object.
         
         Arguments
@@ -154,8 +169,10 @@ class KmerFreqs(KmerFreqsBase):
             full transcript, can also be 'ORF'). 
         `stride`: `int`
             Step size of sliding window during calculation.
+        `alphabet`: `str`
+            Alphabet of characters that the k-mers exist of (default is 'ACGT').
         '''
-        super().__init__(k, apply_to, stride)
+        super().__init__(k, apply_to, stride, alphabet)
         suffix = '' if apply_to == 'sequence' else  f' ({apply_to})'
         suffix = suffix if stride == 1 else f'{suffix} s={stride}'
         self.name = [kmer + suffix for kmer in self.kmers]
@@ -165,6 +182,8 @@ class KmerFreqs(KmerFreqsBase):
         print(f"Calculating {self.k}-mer frequencies...")
         if self.apply_to == 'sequence':
             data.check_columns(['sequence'])
+        elif self.apply_to in HL_SSE_NAMES:
+            data.check_columns(['SSE'])
         else:
             data.check_columns([self.apply_to + suffix 
                                 for suffix in [' (start)', ' (end)']])
@@ -305,7 +324,8 @@ class KmerScore(KmerBase):
 
 class KmerDistance(KmerFreqsBase):
     '''Calculates distance to average k-mer profiles of coding and non-coding
-    RNA transcripts, as introduced by LncFinder. 
+    RNA transcripts, as introduced by LncFinder. Also calculates the ratio of 
+    the two distances. 
     
     Attributes
     ----------
@@ -318,23 +338,25 @@ class KmerDistance(KmerFreqsBase):
     `dist_type`: 'euc'|'log'
         Whether to use euclididan or logarithmic distance.
     `apply_to`: `str`
-        Indicates what (sub)sequence to apply the calculation to (default is 
-        full transcript, can also be 'ORF'). 
+        Indicates what (sub)sequence to apply the calculation to. 
     `stride`: `int`
         Step size of sliding window during calculation.
+    `alphabet`: `str`
+        Alphabet of characters that the k-mers exist of.
     `uncertain`: `str`
         Optional character that indicates any base that falls outside of ACGT.
     `k-mers`: `dict[str:int]`
         Dictionary containing k-mers (keys) and corresponding indices (values).
     `name`: `list[str]`
-        Column names for k-mer distance (to protein-/non-coding) features.
+        Column names for k-mer distance (to protein-/non-coding) (ratio) 
+        features.
 
     References
     ----------
     LncFinder: Han et al. (2019) https://doi.org/10.1093/bib/bby065'''
 
     def __init__(self, data, k, dist_type, apply_to='sequence', stride=1,
-                 export_path=None):
+                 alphabet='ACGT', export_path=None):
         '''Initializes `KmerDistance` object, calculating or importing the 
         k-mer profile of coding vs non-coding RNA.
         
@@ -350,13 +372,15 @@ class KmerDistance(KmerFreqsBase):
             Whether to use euclididan or logarithmic distance.
         `apply_to`: `str`
             Indicates what (sub)sequence to apply the calculation to (default is
-            full transcript, can also be 'ORF'). 
+            full transcript, can also be 'ORF', for example.). 
         `stride`: `int`
             Step size of sliding window during calculation (default is 1).
+        `alphabet`: `str`
+            Alphabet of characters that the k-mers exist of (default is 'ACGT').
         `export_path`: `str`
             Path to save calculated k-mer profiles to for later use.'''
         
-        super().__init__(k, apply_to, stride) # Initialize KmerBase parent
+        super().__init__(k, apply_to, stride, alphabet) # Initialize parent
         
         if dist_type == 'euc': # Define euclidian distance
             self.calculate_distance = lambda a,b: np.sqrt(np.sum((a - b)**2))
@@ -392,8 +416,9 @@ class KmerDistance(KmerFreqsBase):
                 )
         
         prefix = '' if apply_to == 'sequence' else apply_to + ' '
-        self.name = [prefix + f'{k}-mer {dist_type}Dist {i} s={stride}'
-                     for i in ['pc', 'nc']]
+        self.name = ([prefix + f'{k}-mer {dist_type}Dist {i} s={stride}'
+                      for i in ['pc', 'nc']] + 
+                     [prefix + f'{k}-mer {dist_type}DistRatio s={stride}'])
         self.pc_kmer_profile = kmer_freqs[0]
         self.nc_kmer_profile = kmer_freqs[1]
 
@@ -405,62 +430,12 @@ class KmerDistance(KmerFreqsBase):
         for _, row in utils.progress(data.df.iterrows()):
             sequence = self.get_sequence(row)
             kmer_freqs = self.calculate_kmer_freqs(sequence)
+            dist_pc = self.calculate_distance(kmer_freqs, self.pc_kmer_profile)
+            dist_nc = self.calculate_distance(kmer_freqs, self.nc_kmer_profile)
             distances.append([
-                self.calculate_distance(kmer_freqs, self.pc_kmer_profile),
-                self.calculate_distance(kmer_freqs, self.nc_kmer_profile)
+                dist_pc,
+                dist_nc,
+                dist_pc / (dist_nc + 1e-7)
             ])
 
         return distances
-    
-
-class KmerDistanceRatio: 
-    '''Calculates the ratio of k-mer distance to protein-coding over k-mer 
-    distance to non-coding, as introduced by LncFinder.
-    
-    Attributes
-    ----------
-    `k`: `int`
-        Length of to-be-generated nucleotide combinations in the vocabulary.
-    `dist_type`: 'euc'|'log'
-        Whether to use euclididan or logarithmic distance.
-    `apply_to`: `str`
-        Indicates what (sub)sequence to apply the calculation to (default is 
-        full transcript, can also be 'ORF'). 
-    `stride`: `int`
-        Step size of sliding window during calculation.
-    `name`: `list[str]`
-        Column names for k-mer distance (to protein-/non-coding) features.
-    
-    References
-    ----------
-    LncFinder: Han et al. (2019) https://doi.org/10.1093/bib/bby065'''
-
-    def __init__(self, k, dist_type, apply_to='sequence', stride=1):
-        '''Initializes `KmerDistanceRatio` object.
-        
-        Arguments
-        ---------
-        `k`: `int`
-            Length of to-be-generated nucleotide combinations in the vocabulary.
-        `dist_type`: 'euc'|'log'
-            Whether to use euclididan or logarithmic distance.
-        `apply_to`: `str`
-            Indicates what (sub)sequence to apply the calculation to (default is
-            full transcript, can also be 'ORF'). 
-        `stride`: `int`
-            Step size of sliding window during calculation (default is 1).'''
-
-        self.k = k
-        self.dist_type = dist_type
-        self.apply_to = apply_to
-        self.stride = stride
-        prefix = '' if apply_to == 'sequence' else apply_to + ' '
-        self.name = prefix + f'{k}-mer {dist_type}DistRatio s={stride}'
-    
-    def calculate(self, data):
-        '''Calculates k-mer distance ratio for every row in `data`.'''
-        prefix = '' if self.apply_to == 'sequence' else self.apply_to + ' '
-        columns = [prefix + f'{self.k}-mer {self.dist_type}Dist {i} ' + 
-                   f's={self.stride}' for i in ['pc', 'nc']]
-        data.check_columns(columns)
-        return data.df[columns[0]] / (data.df[columns[1]] + 1e-7)

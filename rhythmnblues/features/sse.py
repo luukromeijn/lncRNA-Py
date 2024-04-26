@@ -4,7 +4,7 @@ import re
 import ViennaRNA
 from rhythmnblues import utils
 
-HL_SSE_NAMES = ['acguD', 'acguS', 'acgu-ACGU']
+HL_SSE_NAMES = ['acguD', 'acguS', 'acgu-ACGU', 'UP']
 
 
 def get_hl_sse_sequence(data_row, type):
@@ -34,6 +34,8 @@ def get_hl_sse_sequence(data_row, type):
                 output += data_row['sequence'][i]
             elif type == 'acgu-ACGU':
                 output += data_row['sequence'][i].lower()
+            elif type == 'UP':
+                output += 'U'
         else:
             if type == 'acguD':
                 output += data_row['sequence'][i]
@@ -41,6 +43,8 @@ def get_hl_sse_sequence(data_row, type):
                 output += 'S'
             elif type == 'acgu-ACGU':
                 output += data_row['sequence'][i]
+            elif type == 'UP':
+                output += 'P'
 
     return output
 
@@ -97,9 +101,10 @@ class UPFrequency:
         results = []
         data.check_columns(['SSE'])
         for _, row in utils.progress(data.df.iterrows()):
-            results.append(self.calculate_per_sequence(row['SSE']))
+            results.append(self.calculate_per_sequence(row))
         return results
 
-    def calculate_per_sequence(self, sse):
-        '''Calculates the UP frequency of a given SSE.'''
-        return len(re.findall('\.', sse)) / len(sse)
+    def calculate_per_sequence(self, row):
+        '''Calculates the UP frequency of a given data row.'''
+        return (len(re.findall('\.', get_hl_sse_sequence(row, 'UP'))) / 
+                len(row['sequence']))

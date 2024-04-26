@@ -239,7 +239,7 @@ def test_kmer_freqs_base():
     assert freqs[feature.kmers['AAA']]*(1+1e-7) == 0
     assert freqs[feature.kmers['CTG']]*(1+1e-7) == 0
 
-@pytest.mark.parametrize('type',['acguD', 'acguS', 'acgu-ACGU'])
+@pytest.mark.parametrize('type',['acguD', 'acguS', 'acgu-ACGU', 'UP'])
 def test_get_hl_sse_sequence(data, type):
     data.df = data.df.iloc[[0]]
     data.calculate_feature(SSE())

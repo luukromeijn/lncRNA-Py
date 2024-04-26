@@ -1,6 +1,6 @@
 import pytest
 from rhythmnblues.algorithms import *
-from rhythmnblues.feature_extraction import *
+from rhythmnblues.features import *
 
 algorithms = [
     ('CPAT',   lambda data: CPAT('tests/data/fickett_paper.txt', data)),

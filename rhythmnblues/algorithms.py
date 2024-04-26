@@ -6,6 +6,7 @@ works should be considered as loose adaptations. We do not guarantee that our
 implementations achieve the exact same performance as that of the original 
 works.'''
 
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
@@ -14,7 +15,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
 from rhythmnblues.data import Data
-from rhythmnblues.feature_extraction import *
+from rhythmnblues.features import *
 
 
 class Algorithm:

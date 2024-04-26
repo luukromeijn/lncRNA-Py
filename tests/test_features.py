@@ -1,5 +1,8 @@
 import pytest
-from rhythmnblues.feature_extraction import *
+import numpy as np
+from rhythmnblues.features import *
+from rhythmnblues.features.kmer import KmerBase, KmerFreqsBase, count_kmers
+from rhythmnblues.features.orf import orf_column_names
 
 class TestNoError:
     '''For every feature, simply check whether the calculate method can be run

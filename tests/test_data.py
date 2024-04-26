@@ -4,7 +4,7 @@ from matplotlib.figure import Figure
 from sklearn.decomposition import PCA
 from Bio import SeqIO
 from rhythmnblues.data import Data
-from rhythmnblues.feature_extraction import Length
+from rhythmnblues.features import Length
 
 def test_init_fasta(data):
     for col, test_col in zip(data.df.columns, ['id', 'sequence', 'label']):

@@ -1,6 +1,6 @@
 from rhythmnblues.algorithms import CPAT, CNCI, PLEK, CNIT
 from rhythmnblues.data import Data
-from rhythmnblues.feature_extraction import Length
+from rhythmnblues.features import Length
 from functools import partial
 from sklearn.metrics import classification_report, accuracy_score
 
@@ -32,10 +32,10 @@ datasets = {
 }
 
 models = {
-    'CPAT': lambda dat: CPAT('data/features/fickett_paper.txt', dat),
-    'CNCI': lambda dat: CNCI(dat),
+    # 'CPAT': lambda dat: CPAT('data/features/fickett_paper.txt', dat),
+    # 'CNCI': lambda dat: CNCI(dat),
     'PLEK': lambda dat: PLEK(),
-    'CNIT': lambda dat: CNIT(dat),
+    # 'CNIT': lambda dat: CNIT(dat),
 }
 
 def get_dataset(name):

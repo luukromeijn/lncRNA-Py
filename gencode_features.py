@@ -1,5 +1,5 @@
 from rhythmnblues.data import Data
-from rhythmnblues.feature_extraction import *
+from rhythmnblues.features import *
 
 data = Data('data/sequences/gencode.v45.pc_transcripts.fa',
             'data/sequences/gencode.v45.lncRNA_transcripts.fa',

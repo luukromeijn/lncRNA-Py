@@ -76,7 +76,7 @@ class FeatureEntropy:
         return entropies
     
 
-class EIIPPhysicoChemical: # TODO unittest
+class EIIPPhysicoChemical:
     '''EIIP-derived physico-chemical features, as proposed by LNCFinder. Every 
     sequence is converted into an EIIP representation, of which the power
     spectrum is calculated with a Fast Fourier Transform. Several properties 
@@ -128,7 +128,7 @@ class EIIPPhysicoChemical: # TODO unittest
 
         return EIIP_onethird, EIIP_SNR, EIIP_Q1, EIIP_Q2, EIIP_min, EIIP_max
     
-    def calculate_power_spectrum(self, sequence): # TODO unitest?
+    def calculate_power_spectrum(self, sequence):
         '''Given an RNA `sequence`, convert it to EIIP values and calculate 
         its power spectrum.'''
 

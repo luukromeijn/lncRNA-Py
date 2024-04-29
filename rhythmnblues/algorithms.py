@@ -361,3 +361,53 @@ class iSeeRNA(Algorithm):
                     'TAG', 'TGT', 'ACG', 'TCG']
         model = make_pipeline(StandardScaler(), SVC())
         super().__init__(feature_extractors, features, model)
+
+
+class LncFinder(Algorithm): # NOTE not in unittests due to slow SSE features
+    '''LncFinder algorithm. Utilizes log distance of (ORF) k-mer frequencies, as
+    well as secondary structure elements and EIIP-derived physico-chemical
+    features.
+    
+    References
+    ----------
+    LncFinder: Han et al. (2018) https://doi.org/10.1093/bib/bby065'''
+
+    def __init__(self, orf_6mer_ref, acguD_4mer_ref, acguACGU_3mer_ref):
+        '''Initializes LncFinder algorithm for given k-mer reference profiles or
+        `Data` object to calculate these profiles for.
+        
+        Arguments
+        ---------
+        `orf_6mer_ref`: `str`|`Data`
+            Path to ORF hexamer distance profiles file, or `Data` object for 
+            calculating these profiles.
+        `acguD_4mer_ref`: `str`|`Data`
+            Path to acguD 4-mer distance profiles file, or `Data` object for 
+            calculating these profiles.
+        `acguACGU_3mer_ref`: `str`|`Data`
+            Path to acgu-ACGU 3-mer distance profiles file, or `Data` object for 
+            calculating these profiles.'''
+
+        orf_6_mer = KmerDistance(orf_6mer_ref, 6, 'log', 'ORF', 3)
+        acguD_4mer = KmerDistance(acguD_4mer_ref, 4, 'log', 'acguD', 1, 'ACGTD')
+        acguACGU_3mer = KmerDistance(acguACGU_3mer_ref, 3, 'log', 'acgu-ACGU', 
+                                     1, 'ACGTacgt')
+        eiip_features = EIIPPhysicoChemical()
+        
+        feature_extractors = (
+            Length(),
+            ORFCoordinates(),
+            ORFLength(),
+            ORFCoverage(),
+            orf_6_mer,
+            SSE(),
+            UPFrequency(),
+            acguD_4mer, 
+            acguACGU_3mer,
+            eiip_features,
+        )
+        features = (['ORF length', 'ORF coverage', 'MFE', 'UP freq.'] + 
+                    orf_6_mer.name + acguD_4mer.name + acguACGU_3mer.name +
+                    eiip_features.name)
+        model = make_pipeline(StandardScaler(), SVC())
+        super().__init__(feature_extractors, features, model)

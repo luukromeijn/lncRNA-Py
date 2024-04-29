@@ -147,6 +147,10 @@ class TestNoError:
         data.calculate_feature(SSE())
         feature.calculate(data)
 
+    def test_eiip_features(self, data):
+        feature = EIIPPhysicoChemical()
+        feature.calculate(data)
+
 
 def test_kmer_base():
     for i in range(6):
@@ -245,3 +249,7 @@ def test_get_hl_sse_sequence(data, type):
     data.calculate_feature(SSE())
     for _, row in data.df.iterrows():
         get_hl_sse_sequence(row, type)
+
+def test_calculate_power_spectrum():
+    a = EIIPPhysicoChemical().calculate_power_spectrum('ACGTACGTACGTACGTACGTAC')
+    assert len(a) % 3 == 0 # Necessary to later extract N/3 position properly

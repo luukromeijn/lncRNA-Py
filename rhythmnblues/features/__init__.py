@@ -9,7 +9,9 @@ array of the same length as the `Data` object.'''
 
 from rhythmnblues.features.blast import BLASTXSearch, BLASTXBinary
 from rhythmnblues.features.fickett import FickettTestcode
-from rhythmnblues.features.general import Length, Complexity, FeatureEntropy
+from rhythmnblues.features.general import (
+    Length, Complexity, FeatureEntropy, EIIPPhysicoChemical
+)
 from rhythmnblues.features.kmer import (
     KmerDistance, KmerFreqs, KmerFreqsPLEK, KmerScore
 )

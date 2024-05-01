@@ -134,8 +134,14 @@ class TestNoError:
     def test_entropy(self, data):
         cols = [str(i) for i in range(10)]
         data.df[cols] = np.random.random((len(data), 10))
-        feature = FeatureEntropy('Test Entropy', cols)
+        feature = Entropy('Test Entropy', cols)
         feature.calculate(data)
+
+    def test_entropy_density_profile(self, data):
+        cols = [str(i) for i in range(10)]
+        data.df[cols] = np.random.random((len(data), 10))
+        feature = EntropyDensityProfile(cols)
+        feature.calculate(data)     
 
     def test_sse(self, data):
         feature = SSE()

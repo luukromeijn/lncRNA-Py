@@ -44,8 +44,8 @@ class Complexity:
         return lcc_simp(sequence)
     
 
-class FeatureEntropy:
-    '''Calculates the entropy of specific features of a sequence.
+class Entropy:
+    '''Calculates the shannon entropy of specific features of a sequence.
     
     Attributes
     ----------
@@ -55,7 +55,7 @@ class FeatureEntropy:
         Name of the combined entropy feature calculated by this class.'''
 
     def __init__(self, new_feature_name, feature_names):
-        '''Initializes `FeatureEntropy` object.
+        '''Initializes `Entropy` object.
         
         Arguments
         ---------
@@ -74,6 +74,39 @@ class FeatureEntropy:
         for _, row in utils.progress(data.df.iterrows()):
             entropies.append(entropy(list(row[self.feature_names].values)))
         return entropies
+    
+
+class EntropyDensityProfile:
+    '''Calculates the Entropy Density Profile (EDP) as utilized by LncADeep.
+    
+    Attributes TODO UPDATE!
+    ----------
+    `feature_names`: `list[str]`
+        Names of the features for which the entropy should be calculated.
+    `name`: `str`
+        Name of the combined entropy feature calculated by this class.'''
+    
+    def __init__(self, feature_names):
+        '''Initializes `Entropy Density Profile` object.'''
+
+        self.name = [f'EDP({name})' for name in feature_names]
+        self.feature_names = feature_names
+
+    def calculate(self, data):
+        '''Calculates the EDP for every row in `data`.'''
+        print("Calculating Entropy Density Profiles...")
+        edps = []
+        for _, row in utils.progress(data.df.iterrows()):
+            edps.append(self.calculate_edp(
+                list(row[self.feature_names].values))
+            )
+        return edps
+
+    def calculate_edp(self, values):
+        '''Calculates the EDP for given list of values'''
+        values = np.array(values)
+        shannon = entropy(values)
+        return (-1/(shannon + 1e-7))*(values*np.log10(values + 1e-7))
     
 
 class EIIPPhysicoChemical:

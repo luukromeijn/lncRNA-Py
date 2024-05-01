@@ -1,9 +1,10 @@
 import pytest
 import numpy as np
 from rhythmnblues.features import *
-from rhythmnblues.features.kmer import KmerBase, KmerFreqsBase, count_kmers
+from rhythmnblues.features.general import SequenceFeature
+from rhythmnblues.features.kmer import KmerBase
 from rhythmnblues.features.orf import orf_column_names
-from rhythmnblues.features.sse import get_hl_sse_sequence
+from rhythmnblues.features.sse import get_hl_sse_sequence, HL_SSE_NAMES
 
 class TestNoError:
     '''For every feature, simply check whether the calculate method can be run
@@ -20,9 +21,7 @@ class TestNoError:
 
     @pytest.mark.parametrize('k', range(1,7))
     def test_kmer_freqs_plek(self, data, k):
-        data.calculate_feature(KmerFreqs(k))
-        feature = KmerFreqsPLEK(k)
-        data.calculate_feature(feature)
+        data.calculate_feature(KmerFreqs(k, PLEK=True))
 
     @pytest.mark.parametrize('k', range(1,7))
     def test_kmer_score(self, data, k):
@@ -107,7 +106,7 @@ class TestNoError:
     @pytest.mark.parametrize('k', range(1,7))
     def test_mlcds_kmer_freqs(self, data, k):
         data.calculate_feature(MLCDS(data))
-        feature = MLCDSKmerFreqs(k)
+        feature = KmerFreqs(k, apply_to='MLCDS1')
         data.calculate_feature(feature)
 
     def test_mlcds_score_std(self, data):
@@ -170,6 +169,24 @@ class TestNoError:
         data.calculate_feature(UTRCoverage())
 
 
+@pytest.mark.parametrize('apply_to', [
+    'sequence', 'ORF protein', 'ORF', 'MLCDS1', 'UTR3', 'UTR5', 'acguD'
+])
+def test_sequence_feature(data, apply_to):
+    if apply_to in ['ORF protein', 'ORF', 'UTR3', 'UTR5']:
+        data.calculate_feature(ORFCoordinates())
+    if apply_to == 'ORF protein':
+        data.calculate_feature(ORFProtein())
+    if apply_to.startswith('MLCDS'):
+        data.calculate_feature(MLCDS(data))
+    if apply_to in HL_SSE_NAMES:
+        data = data.sample(1,1)
+        data.calculate_feature(SSE())
+    base_class = SequenceFeature(apply_to)
+    base_class.check_columns(data)
+    for _, row in data.df.iterrows():
+        base_class.get_sequence(row)
+
 def test_kmer_base():
     for i in range(6):
         assert len(KmerBase(i).kmers) == 4**i
@@ -226,7 +243,11 @@ def test_mlcds_reading_frames(data, dir, offset):
     ('ACGACG', np.array([0,0])),
 ])
 def test_count_kmers(sequence, truth):
-    assert (count_kmers(sequence, {'ACT':0, 'CTG':1}, k=3) == truth).all()
+    class Dummy:
+        kmers = {'ACT':0, 'CTG':1}
+        k = 3
+        stride = 1
+    assert (KmerScore.count_kmers(Dummy, sequence) == truth).all()
 
 @pytest.mark.parametrize('nt_seq,aa_seq',[
     ('', '') # Emtpy ORF
@@ -250,12 +271,12 @@ def test_orf_column_names():
     assert orf_column_names(['length', 'coverage'],[1,2])[-1] == 'ORF2 coverage'
 
 def test_kmer_freqs_base():
-    feature = KmerFreqsBase(3, 'sequence', 1)
+    feature = KmerBase(3, 1)
     freqs = feature.calculate_kmer_freqs('ACTG')
     assert freqs[feature.kmers['ACT']]*(2+1e-7) == 1
     assert freqs[feature.kmers['AAA']]*(2+1e-7) == 0
     assert freqs[feature.kmers['CTG']]*(2+1e-7) == 1
-    feature = KmerFreqsBase(3, 'sequence', 3)
+    feature = KmerBase(3, 3)
     freqs = feature.calculate_kmer_freqs('ACTG')
     assert freqs[feature.kmers['ACT']]*(1+1e-7) == 1
     assert freqs[feature.kmers['AAA']]*(1+1e-7) == 0

@@ -5,23 +5,7 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 from rhythmnblues import utils
-from rhythmnblues.features.sse import get_hl_sse_sequence, HL_SSE_NAMES
-
-
-# NOTE currently only used by KmerScore, might move there
-def count_kmers(sequence, kmers, k, stride=1):
-    '''Returns an array of frequencies k-mer counts in `sequence`. Uses k-mer 
-    indices as defined by dictionary.'''
-
-    counts = np.zeros(max(kmers.values())+1)
-
-    for i in utils.progress(range(k,len(sequence)+1,stride)):
-        try:
-            counts[kmers[sequence[i-k:i]]] += 1
-        except KeyError:
-            continue
-
-    return counts
+from rhythmnblues.features.general import SequenceFeature
 
 
 class KmerBase:
@@ -31,6 +15,8 @@ class KmerBase:
     ----------
     `k`: `int`
         Length of to-be-generated nucleotide combinations in the vocabulary.
+    `stride`: `int`
+        Step size of sliding window during calculation.
     `alphabet`: `str`
         Alphabet of characters that the k-mers exist of (default is 'ACGT').
     `uncertain`: `str`
@@ -39,13 +25,15 @@ class KmerBase:
         Dictionary containing k-mers (keys) and corresponding indices (values).
     '''
 
-    def __init__(self, k, alphabet='ACGT', uncertain=''):
+    def __init__(self, k, stride=1, alphabet='ACGT', uncertain=''):
         '''Initializes `KmerBase` object. 
         
         Arguments
         ---------
         `k`: `int`
             Length of to-be-generated nucleotide combinations in the vocabulary.
+        `stride`: `int`
+            Step size of sliding window during calculation.
         `alphabet`: `str`
             Alphabet of characters that the k-mers exist of (default is 'ACGT'). 
         `uncertain`: `str`
@@ -53,6 +41,7 @@ class KmerBase:
             ACGT (default is `''`).'''
         
         self.k = k
+        self.stride = stride
         self.uncertain = uncertain
         self.alphabet = alphabet
         self.kmers = {
@@ -70,59 +59,6 @@ class KmerBase:
         else: 
             return sequence
         
-
-class KmerFreqsBase(KmerBase):
-    '''Base class for feature extractors relying on k-mer frequency spectra.
-    
-    Attributes
-    ----------
-    `k`: `int`
-        Length of to-be-generated nucleotide combinations in the vocabulary.
-    `apply_to`: `str`
-        Indicates what (sub)sequence to apply the calculation to (default is 
-        full transcript, can also be 'ORF'). 
-    `stride`: `int`
-        Step size of sliding window during calculation.
-    `alphabet`: `str`
-        Alphabet of characters that the k-mers exist of.
-    `uncertain`: `str`
-        Optional character that indicates any base that falls outside of ACGT.
-    `k-mers`: `dict[str:int]`
-        Dictionary containing k-mers (keys) and corresponding indices (values).
-    `name`: `list[str]`
-        Column names for frequency features (= all k-mers).'''
-
-    def __init__(self, k, apply_to, stride, alphabet='ACGT'):
-        '''Initializes `KmerFreqsBase` object.
-        
-        Arguments
-        ---------
-        `k`: `int`
-            Length of to-be-generated nucleotide combinations in the vocabulary.
-        `apply_to`: `str`
-            Indicates what (sub)sequence to apply the calculation to (default is 
-            full transcript, can also be 'ORF'). 
-        `stride`: `int`
-            Step size of sliding window during calculation.
-        `alphabet`: `str`
-            Alphabet of characters that the k-mers exist of (default is 'ACGT').
-            '''
-        
-        super().__init__(k, alphabet)
-        self.apply_to = apply_to
-        self.stride = stride
-
-    def get_sequence(self, data_row):
-        '''Extract sequence from `data_row` for which distance should be 
-        calculated based on `apply_to` attribute.'''
-        sequence = data_row['sequence']
-        if self.apply_to in HL_SSE_NAMES:
-            sequence = get_hl_sse_sequence(data_row, self.apply_to)
-        elif self.apply_to != 'sequence':
-            sequence = sequence[data_row[f'{self.apply_to} (start)']:
-                                data_row[f'{self.apply_to} (end)']]
-        return sequence
-    
     def calculate_kmer_freqs(self, sequence):
         '''Calculates k-mer frequency spectrum for given `sequence`.'''
         sequence = self.replace_uncertain_bases(sequence)
@@ -135,7 +71,7 @@ class KmerFreqsBase(KmerBase):
         return freqs / (freqs.sum() + 1e-7) # Divide by total number of k-mers
     
 
-class KmerFreqs(KmerFreqsBase):
+class KmerFreqs(KmerBase, SequenceFeature):
     '''For every k-mer, calculate its occurrence frequency in the sequence
     divided by the total number of k-mers appearing in that sequence.
     
@@ -143,9 +79,11 @@ class KmerFreqs(KmerFreqsBase):
     ----------
     `k`: `int`
         Length of to-be-generated nucleotide combinations in the vocabulary.
+    `scaling`: `float`
+        Scaling factor applied to every k-mer spectrum. Usually set to 1, unless
+        `PLEK` argument was True at initialization.  
     `apply_to`: `str`
-        Indicates what (sub)sequence to apply the calculation to (default is 
-        full transcript, can also be 'ORF'). 
+        Indicates which column this class extracts its features from.
     `stride`: `int`
         Step size of sliding window during calculation.
     `alphabet`: `str`
@@ -157,7 +95,8 @@ class KmerFreqs(KmerFreqsBase):
     `name`: `list[str]`
         Column names for frequency features (= all k-mers).'''
 
-    def __init__(self, k, apply_to='sequence', stride=1, alphabet='ACGT'):
+    def __init__(self, k, apply_to='sequence', stride=1, alphabet='ACGT', 
+                 PLEK=False):
         '''Initializes `KmerFreqs` object.
         
         Arguments
@@ -165,14 +104,23 @@ class KmerFreqs(KmerFreqsBase):
         `k`: `int`
             Length of to-be-generated nucleotide combinations in the vocabulary.
         `apply_to`: `str`
-            Indicates what (sub)sequence to apply the calculation to (default is 
-            full transcript, can also be 'ORF'). 
+            Indicates which column this class extracts its features from.
         `stride`: `int`
             Step size of sliding window during calculation.
         `alphabet`: `str`
             Alphabet of characters that the k-mers exist of (default is 'ACGT').
-        '''
-        super().__init__(k, apply_to, stride, alphabet)
+        `PLEK`: bool
+            If True, will scales k-mer frequencies by 1/(4^(5-k)), compensating
+            for small k-mers occuring more often than large k-mers (default is 
+            False).
+
+        References
+        ----------
+        PLEK: Li et al. (2014) https://doi.org/10.1186/1471-2105-15-311'''
+
+        KmerBase.__init__(self, k, stride, alphabet)
+        SequenceFeature.__init__(self, apply_to)
+        self.scaling = 1/(4**(5-self.k)) if PLEK else 1
         suffix = '' if apply_to == 'sequence' else  f' ({apply_to})'
         suffix = suffix if stride == 1 else f'{suffix} s={stride}'
         self.name = [kmer + suffix for kmer in self.kmers]
@@ -180,54 +128,15 @@ class KmerFreqs(KmerFreqsBase):
     def calculate(self, data):
         '''Calculates k-mer frequencies for every row in `data`.'''
         print(f"Calculating {self.k}-mer frequencies...")
-        if self.apply_to == 'sequence':
-            data.check_columns(['sequence'])
-        elif self.apply_to in HL_SSE_NAMES:
-            data.check_columns(['SSE'])
-        else:
-            data.check_columns([self.apply_to + suffix 
-                                for suffix in [' (start)', ' (end)']])
+        self.check_columns(data)
         freqs = []
         for _, row in utils.progress(data.df.iterrows()):
             sequence = self.get_sequence(row)
-            freqs.append(self.calculate_kmer_freqs(sequence)) 
+            freqs.append(self.scaling*self.calculate_kmer_freqs(sequence)) 
         return np.stack(freqs)
-
-
-class KmerFreqsPLEK:
-    '''Scales k-mer frequencies by 1/(4^(5-k)), compensating for small k-mers 
-    occuring more often than large k-mers. Calculates based on original k-mer 
-    frequencies (does not recalculate k-mer frequencies.)
-    
-    Attributes
-    ----------
-    `k`: `int`
-        Length of to-be-generated nucleotide combinations in the vocabulary.
-    `name`: `list[str]`
-        Column names for frequency features (= all k-mers).
-        
-    References
-    ----------
-    PLEK: Li et al. (2014) https://doi.org/10.1186/1471-2105-15-311'''
-
-    def __init__(self, k):
-        '''Initializes `KmerFreqsPLEK` object.
-        
-        Arguments
-        ---------
-        `k`: `int`
-            Length of nucleotide combinations in the vocabulary.'''
-        self.k = k 
-        self.name = [f'{kmer} (PLEK)' for kmer in KmerBase(k).kmers]
-
-    def calculate(self, data):
-        '''Scales k-mer frequencies for every row in `data`.'''
-        kmers = list(KmerBase(self.k).kmers)
-        data.check_columns(kmers)
-        return 1/(4**(5-self.k)) * data.df[kmers]
     
 
-class KmerScore(KmerBase):
+class KmerScore(KmerBase, SequenceFeature):
     '''Calculates k-mer score, indicating how likely a sequence is to be 
     protein-coding (the higher, the more likely). Sums the log-ratios of k-mer
     frequencies in protein-coding RNA over non-coding RNA. Introduced by CPAT 
@@ -237,22 +146,29 @@ class KmerScore(KmerBase):
     ----------
     `k`: `int`
         Length of to-be-generated nucleotide combinations in the vocabulary.
+    `kmer_freqs`: `np.ndarray`
+        Log-ratios of k-mer frequencies in protein-coding RNA over non-coding 
+        RNA. 
+    `apply_to`: `str`
+        Indicates which column this class extracts its features from.
+    `stride`: `int`
+        Step size of sliding window during calculation.
+    `alphabet`: `str`
+        Alphabet of characters that the k-mers exist of (default is 'ACGT').
     `uncertain`: `str`
         Optional character that indicates any base that falls outside of ACGT.
     `k-mers`: `dict[str:int]`
         Dictionary containing k-mers (keys) and corresponding indices (values).
     `name`: `list[str]`
         Column names for frequency features (= all k-mers).
-    `kmer_freqs`: `np.ndarray`
-        Log-ratios of k-mer frequencies in protein-coding RNA over non-coding 
-        RNA. 
        
     References
     ----------
     CPAT: Wang et al. (2013) https://doi.org/10.1093/nar/gkt006
     FEELnc: Wucher et al. (2017) https://doi.org/10.1093/nar/gkw1306'''
 
-    def __init__(self, data, k, export_path=None):
+    def __init__(self, data, k, apply_to='sequence', stride=1, alphabet='ACGT',  
+                 export_path=None):
         '''Initializes `KmerScore` object, calculates log-ratios of k-mer 
         frequencies in protein-coding RNA over non-coding RNA.
         
@@ -263,51 +179,83 @@ class KmerScore(KmerBase):
             bias (training set), or path to file that contains these values. 
         `k`: `int`
             Length of to-be-generated nucleotide combinations in the vocabulary.
+        `apply_to`: `str`
+            Indicates which column this class extracts its features from 
+            (default is full transcript).
+        `stride`: `int`
+            Step size of sliding window during calculation (default is 1).
+        `alphabet`: `str`
+            Alphabet of characters that the k-mers exist of (default is 'ACGT').
         `export_path`: `str`
             Path to save k-mer frequency bias matrix to for later use.'''
         
-        super().__init__(k)
-        self.name = f'{k}-mer score'
-        if type(data) == str:
+        # Initializing parent classes
+        KmerBase.__init__(self, k, stride, alphabet)
+        SequenceFeature.__init__(self, apply_to)
+
+        # Setting an unambiguous proper name
+        suffix = '' if apply_to == 'sequence' else  f' ({apply_to})'
+        suffix = suffix if stride == 1 else f'{suffix} s={stride}'
+        self.name = f'{k}-mer score{suffix}'
+
+        if type(data) == str: # If provided, load kmer frequency bias data
             self.kmer_freqs = np.loadtxt(data)
-        else:
+
+        else: # If not, calculate from data
             print(f"Initializing {self.k}-mer score...")
             kmer_freqs = np.zeros((len(self.kmers), 2))
+
+            # Count occurrences
             all_seqs = data.df.groupby('label')['sequence']
             all_seqs = all_seqs.apply(lambda x: "!".join(x.tolist()))
             for j, label in enumerate(['pcrna', 'ncrna']):
-                kmer_freqs[:,j] = count_kmers(all_seqs[label],self.kmers,self.k)
+                kmer_freqs[:,j] = self.count_kmers(all_seqs[label])
+
+            # Convert to log ratio
             kmer_freqs = kmer_freqs / (kmer_freqs.sum(axis=0) + 1e-7)
             kmer_freqs = (kmer_freqs[:,0] + 1e-10) / (kmer_freqs[:,1] + 1e-10)
             kmer_freqs = np.log(kmer_freqs + 1e-10)
             kmer_freqs = np.nan_to_num(kmer_freqs, nan=0)
             self.kmer_freqs = kmer_freqs
-            if export_path is not None:
+
+            if export_path is not None: # Export if export_path specified
                 np.savetxt(
                     export_path, self.kmer_freqs, header=f'{k}-mer ' + 
                     'frequency bias matrix for KmerScore object.\n' +  
-                    f'Load using KmerScore(data="<filepath>", k={k})', 
+                    f'Load using KmerScore(data="<filepath>", k={k}, ' + 
+                    f'apply_to="{apply_to}", stride={stride})', 
                     fmt="%.6f"
                 )
 
     def calculate(self, data):
         '''Calculates k-mer score for every row in `data`.'''
         print(f"Calculating {self.k}-mer scores...")
+        self.check_columns(data)
         scores = []
         for _, row in utils.progress(data.df.iterrows()):
-            scores.append(self.calculate_per_sequence(row['sequence']))
+            scores.append(self.calculate_per_sequence(self.get_sequence(row)))
         return scores
     
     def calculate_per_sequence(self, sequence):
         '''Calculates k-mer score of `sequence`.'''
         sequence = self.replace_uncertain_bases(sequence)
         score = 0
-        for i in range(len(sequence)-self.k+1):
+        for i in range(0, len(sequence)-self.k+1, self.stride):
             try: 
                 score += self.kmer_freqs[self.kmers[sequence[i:i+self.k]]]
             except KeyError:
                 pass
-        return score / (len(sequence)-self.k+1)
+        return score / i
+    
+    def count_kmers(self, sequence):
+        '''Returns an array of frequencies k-mer counts in `sequence`.'''
+        counts = np.zeros(max(self.kmers.values())+1)
+        for i in utils.progress(range(self.k,len(sequence)+1,self.stride)):
+            try:
+                counts[self.kmers[sequence[i-self.k:i]]] += 1
+            except KeyError:
+                continue
+        return counts
     
     def plot_bias(self, filepath=None):
         '''Plots log ratio of usage frequency of k-mers in pcRNA/ncRNA.'''
@@ -322,7 +270,7 @@ class KmerScore(KmerBase):
         return fig
     
 
-class KmerDistance(KmerFreqsBase):
+class KmerDistance(KmerBase, SequenceFeature):
     '''Calculates distance to average k-mer profiles of coding and non-coding
     RNA transcripts, as introduced by LncFinder. Also calculates the ratio of 
     the two distances. 
@@ -338,7 +286,7 @@ class KmerDistance(KmerFreqsBase):
     `dist_type`: 'euc'|'log'
         Whether to use euclididan or logarithmic distance.
     `apply_to`: `str`
-        Indicates what (sub)sequence to apply the calculation to. 
+        Indicates which column this class extracts its features from.
     `stride`: `int`
         Step size of sliding window during calculation.
     `alphabet`: `str`
@@ -371,8 +319,7 @@ class KmerDistance(KmerFreqsBase):
         `dist_type`: 'euc'|'log'
             Whether to use euclididan or logarithmic distance.
         `apply_to`: `str`
-            Indicates what (sub)sequence to apply the calculation to (default is
-            full transcript, can also be 'ORF', for example.). 
+            Indicates which column this class extracts its features from.
         `stride`: `int`
             Step size of sliding window during calculation (default is 1).
         `alphabet`: `str`
@@ -380,7 +327,8 @@ class KmerDistance(KmerFreqsBase):
         `export_path`: `str`
             Path to save calculated k-mer profiles to for later use.'''
         
-        super().__init__(k, apply_to, stride, alphabet) # Initialize parent
+        KmerBase.__init__(self, k, stride, alphabet)
+        SequenceFeature.__init__(self, apply_to)
         
         if dist_type == 'euc': # Define euclidian distance
             self.calculate_distance = lambda a,b: np.sqrt(np.sum((a - b)**2))
@@ -426,6 +374,7 @@ class KmerDistance(KmerFreqsBase):
         '''Calculates k-mer distance for every row in `data`.'''
         
         print(f"Calculating {self.k}-mer distances...")
+        self.check_columns(data)
         distances = []
         for _, row in utils.progress(data.df.iterrows()):
             sequence = self.get_sequence(row)

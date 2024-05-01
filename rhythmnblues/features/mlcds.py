@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from rhythmnblues import utils
-from rhythmnblues.features.kmer import KmerFreqsBase, KmerBase
+from rhythmnblues.features.kmer import KmerBase
 
 
 class MLCDS:
@@ -255,48 +255,6 @@ class MLCDSScoreDistance:
                  for i in range(2,7)], axis=0
             ) / 5
         )
-    
-
-class MLCDSKmerFreqs(KmerFreqsBase):
-    '''K-mer Frequencies of the Most-Like Coding Sequence with the highest
-    score. 
-    
-    Attributes
-    ----------
-    `name`: `list[str]`
-        Column name for MLCDS lengths
-    `k`: `int`
-        Length of to-be-generated nucleotide combinations in the vocabulary.
-    `uncertain`: `str`
-        Optional character that indicates any base that falls outside of ACGT.
-    `k-mers`: `dict[str:int]`
-        Dictionary containing k-mers (keys) and corresponding indices (values).
-    `name`: `list[str]`
-        Column names for frequency features (= all k-mers).'''
-
-    def __init__(self, k):
-        '''Initializes `MLCDSKmerFreqs` object.
-        
-        Arguments
-        ---------
-        `k`: `int`
-            Length of to-be-generated nucleotide combinations in the vocabulary.
-        '''
-        super().__init__(k, 'MLCDS1', 1)
-        self.name = [f'{kmer} ({self.apply_to})' for kmer in self.kmers]
-
-    def calculate(self, data):
-        '''Calculates MLCDS k-mer frequencies for every row in `data`.'''
-        print(f"Calculating MLCDS {self.k}-mer frequencies...")
-        cols = [self.apply_to + suffix for suffix in [' (start)', ' (end)']]
-        data.check_columns(cols)
-        data.df[cols[0]] = pd.to_numeric(data.df[cols[0]], downcast='integer')
-        data.df[cols[1]] = pd.to_numeric(data.df[cols[1]], downcast='integer')
-        freqs = []
-        for _, row in utils.progress(data.df.iterrows()):
-            sequence = self.get_sequence(row)
-            freqs.append(self.calculate_kmer_freqs(sequence)) 
-        return np.stack(freqs)
 
 
 class MLCDSScoreStd:

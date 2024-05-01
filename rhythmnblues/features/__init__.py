@@ -13,10 +13,10 @@ from rhythmnblues.features.general import (
     Length, Complexity, Entropy, EntropyDensityProfile, EIIPPhysicoChemical
 )
 from rhythmnblues.features.kmer import (
-    KmerDistance, KmerFreqs, KmerFreqsPLEK, KmerScore
+    KmerDistance, KmerFreqs, KmerScore
 )
 from rhythmnblues.features.mlcds import (
-    MLCDS, MLCDSKmerFreqs, MLCDSLength, MLCDSLengthPercentage, MLCDSLengthStd, 
+    MLCDS, MLCDSLength, MLCDSLengthPercentage, MLCDSLengthStd, 
     MLCDSScoreDistance, MLCDSScoreStd
 )
 from rhythmnblues.features.orf import (

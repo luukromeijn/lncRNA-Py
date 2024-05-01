@@ -11,23 +11,23 @@ class TestNoError:
 
     def test_length(self, data):
         feature = Length()
-        feature.calculate(data)
+        data.calculate_feature(feature)
     
     @pytest.mark.parametrize('k', range(1,7))
     def test_kmer_freqs(self, data, k):
         feature = KmerFreqs(k)
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     @pytest.mark.parametrize('k', range(1,7))
     def test_kmer_freqs_plek(self, data, k):
         data.calculate_feature(KmerFreqs(k))
         feature = KmerFreqsPLEK(k)
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     @pytest.mark.parametrize('k', range(1,7))
     def test_kmer_score(self, data, k):
         feature = KmerScore(data, k)
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     @pytest.mark.parametrize('dist_type,apply_to,stride',[
         ['euc', 'sequence', 1],
@@ -42,13 +42,13 @@ class TestNoError:
 
     def test_orf_coordinates(self, data):
         feature = ORFCoordinates()
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_orf_length(self, data):
         data.df[["ORF (start)", 
                  "ORF (end)"]] = np.random.randint(1,99,(len(data.df), 2))
         feature = ORFLength()
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_orf_coverage(self, data_hdf):
         data_hdf.df['ORF length'] = np.random.randint(1,20, len(data_hdf.df))
@@ -58,19 +58,19 @@ class TestNoError:
     def test_orf_protein(self, data):
         data.calculate_feature(ORFCoordinates())
         feature = ORFProtein()
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_orf_protein_analysis(self, data):
         data.calculate_feature(ORFCoordinates())
         data.calculate_feature(ORFProtein())
         feature = ORFProteinAnalysis()
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_orf_isoelectric(self, data):
         data.calculate_feature(ORFCoordinates())
         data.calculate_feature(ORFProtein())
         feature = ORFIsoelectric()
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_orf_amino_acids_freqs(self, data):
         data.calculate_feature(ORFCoordinates())
@@ -79,69 +79,69 @@ class TestNoError:
 
     def test_fickett(self, data):
         feature = FickettTestcode('tests/data/fickett_paper.txt')
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_mlcds(self, data):
         feature = MLCDS(data)
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_mlcds_length(self, data):
         cols = [name for i in range(1,7) for name in 
                 [f"MLCDS{i} (start)", f"MLCDS{i} (end)"]]
         data.df[cols] = np.random.randint(1,99,(len(data.df), 12))
         feature = MLCDSLength()
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_mlcds_length_percentage(self, data):
         cols = [f"MLCDS{i} length" for i in range(1,7)]
         data.df[cols] = np.random.randint(1,99,(len(data.df), 6))
         feature = MLCDSLengthPercentage()
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_mlcds_score_distance(self, data):
         cols = [f"MLCDS{i} score" for i in range(1,7)]
         data.df[cols] = np.random.random((len(data.df), 6))
         feature = MLCDSScoreDistance()
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     @pytest.mark.parametrize('k', range(1,7))
     def test_mlcds_kmer_freqs(self, data, k):
         data.calculate_feature(MLCDS(data))
         feature = MLCDSKmerFreqs(k)
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_mlcds_score_std(self, data):
         cols = [f"MLCDS{i} score" for i in range(1,7)]
         data.df[cols] = np.random.random((len(data.df), 6))
         feature = MLCDSScoreStd()
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_mlcds_length_std(self, data):
         cols = [f"MLCDS{i} length" for i in range(1,7)]
         data.df[cols] = np.random.randint(1,99,(len(data.df), 6))
         feature = MLCDSLengthStd()
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_blastx_binary(self, data):
         data.df['BLASTX hits'] = np.random.randint(0,10,len(data))
         feature = BLASTXBinary(threshold=0)
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_complexity(self, data):
         feature = Complexity()
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_entropy(self, data):
         cols = [str(i) for i in range(10)]
         data.df[cols] = np.random.random((len(data), 10))
         feature = Entropy('Test Entropy', cols)
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_entropy_density_profile(self, data):
         cols = [str(i) for i in range(10)]
         data.df[cols] = np.random.random((len(data), 10))
         feature = EntropyDensityProfile(cols)
-        feature.calculate(data)     
+        data.calculate_feature(feature)     
 
     def test_sse(self, data):
         feature = SSE()
@@ -151,11 +151,23 @@ class TestNoError:
         feature = UPFrequency()
         data = data.sample(1,1)
         data.calculate_feature(SSE())
-        feature.calculate(data)
+        data.calculate_feature(feature)
 
     def test_eiip_features(self, data):
         feature = EIIPPhysicoChemical()
-        feature.calculate(data)
+        data.calculate_feature(feature)
+
+    def test_utr_length(self, data):
+        data.calculate_feature(ORFCoordinates())
+        data.calculate_feature(Length())
+        feature = UTRLength()
+        data.calculate_feature(feature)
+
+    def test_utr_coverage(self, data):
+        data.calculate_feature(ORFCoordinates())
+        data.calculate_feature(Length())
+        data.calculate_feature(UTRLength())
+        data.calculate_feature(UTRCoverage())
 
 
 def test_kmer_base():
@@ -259,3 +271,11 @@ def test_get_hl_sse_sequence(data, type):
 def test_calculate_power_spectrum():
     a = EIIPPhysicoChemical().calculate_power_spectrum('ACGTACGTACGTACGTACGTAC')
     assert len(a) % 3 == 0 # Necessary to later extract N/3 position properly
+
+def test_utr_length_no_orfs(data):
+    data.df['ORF (start)'] = -1
+    data.df['ORF (end)'] = -1
+    data.calculate_feature(Length())
+    data.calculate_feature(UTRLength())
+    assert np.isnan(data.df.iloc[0]['UTR5 length']) # UTR length should be nan
+    assert np.isnan(data.df.iloc[0]['UTR3 length']) # ... when no ORF found

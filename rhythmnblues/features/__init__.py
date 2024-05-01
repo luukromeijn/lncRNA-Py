@@ -21,7 +21,7 @@ from rhythmnblues.features.mlcds import (
 )
 from rhythmnblues.features.orf import (
     ORFAminoAcidFreqs, ORFCoordinates, ORFCoverage, ORFIsoelectric, ORFLength, 
-    ORFProtein, ORFProteinAnalysis
+    ORFProtein, ORFProteinAnalysis, UTRLength, UTRCoverage
 )
 try: # Allows ViennaRNA package to be optional
     from rhythmnblues.features.sse import SSE, UPFrequency

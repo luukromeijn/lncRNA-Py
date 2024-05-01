@@ -353,3 +353,50 @@ class ORFAminoAcidFreqs:
             [len(re.findall(aa, protein)) for aa in self.amino_acids]
         )
         return occ_freqs / (len(protein))
+    
+
+class UTRLength:
+    '''Calculates the length of the 5' and 3' Untranslated Regions (UTRs).
+    
+    Attributes
+    ----------
+    `name`: `list[str]`
+        Column names for 5' and 3' UTR length.'''
+    
+    def __init__(self):
+        '''Initializes `UTRLength` object.'''
+        self.name = ["UTR5 length", "UTR3 length"]
+
+    def calculate(self, data):
+        '''Calculates the lengths of the 5'/3' UTRs for every row in `data`.'''
+        data.check_columns(['ORF (start)', 'ORF (end)', 'length'])
+        utr5 = self.no_orf_to_nan(self.series_to_array(data.df['ORF (start)']))
+        utr3 = self.no_orf_to_nan(self.series_to_array(data.df['ORF (end)']))
+        utr3 = self.series_to_array(data.df['length']) - utr3
+        return np.stack((utr5, utr3), axis=1)
+    
+    def no_orf_to_nan(self, array):
+        '''Sets array value to nan if value at index is -1.'''
+        return np.where(array > 0, array, np.nan)
+    
+    def series_to_array(self, series):
+        return np.array(series.values)
+    
+
+class UTRCoverage:
+    '''Calculates the coverage of the 5' and 3' Untranslated Regions (UTRs).
+    
+    Attributes
+    ----------
+    `name`: `list[str]`
+        Column names for 5' and 3' UTR coverage.'''
+    
+    def __init__(self):
+        '''Initializes `UTRCoverage` object.'''
+        self.name = ['UTR5 coverage', 'UTR3 coverage']
+    
+    def calculate(self, data):
+        '''Calculates the UTR coverage for every row in `data`.'''
+        data.check_columns(['UTR5 length', 'UTR3 length', 'length'])
+        return (data.df[['UTR5 length', 'UTR3 length']].values / 
+                data.df[['length', 'length']].values)

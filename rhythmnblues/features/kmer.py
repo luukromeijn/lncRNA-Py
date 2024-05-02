@@ -123,6 +123,7 @@ class KmerFreqs(KmerBase, SequenceFeature):
         self.scaling = 1/(4**(5-self.k)) if PLEK else 1
         suffix = '' if apply_to == 'sequence' else  f' ({apply_to})'
         suffix = suffix if stride == 1 else f'{suffix} s={stride}'
+        suffix = suffix if not PLEK else f'{suffix} (PLEK)'
         self.name = [kmer + suffix for kmer in self.kmers]
 
     def calculate(self, data):
@@ -240,12 +241,17 @@ class KmerScore(KmerBase, SequenceFeature):
         '''Calculates k-mer score of `sequence`.'''
         sequence = self.replace_uncertain_bases(sequence)
         score = 0
+        j = 0
         for i in range(0, len(sequence)-self.k+1, self.stride):
             try: 
                 score += self.kmer_freqs[self.kmers[sequence[i:i+self.k]]]
+                j += 1
             except KeyError:
                 pass
-        return score / i
+        try:
+            return score / j 
+        except ZeroDivisionError:
+            return np.nan
     
     def count_kmers(self, sequence):
         '''Returns an array of frequencies k-mer counts in `sequence`.'''

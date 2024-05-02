@@ -273,7 +273,8 @@ class GCContent(SequenceFeature):
             Indicates which column this class extracts its features from.'''
         
         super().__init__(apply_to)
-        self.name = 'GC content'
+        suffix = '' if apply_to == 'sequence' else f' ({apply_to})'
+        self.name = 'GC content' + suffix
     
     def calculate(self, data):
         '''Calculates GC content for every row in `data`.'''

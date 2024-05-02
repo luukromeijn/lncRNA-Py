@@ -168,6 +168,9 @@ class TestNoError:
         data.calculate_feature(UTRLength())
         data.calculate_feature(UTRCoverage())
 
+    def test_std_stop_codons(self, data):
+        data.calculate_feature(StdStopCodons())
+
 
 @pytest.mark.parametrize('apply_to', [
     'sequence', 'ORF protein', 'ORF', 'MLCDS1', 'UTR3', 'UTR5', 'acguD'

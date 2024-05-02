@@ -288,3 +288,48 @@ class GCContent(SequenceFeature):
     def calculate_per_sequence(self, sequence):
         '''Calculates the GC content for a given sequence.'''
         return len(re.findall('[CG]', sequence)) / len(sequence)
+    
+
+class StdStopCodons(SequenceFeature):
+    '''Calculates the standard deviations of stop codon counts between three
+    reading frames, as formulated by lncRScan-SVM.
+    
+    Attributes
+    ----------
+    `apply_to`: `str`
+        Indicates which column this class extracts its features from.
+    `name`: `str`
+        Column name of feature calculated by this class ('SCS')
+
+    References
+    ----------
+    lncRScan-SVM: Sun et al. (2015) https://doi.org/10.1371/journal.pone.0139654
+    '''
+
+    def __init__(self, apply_to='sequence'):
+        '''Initializes `StdStopCodons` object.
+        
+        Arguments 
+        ---------
+        `apply_to`: `str`
+            Indicates which column this class extracts its features from.'''
+        super().__init__(apply_to)
+        self.name = 'SCS'
+
+    def calculate(self, data):
+        '''Calculates the std of stop codon counts for every row in `data`.'''
+        print("Calculating standard deviation of stop codon counts...")
+        stds = []
+        self.check_columns(data)
+        for _, row in utils.progress(data.df.iterrows()):
+            stds.append(self.calculate_per_sequence(self.get_sequence(row)))
+        return stds
+    
+    def calculate_per_sequence(self, sequence):
+        '''Calculates the std of stop codon counts for a given `sequence`.'''
+        counts = np.zeros(3)
+        for frame in range(3):
+            for i in range(frame, len(sequence)-3+1, 3):
+                if sequence[i:i+3] in ['TAA', 'TAG', 'TGA']:
+                    counts[frame] += 1
+        return np.std(counts)

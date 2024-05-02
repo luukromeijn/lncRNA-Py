@@ -6,6 +6,7 @@ from scipy.fft import fft
 from rhythmnblues import utils
 from rhythmnblues.features.sse import HL_SSE_NAMES, get_hl_sse_sequence
 import numpy as np
+import re
 
 
 class Length:
@@ -251,3 +252,38 @@ class EIIPPhysicoChemical:
         N = int(len(sequence)/3)*3 # Cut off at mod 3
         EIIP_values = EIIP_values[:N]
         return np.abs(fft(EIIP_values)) 
+    
+
+class GCContent(SequenceFeature):
+    '''Calculates the proportion of bases that are either Guanine or Cytosine.
+    
+    Attributes
+    ----------
+    `apply_to`: `str`
+        Indicates which column this class extracts its features from.
+    `name`: `str`
+        Name of the feature calculated by this object ('GC content')'''
+    
+    def __init__(self, apply_to='sequence'):
+        '''Initializes `GCContent` object.
+        
+        Arguments
+        ---------
+        `apply_to`: `str`
+            Indicates which column this class extracts its features from.'''
+        
+        super().__init__(apply_to)
+        self.name = 'GC content'
+    
+    def calculate(self, data):
+        '''Calculates GC content for every row in `data`.'''
+        print("Calculating GC content...")
+        self.check_columns(data)
+        values = []
+        for _, row in utils.progress(data.df.iterrows()):
+            values.append(self.calculate_per_sequence(self.get_sequence(row)))
+        return values
+    
+    def calculate_per_sequence(self, sequence):
+        '''Calculates the GC content for a given sequence.'''
+        return len(re.findall('[CG]', sequence)) / len(sequence)

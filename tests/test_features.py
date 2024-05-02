@@ -300,3 +300,11 @@ def test_utr_length_no_orfs(data):
     data.calculate_feature(UTRLength())
     assert np.isnan(data.df.iloc[0]['UTR5 length']) # UTR length should be nan
     assert np.isnan(data.df.iloc[0]['UTR3 length']) # ... when no ORF found
+
+@pytest.mark.parametrize('sequence,GC_content', [
+    ['CGCGCG', 1],
+    ['AC', 0.5],
+    ['ACG', 2/3],
+])
+def test_gc_content(sequence, GC_content):
+    assert GCContent().calculate_per_sequence(sequence) == GC_content

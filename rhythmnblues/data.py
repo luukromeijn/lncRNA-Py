@@ -394,8 +394,8 @@ class Data:
 
         df = copy.deepcopy(self)
         df.df = pd.concat((
-            pcrna.sample(n=int(np.round(pc)), replace=replace),
-            ncrna.sample(n=int(np.round(nc)), replace=replace)
+            pcrna.sample(n=int(np.round(pc)),replace=replace,random_state=seed),
+            ncrna.sample(n=int(np.round(nc)),replace=replace,random_state=seed)
         ))
         return df
     

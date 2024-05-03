@@ -8,10 +8,10 @@ this feature will have.
 array of the same length as the `Data` object.'''
 
 from rhythmnblues.features.blast import BLASTXSearch, BLASTXBinary
-from rhythmnblues.features.fickett import FickettTestcode
+from rhythmnblues.features.fickett import FickettScore
 from rhythmnblues.features.general import (
-    Length, Complexity, Entropy, EntropyDensityProfile, EIIPPhysicoChemical,
-    GCContent, StdStopCodons, SequenceDistribution, ZhangScore
+    Length, Complexity, Entropy, EntropyDensityProfile, GCContent, 
+    StdStopCodons, SequenceDistribution
 )
 from rhythmnblues.features.kmer import (
     KmerDistance, KmerFreqs, KmerScore
@@ -28,3 +28,5 @@ try: # Allows ViennaRNA package to be optional
     from rhythmnblues.features.sse import SSE, UPFrequency
 except ModuleNotFoundError:
     pass
+from rhythmnblues.features.zhang import ZhangScore
+from rhythmnblues.features.eiip import EIIPPhysicoChemical

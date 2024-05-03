@@ -2,9 +2,8 @@
 
 from Bio.SeqUtils.lcc import lcc_simp
 from scipy.stats import entropy
-from scipy.fft import fft
 from rhythmnblues import utils
-from rhythmnblues.features.sse import HL_SSE_NAMES, get_hl_sse_sequence
+from rhythmnblues.features.sequence_base import SequenceBase
 import numpy as np
 import re
 
@@ -23,79 +22,6 @@ class Length:
 
     def calculate(self, data):
         return data.df['sequence'].str.len()
-    
-
-class SequenceFeature: 
-    '''Base class for features that operate on data (sub)sequences, the type of 
-    which is specified by the `apply_to` attribute. 
-    
-    Sequence-based features in rhyhthmnblues are not required to inherit from 
-    this class, but it does make them more versatile as it enables a single 
-    implementation to operate on multiple sequence types.
-    
-    Most important methods are `get_sequence` and `check_columns`, which will 
-    behave differently for different `apply_to` settings.
-    
-    Attributes
-    ----------
-    `apply_to`: `str`
-        Indicates which column this class extracts its features from.'''
-
-    def __init__(self, apply_to='sequence'):
-        '''Initializes `SequenceFeature` base class.'''
-        if apply_to in ['sequence', 'ORF protein']:
-            self.get_sequence = self._get_full_sequence
-        elif apply_to in HL_SSE_NAMES:
-            self.get_sequence = self._get_hl_sse_sequence
-        elif apply_to == 'UTR5':
-            self.get_sequence = self._get_utr5_sequence
-        elif apply_to == 'UTR3':
-            self.get_sequence = self._get_utr3_sequence
-        elif apply_to.startswith('MLCDS') or apply_to == 'ORF':
-            self.get_sequence = self._get_subsequence
-        else: 
-            print("Sequence type not known by rhythmnblues.")
-            print("Assuming its presence as column in future input data.")
-            self.get_sequence = self._get_full_sequence
-        self.apply_to = apply_to
-
-    def check_columns(self, data):
-        '''Checks if the required columns, based on the `apply_to` attribute,
-        are present within `data`.'''
-        if self.apply_to in HL_SSE_NAMES:
-            data.check_columns(['SSE'])
-        elif self.apply_to in ['UTR5', 'UTR3']:
-            data.check_columns(['ORF (start)', 'ORF (end)'])
-        elif self.apply_to.startswith('MLCDS') or self.apply_to == 'ORF':
-            data.check_columns([f'{self.apply_to} ({suffix})'
-                                for suffix in ['start', 'end']])
-        else: 
-            data.check_columns([self.apply_to])
-            
-    def _get_full_sequence(self, data_row):
-        ''''Returns full RNA transcript sequence'''
-        return data_row[self.apply_to]
-    
-    def _get_hl_sse_sequence(self, data_row):
-        '''Returns high-level secondary strucutre derived sequence, the type
-        of which is determined by the `apply_to` attribute.'''
-        return get_hl_sse_sequence(data_row, self.apply_to)
-    
-    def _get_subsequence(self, data_row):
-        '''Returns subsequence based on coordinates in `data_row`, as specified 
-        by `apply_to` attribute.'''
-        start = int(data_row[f'{self.apply_to} (start)'])
-        end = int(data_row[f'{self.apply_to} (end)'])
-        dir = 1 if start <= end else -1
-        return data_row['sequence'][start:end:dir]
-    
-    def _get_utr5_sequence(self, data_row):
-        '''Returns 5' UTR subsequence.'''
-        return data_row['sequence'][:data_row['ORF (start)']]
-    
-    def _get_utr3_sequence(self, data_row):
-        '''Returns 3' UTR subsequence.'''
-        return data_row['sequence'][data_row['ORF (end)']:]
 
 
 class Complexity:
@@ -184,77 +110,7 @@ class EntropyDensityProfile:
         return (-1/(shannon + 1e-7))*(values*np.log10(values + 1e-7))
     
 
-class EIIPPhysicoChemical:
-    '''EIIP-derived physico-chemical features, as proposed by LNCFinder. Every 
-    sequence is converted into an EIIP representation, of which the power
-    spectrum is calculated with a Fast Fourier Transform. Several properties 
-    are derived from this power spectrum. 
-
-    Attributes
-    ----------
-    `name`: `str`
-        Names of the EIIP-derived physico-chemical features.
-    `eiip_map`: `dict[str:float]`
-        Mapping to convert nucleotides into EIIP values.
-
-    References
-    ----------
-    LNCFinder: Han et al. (2018) https://doi.org/10.1093/bib/bby065'''
-
-    def __init__(self, eiip_map={'A':0.126, 'C':0.134, 'G':0.0806, 'T':0.1335}):
-        '''Initializes `EIIPPhysicoChemical` object.
-        
-        Arguments
-        ---------
-        `eiip_map`: `dict[str:float]`
-            Mapping to convert nucleotides into EIIP values.'''
-        
-        self.name = ['EIIP 1/3', 'EIIP SNR', 'EIIP Q1', 'EIIP Q2', 'EIIP min', 
-                     'EIIP max']
-        self.eiip_map = eiip_map
-        
-    def calculate(self, data):
-        '''Calculate EIIP physico-chemical features for every row in `data`.'''
-        print("Calculating EIIP-derived physico-chemical features...")
-        results = []
-        for _, row in utils.progress(data.df.iterrows()):
-            results.append(self.calculate_per_sequence(row['sequence']))
-        return results
-
-    def calculate_per_sequence(self, sequence):
-        '''Calculate EIIP physico-chemical features of given `sequence`.'''
-        spectrum = self.calculate_power_spectrum(sequence)
-
-        N = len(spectrum)
-        EIIP_onethird = spectrum[int(N/3)] # pcRNA often has peak at 1/3
-        EIIP_SNR = EIIP_onethird / np.mean(spectrum) # Signal to noise ratio
-
-        # Quantile statistics of top 10%
-        sorted = np.sort(spectrum)[::-1][:int(N/10)] # Top 10% (desc.)
-        EIIP_Q1, EIIP_Q2 = np.quantile(sorted, [0.25, 0.5]) 
-        EIIP_min, EIIP_max = np.min(sorted), np.max(sorted)
-
-        return EIIP_onethird, EIIP_SNR, EIIP_Q1, EIIP_Q2, EIIP_min, EIIP_max
-    
-    def calculate_power_spectrum(self, sequence):
-        '''Given an RNA `sequence`, convert it to EIIP values and calculate 
-        its power spectrum.'''
-
-        # Conversion to EIIP values
-        EIIP_values = []
-        for base in sequence:
-            try: 
-                EIIP_values.append(self.eiip_map[base])
-            except KeyError:
-                EIIP_values.append(np.mean(list(self.eiip_map.values())))
-
-        # Fast fourier transform, obtain power spectrum
-        N = int(len(sequence)/3)*3 # Cut off at mod 3
-        EIIP_values = EIIP_values[:N]
-        return np.abs(fft(EIIP_values)) 
-    
-
-class GCContent(SequenceFeature):
+class GCContent(SequenceBase):
     '''Calculates the proportion of bases that are either Guanine or Cytosine.
     
     Attributes
@@ -290,7 +146,7 @@ class GCContent(SequenceFeature):
         return len(re.findall('[CG]', sequence)) / len(sequence)
     
 
-class StdStopCodons(SequenceFeature):
+class StdStopCodons(SequenceBase):
     '''Calculates the standard deviations of stop codon counts between three
     reading frames, as formulated by lncRScan-SVM.
     
@@ -335,7 +191,7 @@ class StdStopCodons(SequenceFeature):
         return np.std(counts)
 
 
-class SequenceDistribution(SequenceFeature):
+class SequenceDistribution(SequenceBase):
     '''For every word in a given vocabulary, calculate the percentage that is 
     contained within every quarter of the total length of the sequence. 
     Loosely based on the D (disrtibution) feature of CTD as proposed by CPPred.
@@ -405,90 +261,3 @@ class SequenceDistribution(SequenceFeature):
             else:
                 dist[index,3] += 1
         return (dist/(Q4-self.k+1+1e-7)).flatten()
-    
-
-class ZhangScore:
-    '''Nucleotide bias around the start codon of the ORF, as proposed by
-    DeepCPP.
-
-    Attributes
-    ----------
-    `bias`: `np.ndarray`
-        Array containing the nucleotide bias around the start codon.
-    `name`:`str`
-        Column name of the feature calculated by this class ('Zhang score').
-    
-    References
-    ----------
-    DeepCPP: Zhang et al. (2020) https://doi.org/10.1093/bib/bbaa039'''
-
-    def __init__(self, data, export_path=None):
-        '''Initializes `ZhangScore` object.
-         
-        Arguments
-        ---------
-        `data`: `Data` | `str`
-            `Data` object used to calculate nucleotide bias around the start
-            codon, or path to file containing this.
-        `export_path`: `str`
-            Path to save nucleotide bias to for later use (default is None).'''
-        
-        self._bases = {'A':0, 'C':1, 'G':2, 'T':3}
-        labels = {'pcrna': 0, 'ncrna':1}
-        self.name = 'Zhang score'
-
-        if type(data) == str:
-            self.bias = np.loadtxt(data)
-        else:
-            print("Initializing Zhang nucleotide bias score...")
-            data.check_columns(['ORF (start)'])
-            bias = np.zeros((2,4,6))
-
-            # Looping through data
-            for _, row in utils.progress(data.df.iterrows()):
-                start = row['ORF (start)'] # Start codon coordinate
-                if start < 0: # Skip row if no ORF is found
-                    continue
-                sequence = row['sequence']
-                for i, offset in enumerate([-3,-2,-1,3,4,5]):
-                    pos = start + offset
-                    if pos >= 0 and pos < len(sequence):
-                        try: # Increment counter
-                            bias[labels[row['label']], 
-                                 self._bases[sequence[pos]],i] += 1
-                        except KeyError: # For uncertain nucleotides (e.g. N)
-                            pass
-
-            # Normalize and take logarithm
-            bias[0] = bias[0] / np.sum(bias[0], axis=0)
-            bias[1] = bias[1] / np.sum(bias[1], axis=0)
-            self.bias = np.log10(bias[0] / (bias[1]+1e-7))
-
-            if export_path is not None:
-                np.savetxt(export_path, self.bias, fmt="%.6f", header=
-                        "Zhang nucleotide bias for ZhangBias object.\n" + 
-                        'Load using ZhangBias(data="<filepath>")')
-                
-    def calculate(self, data):
-        '''Calculates the Zhang nucleotide bias score for every row in `data`.
-        '''
-        scores = []
-        print("Calculating Zhang nucleotide bias score...")
-        data.check_columns(['sequence', 'ORF (start)'])
-        for _, row in utils.progress(data.df.iterrows()):
-            scores.append(self.calculate_per_sequence(row['sequence'], 
-                                                      row['ORF (start)']))
-        return scores
-
-    def calculate_per_sequence(self, sequence, orf_start):
-        '''Calculates the Zhang nucleotide bias score for given `sequence`.'''
-        if orf_start < 0:
-            return 0 # In case no ORF is found
-        score = 0
-        for i, offset in enumerate([-3, -2, -1, 3, 4, 5]):
-            pos = orf_start + offset
-            try:
-                score += self.bias[self._bases[sequence[pos]], i]
-            except KeyError: # In case of uncertain nucleotides (e.g. N)
-                score += 0
-        return score

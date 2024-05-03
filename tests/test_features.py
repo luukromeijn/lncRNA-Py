@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 from rhythmnblues.features import *
-from rhythmnblues.features.general import SequenceFeature
+from rhythmnblues.features.sequence_base import SequenceBase
 from rhythmnblues.features.kmer import KmerBase
 from rhythmnblues.features.orf import orf_column_names
 from rhythmnblues.features.sse import get_hl_sse_sequence, HL_SSE_NAMES
@@ -77,7 +77,7 @@ class TestNoError:
         data.calculate_feature(ORFAminoAcidFreqs())
 
     def test_fickett(self, data):
-        feature = FickettTestcode('tests/data/fickett_paper.txt')
+        feature = FickettScore('tests/data/fickett_paper.txt')
         data.calculate_feature(feature)
 
     def test_mlcds(self, data):
@@ -192,7 +192,7 @@ def test_sequence_feature(data, apply_to):
     if apply_to in HL_SSE_NAMES:
         data = data.sample(1,1)
         data.calculate_feature(SSE())
-    base_class = SequenceFeature(apply_to)
+    base_class = SequenceBase(apply_to)
     base_class.check_columns(data)
     for _, row in data.df.iterrows():
         base_class.get_sequence(row)

@@ -2,7 +2,6 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from rhythmnblues import utils
 from rhythmnblues.features.kmer import KmerBase
 

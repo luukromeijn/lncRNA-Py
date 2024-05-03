@@ -5,14 +5,14 @@ import numpy as np
 from rhythmnblues import utils
 
 
-class FickettTestcode:
+class FickettScore:
     '''Calculates the Fickett TESTCODE statistic as used by CPAT. Summarizes 
     bias in nucleotide position values and frequencies. 
 
     Attributes
     ----------
     `name`: `str`
-        Column name for Fickett score ('Fickett TESTCODE')
+        Column name for Fickett score ('Fickett Score')
     `pos_intervals`: `np.ndarray`
         Thresholds determining which index to use for the position LUT. 
     `cont_intervals`: `np.ndarray`
@@ -36,7 +36,7 @@ class FickettTestcode:
     Fickett et al. (1982) https://doi.org/10.1093/nar/10.17.5303'''
 
     def __init__(self, data, export_path=None):
-        '''Initializes `FickettTestcode` object.
+        '''Initializes `FickettScore` object.
         
         Arguments
         ---------
@@ -46,7 +46,7 @@ class FickettTestcode:
         `export_path`: `str`
             Path to save lookup tables and weights to for later use.'''
 
-        self.name = 'Fickett TESTCODE'
+        self.name = 'Fickett score'
         self.pos_intervals = np.arange(1.1, 1.91, 0.1)
         self.cont_intervals = np.arange(0.17, 0.34, 0.02)
         if type(data) == str:
@@ -74,8 +74,8 @@ class FickettTestcode:
         output[2:12] = self.pos_lut 
         output[12:] = self.cont_lut
         np.savetxt(filepath, output, fmt="%.6f", header='Fickett TESTCODE ' + 
-                   'intervals and look-up tables for FickettTestcode object.\n'+
-                   'Load using FickettTestcode(data="<filepath>")')
+                   'intervals and look-up tables for FickettScore object.\n'+
+                   'Load using FickettScore(data="<filepath>")')
 
     def calculate(self, data):
         '''Calculates Fickett score for every row in `data`.'''

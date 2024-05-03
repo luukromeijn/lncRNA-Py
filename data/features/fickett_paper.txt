@@ -1,5 +1,5 @@
-# Fickett TESTCODE intervals and look-up tables for FickettTestcode class.
-# Load using FickettTestcode(data="<filepath>")
+# Fickett TESTCODE intervals and look-up tables for FickettScore class.
+# Load using FickettScore(data="<filepath>")
 0.260000 0.180000 0.310000 0.330000
 0.110000 0.120000 0.150000 0.140000
 0.220000 0.230000 0.080000 0.090000

@@ -5,7 +5,7 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 from rhythmnblues import utils
-from rhythmnblues.features.general import SequenceFeature
+from rhythmnblues.features.sequence_base import SequenceBase
 
 
 class KmerBase:
@@ -91,7 +91,7 @@ class KmerBase:
         return freqs / (freqs.sum() + 1e-7) # Divide by total number of k-mers
     
 
-class KmerFreqs(KmerBase, SequenceFeature):
+class KmerFreqs(KmerBase, SequenceBase):
     '''For every k-mer, calculate its occurrence frequency in the sequence
     divided by the total number of k-mers appearing in that sequence.
     
@@ -151,7 +151,7 @@ class KmerFreqs(KmerBase, SequenceFeature):
         PLEK: Li et al. (2014) https://doi.org/10.1186/1471-2105-15-311'''
 
         KmerBase.__init__(self, k, stride, alphabet, gap_length, gap_pos)
-        SequenceFeature.__init__(self, apply_to)
+        SequenceBase.__init__(self, apply_to)
         self.scaling = 1/(4**(5-self.k)) if PLEK else 1
         suffix = '' if apply_to == 'sequence' else  f' ({apply_to})'
         suffix = suffix if stride == 1 else f'{suffix} s={stride}'
@@ -169,7 +169,7 @@ class KmerFreqs(KmerBase, SequenceFeature):
         return np.stack(freqs)
     
 
-class KmerScore(KmerBase, SequenceFeature):
+class KmerScore(KmerBase, SequenceBase):
     '''Calculates k-mer score, indicating how likely a sequence is to be 
     protein-coding (the higher, the more likely). Sums the log-ratios of k-mer
     frequencies in protein-coding RNA over non-coding RNA. Introduced by CPAT 
@@ -224,7 +224,7 @@ class KmerScore(KmerBase, SequenceFeature):
         
         # Initializing parent classes
         KmerBase.__init__(self, k, stride, alphabet)
-        SequenceFeature.__init__(self, apply_to)
+        SequenceBase.__init__(self, apply_to)
 
         # Setting an unambiguous proper name
         suffix = '' if apply_to == 'sequence' else  f' ({apply_to})'
@@ -308,7 +308,7 @@ class KmerScore(KmerBase, SequenceFeature):
         return fig
     
 
-class KmerDistance(KmerBase, SequenceFeature):
+class KmerDistance(KmerBase, SequenceBase):
     '''Calculates distance to average k-mer profiles of coding and non-coding
     RNA transcripts, as introduced by LncFinder. Also calculates the ratio of 
     the two distances. 
@@ -378,7 +378,7 @@ class KmerDistance(KmerBase, SequenceFeature):
             Path to save calculated k-mer profiles to for later use.'''
         
         KmerBase.__init__(self, k, stride, alphabet, gap_length, gap_pos)
-        SequenceFeature.__init__(self, apply_to)
+        SequenceBase.__init__(self, apply_to)
         
         if dist_type == 'euc': # Define euclidian distance
             self.calculate_distance = lambda a,b: np.sqrt(np.sum((a - b)**2))

@@ -473,3 +473,36 @@ class LncADeep(Algorithm):
         model = make_pipeline(SimpleImputer(missing_values=np.nan), # TODO:
                               StandardScaler(), SVC()) # Replace with deep-learn
         super().__init__(feature_extractors, features, model)
+
+
+class PLncPro(Algorithm): # NOTE no unittests because of BLAST dependency
+    '''Plant Long Non-Coding RNA Prediction by Random fOrest
+    
+    References
+    ----------
+    PLncPro: Singh et al. (2017) https://doi.org/10.1093/nar/gkx866'''
+
+    def __init__(self, database, **kwargs):
+        '''Initializes PLncPro algorithm for given BLAST protein database.
+        
+        Arguments
+        ---------
+        `database`: `str`
+            Path to local BLAST database or name of official BLAST database 
+            (when running remotely).
+        `**kwargs`
+            Any keyword argument accepted by `BLASTXSearch` object.'''
+        
+        trimers = KmerFreqs(3)
+
+        feature_extractors = (
+            Length(),
+            BLASTXSearch(database, **kwargs),
+            trimers,
+        )
+        features = ['length', 'BLASTX hits', 'BLASTX S-score', 
+                    'BLASTX bit score', 'BLASTX frame entropy'] + trimers.name
+        model = make_pipeline(SimpleImputer(missing_values=np.nan), 
+                              StandardScaler(), 
+                              RandomForestClassifier(n_estimators=1000))
+        super().__init__(feature_extractors, features, model)

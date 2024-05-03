@@ -4,6 +4,7 @@ import os
 import subprocess
 import numpy as np
 import pandas as pd
+from scipy.stats import entropy
 from rhythmnblues import utils
 
 
@@ -15,6 +16,11 @@ class BLASTXSearch:
     reading frames (as proposed by CPC). 
     * BLASTX frame score: mean of the deviation from the hit score over each of
     the three reading frames (as proposed by CPC). 
+    * BLASTX S-score: sum of the logs of the significant scores (as proposed by
+    PLncPro)
+    * BLASTX bit score: total bit score (as proposed by PLncPro)
+    * BLASTX frame entropy: Shannon entropy of probabilities that hits are in
+    the ith frame (as proposed by PLncPro)
     * BLASTX identity: sum of the identity percentage for each of the blast hits
     for a given sequence.
     
@@ -37,7 +43,8 @@ class BLASTXSearch:
 
     References
     ----------
-    CPC: Kong et al. (2007) https://doi.org/10.1093/nar/gkm391'''
+    CPC: Kong et al. (2007) https://doi.org/10.1093/nar/gkm391
+    PLncPro: Singh et al. (2017) https://doi.org/10.1093/nar/gkx866'''
 
     def __init__(self, database, remote=False, evalue=1e-10, strand='plus', 
                  threads=None):
@@ -68,7 +75,8 @@ class BLASTXSearch:
         self.strand = strand
         self.threads = threads
         self.name = ['BLASTX hits', 'BLASTX hit score', 'BLASTX frame score',
-                     'BLASTX identity']
+                     'BLASTX S-score', 'BLASTX bit score',
+                     'BLASTX frame entropy', 'BLASTX identity']
 
     def calculate(self, data):
         '''Calculates BLASTX database search features for all rows in `data`.'''
@@ -107,8 +115,12 @@ class BLASTXSearch:
     def calculate_per_sequence(self, blast_result):
         '''Calculate BLASTX features for given query result'''
         
+        s_score = np.sum(-np.log10(blast_result['evalue'] + 1e-250))
+        bit_score = np.sum(blast_result['bit score'])
+        identity = blast_result['identity'].sum()
+
         # Mean log evalue per reading frame
-        S = np.array([np.mean(-np.log(
+        S = np.array([np.mean(-np.log10(
             blast_result[blast_result['q. start'] % 3 == i]['evalue'] + 1e-250
             )) for i in range(3)])
 
@@ -117,9 +129,21 @@ class BLASTXSearch:
         else:
             hit_score = np.nanmean(S)
             frame_score = np.nanmean((hit_score - np.array(S))**2)
-        identity = blast_result['identity'].sum()
 
-        return [len(blast_result), hit_score, frame_score, identity]
+        frame_entropy = entropy(
+            [(blast_result['q. start'] % 3 == i).sum()/(len(blast_result)+1e-7)
+             for i in range(3)]
+        )
+
+        # If still nan (no hits), set scores to... 
+        hit_score = np.nan_to_num(hit_score, nan=0) #... 0 (no hits)
+        frame_score = np.nan_to_num(frame_score, nan=0) # ... 0 (no hits)
+        # ... maximum entropy value (but this is questionable, hence comment)
+        # frame_entropy = np.nan_to_num(frame_entropy, 
+        #                               nan=entropy([1/3,1/3,1/3]))
+
+        return [len(blast_result), hit_score, frame_score, s_score, bit_score,
+                frame_entropy, identity]
 
 
 class BLASTXBinary:

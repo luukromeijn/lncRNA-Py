@@ -9,7 +9,9 @@ algorithms = [
     ('PLEK',   lambda data: PLEK()),
     ('CPC2',   lambda data: CPC2('tests/data/fickett_paper.txt')),
     ('FEELnc', lambda data: FEELnc(data)),
-    ('CPPred', lambda data: CPPred('tests/data/fickett_paper.txt', data))
+    ('CPPred', lambda data: CPPred('tests/data/fickett_paper.txt', data)),
+    ('DeepCPP',lambda data: DeepCPP('tests/data/fickett_paper.txt', data, 
+                                    'tests/data/zhang_ref.txt'))
 ]
 
 @pytest.fixture(scope="class", params=algorithms, ids=[n for n,_ in algorithms])

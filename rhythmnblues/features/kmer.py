@@ -19,13 +19,20 @@ class KmerBase:
         Step size of sliding window during calculation.
     `alphabet`: `str`
         Alphabet of characters that the k-mers exist of (default is 'ACGT').
+    `gap_length`: int
+        Introduces a gap of specified length to k-mer sequences, position of
+        this gap is controlled by `gap_pos`.
+    `gap_pos`:
+        Introduces a gap at specified position to k-mer sequences, length of
+        this gap is controlled by `gap_length`.
     `uncertain`: `str`
         Optional character that indicates any base that falls outside of ACGT.
     `k-mers`: `dict[str:int]`
         Dictionary containing k-mers (keys) and corresponding indices (values).
     '''
 
-    def __init__(self, k, stride=1, alphabet='ACGT', uncertain=''):
+    def __init__(self, k, stride=1, alphabet='ACGT', gap_length=0, gap_pos=0, 
+                 uncertain=''):
         '''Initializes `KmerBase` object. 
         
         Arguments
@@ -35,20 +42,29 @@ class KmerBase:
         `stride`: `int`
             Step size of sliding window during calculation.
         `alphabet`: `str`
-            Alphabet of characters that the k-mers exist of (default is 'ACGT'). 
+            Alphabet of characters that the k-mers exist of (default is 'ACGT').
+        `gap_length`: int
+            Introduces a gap of specified length to k-mer sequences, position of
+            this gap is controlled by `gap_pos` (default is 0).
+        `gap_pos`:
+            Introduces a gap at specified position to k-mer sequences, length of
+            this gap is controlled by `gap_length` (default is 0).
         `uncertain`: `str`
             Optional character that indicates any base that falls outside of 
             ACGT (default is `''`).'''
         
         self.k = k
         self.stride = stride
-        self.uncertain = uncertain
         self.alphabet = alphabet
-        self.kmers = {
-            ''.join(list(kmer)):i for i, kmer in enumerate(
-                itertools.product(alphabet + uncertain, repeat=self.k)
-            )
-        }
+        self.gap_length = gap_length
+        self.gap_pos = gap_pos
+        self.uncertain = uncertain
+        self.kmers = {}
+        for i, kmer in enumerate(itertools.product(alphabet + uncertain, 
+                                                   repeat=self.k)):
+            kmer = ''.join(list(kmer))
+            kmer = kmer[:gap_pos] + ('.'*gap_length) + kmer[gap_pos:]
+            self.kmers[kmer] = i
 
     # Decide if we wan't to keep this (currently not used)
     def replace_uncertain_bases(self, sequence):
@@ -63,9 +79,13 @@ class KmerBase:
         '''Calculates k-mer frequency spectrum for given `sequence`.'''
         sequence = self.replace_uncertain_bases(sequence)
         freqs = np.zeros(len(self.kmers)) # Initialize
-        for i in range(self.k, len(sequence)+1, self.stride): # Loop through seq
+        # Loop through sequence
+        for i in range(self.k + self.gap_length, len(sequence)+1, self.stride): 
+            subseq = sequence[i-self.k-self.gap_length:i] # Get subsequence...
+            subseq = (subseq[:self.gap_pos] + ('.'*self.gap_length) + # and ...
+                      subseq[self.gap_pos+self.gap_length:]) # mask out the gap.
             try:
-                freqs[self.kmers[sequence[i-self.k:i]]] += 1
+                freqs[self.kmers[subseq]] += 1
             except KeyError: # In case of non-canonical bases (e.g. N)
                 continue
         return freqs / (freqs.sum() + 1e-7) # Divide by total number of k-mers
@@ -88,6 +108,12 @@ class KmerFreqs(KmerBase, SequenceFeature):
         Step size of sliding window during calculation.
     `alphabet`: `str`
         Alphabet of characters that the k-mers exist of (default is 'ACGT').
+    `gap_length`: int
+        Introduces a gap of specified length to k-mer sequences, position of
+        this gap is controlled by `gap_pos`.
+    `gap_pos`:
+        Introduces a gap at specified position to k-mer sequences, length of
+        this gap is controlled by `gap_length`.
     `uncertain`: `str`
         Optional character that indicates any base that falls outside of ACGT.
     `k-mers`: `dict[str:int]`
@@ -96,7 +122,7 @@ class KmerFreqs(KmerBase, SequenceFeature):
         Column names for frequency features (= all k-mers).'''
 
     def __init__(self, k, apply_to='sequence', stride=1, alphabet='ACGT', 
-                 PLEK=False):
+                 PLEK=False, gap_length=0, gap_pos=0):
         '''Initializes `KmerFreqs` object.
         
         Arguments
@@ -113,12 +139,18 @@ class KmerFreqs(KmerBase, SequenceFeature):
             If True, will scales k-mer frequencies by 1/(4^(5-k)), compensating
             for small k-mers occuring more often than large k-mers (default is 
             False).
+        `gap_length`: int
+            Introduces a gap of specified length to k-mer sequences, position of
+            this gap is controlled by `gap_pos` (default is 0).
+        `gap_pos`:
+            Introduces a gap at specified position to k-mer sequences, length of
+            this gap is controlled by `gap_length` (default is 0).
 
         References
         ----------
         PLEK: Li et al. (2014) https://doi.org/10.1186/1471-2105-15-311'''
 
-        KmerBase.__init__(self, k, stride, alphabet)
+        KmerBase.__init__(self, k, stride, alphabet, gap_length, gap_pos)
         SequenceFeature.__init__(self, apply_to)
         self.scaling = 1/(4**(5-self.k)) if PLEK else 1
         suffix = '' if apply_to == 'sequence' else  f' ({apply_to})'
@@ -297,6 +329,12 @@ class KmerDistance(KmerBase, SequenceFeature):
         Step size of sliding window during calculation.
     `alphabet`: `str`
         Alphabet of characters that the k-mers exist of.
+    `gap_length`: int
+        Introduces a gap of specified length to k-mer sequences, position of
+        this gap is controlled by `gap_pos`.
+    `gap_pos`:
+        Introduces a gap at specified position to k-mer sequences, length of
+        this gap is controlled by `gap_length`.
     `uncertain`: `str`
         Optional character that indicates any base that falls outside of ACGT.
     `k-mers`: `dict[str:int]`
@@ -310,7 +348,7 @@ class KmerDistance(KmerBase, SequenceFeature):
     LncFinder: Han et al. (2019) https://doi.org/10.1093/bib/bby065'''
 
     def __init__(self, data, k, dist_type, apply_to='sequence', stride=1,
-                 alphabet='ACGT', export_path=None):
+                 alphabet='ACGT', gap_length=0, gap_pos=0, export_path=None):
         '''Initializes `KmerDistance` object, calculating or importing the 
         k-mer profile of coding vs non-coding RNA.
         
@@ -330,10 +368,16 @@ class KmerDistance(KmerBase, SequenceFeature):
             Step size of sliding window during calculation (default is 1).
         `alphabet`: `str`
             Alphabet of characters that the k-mers exist of (default is 'ACGT').
+        `gap_length`: int
+            Introduces a gap of specified length to k-mer sequences, position of
+            this gap is controlled by `gap_pos` (default is 0).
+        `gap_pos`:
+            Introduces a gap at specified position to k-mer sequences, length of
+            this gap is controlled by `gap_length` (default is 0).
         `export_path`: `str`
             Path to save calculated k-mer profiles to for later use.'''
         
-        KmerBase.__init__(self, k, stride, alphabet)
+        KmerBase.__init__(self, k, stride, alphabet, gap_length, gap_pos)
         SequenceFeature.__init__(self, apply_to)
         
         if dist_type == 'euc': # Define euclidian distance

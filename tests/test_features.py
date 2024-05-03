@@ -174,6 +174,10 @@ class TestNoError:
     def test_sequence_distribution(self, data):
         data.calculate_feature(SequenceDistribution())
 
+    def test_zhang_score(self, data):
+        data.calculate_feature(ORFCoordinates())
+        data.calculate_feature(ZhangScore(data))
+
 
 @pytest.mark.parametrize('apply_to', [
     'sequence', 'ORF protein', 'ORF', 'MLCDS1', 'UTR3', 'UTR5', 'acguD'

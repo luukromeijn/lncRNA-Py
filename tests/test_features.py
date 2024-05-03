@@ -171,6 +171,9 @@ class TestNoError:
     def test_std_stop_codons(self, data):
         data.calculate_feature(StdStopCodons())
 
+    def test_sequence_distribution(self, data):
+        data.calculate_feature(SequenceDistribution())
+
 
 @pytest.mark.parametrize('apply_to', [
     'sequence', 'ORF protein', 'ORF', 'MLCDS1', 'UTR3', 'UTR5', 'acguD'

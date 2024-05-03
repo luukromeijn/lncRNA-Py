@@ -333,3 +333,75 @@ class StdStopCodons(SequenceFeature):
                 if sequence[i:i+3] in ['TAA', 'TAG', 'TGA']:
                     counts[frame] += 1
         return np.std(counts)
+
+
+class SequenceDistribution(SequenceFeature):
+    '''For every word in a given vocabulary, calculate the percentage that is 
+    contained within every quarter of the total length of the sequence. 
+    Loosely based on the D (disrtibution) feature of CTD as proposed by CPPred.
+    
+    Attributes
+    ----------
+    `vocabulary`: `dict[str:int]`
+        Words of equal length `k` for which to determine distribution for. 
+    `k`: `int`
+        Inferred lenght of the words in the vocabulary.
+    `apply_to`: `str`
+        Indicates which column this class extracts its features from.
+    `name`: `list[str]`
+        List of column names of feature calculated by this class.
+
+    References
+    ----------
+    CPPred: Tong et al. (2019) https://doi.org/10.1093/nar/gkz087'''
+
+    def __init__(self, apply_to='sequence', vocabulary=['A', 'C', 'G', 'T']):
+        '''Initializes `SequenceDistribution` object.
+        
+        Arguments
+        ---------
+        `apply_to`: `str`
+            Indicates which column this class extracts its features from 
+            (default is full transcript).
+        `vocabulary`: `list[str]`
+            Words of equal length for which to determine distribution for 
+            (default is `['A','C','G','T']`).'''
+
+        super().__init__(apply_to)
+        self.k = len(vocabulary[0])
+        for word in vocabulary:
+            if self.k != len(word):
+                raise ValueError("Please provide words of even length.")
+        self.vocabulary = {word:i for i, word in enumerate(vocabulary)}
+        suffix = '' if apply_to == 'sequence' else f' ({apply_to})'
+        self.name = [f'distQ{i} {w}{suffix}' for w in vocabulary
+                     for i in range(1,5)]
+
+    def calculate(self, data):
+        '''Calculates the sequence distribution for every row in `data`.'''
+        print("Calculating sequence distribution...")
+        dists = []
+        self.check_columns(data)
+        for _, row in utils.progress(data.df.iterrows()):
+            dists.append(self.calculate_per_sequence(self.get_sequence(row)))
+        return dists
+    
+    def calculate_per_sequence(self, sequence):
+        '''Calculates the distriution of a given `sequence`.'''
+        dist = np.zeros((len(self.vocabulary), 4))
+        Q4 = len(sequence)
+        Q1, Q2, Q3 = Q4/4, Q4/2, 3*Q4/4 
+        for i in range(0, Q4-self.k+1):
+            try:
+                index = self.vocabulary[sequence[i:i+self.k]]
+            except KeyError:
+                continue
+            if i < Q1: 
+                dist[index,0] += 1
+            elif i < Q2:
+                dist[index,1] += 1
+            elif i < Q3:
+                dist[index,2] += 1
+            else:
+                dist[index,3] += 1
+        return (dist/(Q4-self.k+1+1e-7)).flatten()

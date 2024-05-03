@@ -8,7 +8,8 @@ algorithms = [
     ('CNIT',   lambda data: CNIT(data)),
     ('PLEK',   lambda data: PLEK()),
     ('CPC2',   lambda data: CPC2('tests/data/fickett_paper.txt')),
-    ('FEELnc', lambda data: FEELnc(data))
+    ('FEELnc', lambda data: FEELnc(data)),
+    ('CPPred', lambda data: CPPred('tests/data/fickett_paper.txt', data))
 ]
 
 @pytest.fixture(scope="class", params=algorithms, ids=[n for n,_ in algorithms])

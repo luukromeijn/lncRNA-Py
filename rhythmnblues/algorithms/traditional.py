@@ -1,5 +1,4 @@
-'''Pre-implemented coding/non-coding RNA classifiers and a base `Algorithm` 
-class for creating new classification algorithms.
+'''Pre-implemented coding/non-coding RNA classifiers.
 
 Note that all classifiers that are based on algorithms presented in related
 works should be considered as loose adaptations. We do not guarantee that our
@@ -16,64 +15,7 @@ from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
 from rhythmnblues.data import Data
 from rhythmnblues.features import *
-
-
-class Algorithm:
-    '''Base class for custom coding/non-coding RNA classifiers.
-    
-    Attributes
-    ----------
-    `feature_extractors`: `list`
-        List of feature extractors that are applied to the data if a feature in 
-        `used_features` is missing in the input.
-    `used_features`: `list[str]`
-        List of feature names (data columns) that serve as explanatory variables
-        for the model.
-    `model`:
-        Model with `.fit` and `.classify` method, base model of classifier.'''
-
-    def __init__(self, feature_extractors, used_features, model):
-        '''Initializes `Algorithm` object.
-        
-        Arguments
-        ---------
-        `feature_extractors`: `list`
-            List of feature extractors that will be applied to the data if a 
-            feature in `used_features` is missing in the input.
-        `used_features`: `list[str]`
-            List of feature names (data columns) that will serve as explanatory
-             variables for the model.
-        `model`:
-            Model with `.fit` and `.classify` method, base model of classifier.
-        '''
-
-        self.feature_extractors = feature_extractors
-        self.used_features = used_features
-        self.model = model
-
-    def fit(self, data):
-        '''Fits model on `data`, extracting features first if necessary. Will
-        only fit on features as specified in the `used_features` attribute.'''
-        data = self.feature_extraction(data)
-        y = data.df['label'].replace({'pcrna':0, 'ncrna':1})
-        y = y.infer_objects(copy=False) # Downcasting from str to int
-        self.model.fit(data.df[self.used_features], y)
-
-    def predict(self, data):
-        '''Classifies `data`, extracting features first if necessary. Will
-        only use features as specified in the `used_features` attribute.'''
-        self.feature_extraction(data)
-        y = self.model.predict(data.df[self.used_features])
-        y = np.vectorize({0:'pcrna', 1:'ncrna'}.get)(y)
-        return y 
-
-    def feature_extraction(self, data):
-        '''Calls upon the object's feature extractors if a feature in the 
-        `used_features` attribute is missing in `data`.'''
-        if not data.check_columns(self.used_features, behaviour='bool'):
-            for extractor in self.feature_extractors:
-                data.calculate_feature(extractor)
-        return data
+from rhythmnblues.algorithms.algorithm import Algorithm
 
 
 class CPAT(Algorithm): 
@@ -109,7 +51,7 @@ class CPAT(Algorithm):
         features = ['ORF length', 'ORF coverage', 'Fickett score', 
                     '6-mer score']
         model = make_pipeline(StandardScaler(), LogisticRegression())
-        super().__init__(feature_extractors, features, model)
+        super().__init__(model, feature_extractors, features)
 
 
 class CNCI(Algorithm):
@@ -142,7 +84,7 @@ class CNCI(Algorithm):
                     'MLCDS score-distance'] + [f'{kmer} (MLCDS1)' for kmer in 
                    codon_extractor.kmers if kmer not in ['TAA', 'TGA', 'TAG']]
         model = make_pipeline(StandardScaler(), SVC())
-        super().__init__(feature_extractors, features, model)
+        super().__init__(model, feature_extractors, features)
 
 
 class PLEK(Algorithm):
@@ -162,7 +104,7 @@ class PLEK(Algorithm):
         features = ([f'{kmer} (PLEK)' for extractor in feature_extractors[:5] 
                      for kmer in extractor.kmers])
         model = make_pipeline(StandardScaler(), SVC())
-        super().__init__(feature_extractors, features, model)
+        super().__init__(model, feature_extractors, features)
 
     def feature_extraction(self, data):
         '''Calls upon the object's feature extractors if a feature in the 
@@ -213,7 +155,7 @@ class CNIT(Algorithm):
         features = (['MLCDS1 score', 'MLCDS score (std)', 'MLCDS length (std)'] 
                     + [f'{kmer} (MLCDS1)' for kmer in codon_extractor.kmers])
         model = make_pipeline(StandardScaler(),XGBClassifier(n_estimators=1000))
-        super().__init__(feature_extractors, features, model)
+        super().__init__(model, feature_extractors, features)
 
 
 class CPC(Algorithm):
@@ -248,7 +190,7 @@ class CPC(Algorithm):
                     'BLASTX hit score', 'BLASTX frame score']
         model = make_pipeline(SimpleImputer(missing_values=np.nan), 
                               StandardScaler(), SVC())
-        super().__init__(feature_extractors, features, model)
+        super().__init__(model, feature_extractors, features)
 
 
 class CPC2(Algorithm):
@@ -281,7 +223,7 @@ class CPC2(Algorithm):
         features = ['Fickett score', 'ORF length', 'ORF pI']
         model = make_pipeline(SimpleImputer(missing_values=np.nan), 
                               StandardScaler(), SVC())
-        super().__init__(feature_extractors, features, model)
+        super().__init__(model, feature_extractors, features)
 
 
 class FEELnc(Algorithm):
@@ -326,7 +268,7 @@ class FEELnc(Algorithm):
                     '12-mer score']
         model = make_pipeline(StandardScaler(), 
                               RandomForestClassifier(n_estimators=500)) 
-        super().__init__(feature_extractors, features, model)
+        super().__init__(model, feature_extractors, features)
 
 
 class iSeeRNA(Algorithm):
@@ -360,7 +302,7 @@ class iSeeRNA(Algorithm):
         features = ['ORF length', 'ORF coverage', 'BLASTX hits', 'GC', 'CT', 
                     'TAG', 'TGT', 'ACG', 'TCG']
         model = make_pipeline(StandardScaler(), SVC())
-        super().__init__(feature_extractors, features, model)
+        super().__init__(model, feature_extractors, features)
 
 
 class LncFinder(Algorithm): # NOTE not in unittests due to slow SSE features
@@ -410,7 +352,7 @@ class LncFinder(Algorithm): # NOTE not in unittests due to slow SSE features
                     orf_6_mer.name + acguD_4mer.name + acguACGU_3mer.name +
                     eiip_features.name)
         model = make_pipeline(StandardScaler(), SVC())
-        super().__init__(feature_extractors, features, model)
+        super().__init__(model, feature_extractors, features)
 
 
 # NOTE Deep part still in progress
@@ -472,7 +414,7 @@ class LncADeep(Algorithm):
                      'Fickett score', 'BLASTX hits', 'BLASTX hit score'])
         model = make_pipeline(SimpleImputer(missing_values=np.nan), # TODO:
                               StandardScaler(), SVC()) # Replace with deep-learn
-        super().__init__(feature_extractors, features, model)
+        super().__init__(model, feature_extractors, features)
 
 
 class PLncPro(Algorithm): # NOTE no unittests because of BLAST dependency
@@ -505,7 +447,7 @@ class PLncPro(Algorithm): # NOTE no unittests because of BLAST dependency
         model = make_pipeline(SimpleImputer(missing_values=np.nan), 
                               StandardScaler(), 
                               RandomForestClassifier(n_estimators=1000))
-        super().__init__(feature_extractors, features, model)
+        super().__init__(model, feature_extractors, features)
 
 
 class CPPred(Algorithm): 
@@ -553,7 +495,7 @@ class CPPred(Algorithm):
                     monomers.name + dimers.name + distribution.name)
         model = make_pipeline(SimpleImputer(missing_values=np.nan), 
                               StandardScaler(), SVC())
-        super().__init__(feature_extractors, features, model)
+        super().__init__(model, feature_extractors, features)
 
 
 class DeepCPP(Algorithm): # NOTE: currently missing its deep component
@@ -605,6 +547,4 @@ class DeepCPP(Algorithm): # NOTE: currently missing its deep component
                     bigap.name + trigap.name)
         model = make_pipeline(SimpleImputer(), StandardScaler(), 
                               RandomForestClassifier(n_estimators=1000))
-        super().__init__(feature_extractors, features, model)
-
-        
+        super().__init__(model, feature_extractors, features)

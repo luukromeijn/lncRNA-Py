@@ -12,18 +12,24 @@ from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 from scipy.stats import ttest_ind
+from torch.utils.data import Dataset
+import torch
 
 
-class Data:
+class Data(Dataset):
     '''Container for RNA seq data. Contains methods for data analysis and 
     manipulation.
     
     Attributes
     ----------
     `df`: `pd.DataFrame`
-        The underlying `DataFrame` object containing the data.'''
+        The underlying `DataFrame` object containing the data.
+    `feature_names`: `list[str]`
+        List of feature names (columns) to be retrieved as tensors when 
+        `__getitem__` is called (indexing).'''
 
-    def __init__(self, pc_filepath=None, nc_filepath=None, hdf_filepath=None):
+    def __init__(self, pc_filepath=None, nc_filepath=None, hdf_filepath=None,
+                 tensor_features=None):
         '''Initializes `Data` object based on two FASTA files for 
         protein-coding and non-coding RNA provided in `pc_filepath` and 
         `nc_filepath`, respectively.
@@ -37,7 +43,10 @@ class Data:
         `hdf_filepath`: `str`
             When `hdf_filepath` is provided, will load features from this file, 
             retrieving the sequences from the provided FASTA files using their 
-            sequence IDs.'''
+            sequence IDs.
+        `feature_names`: `list[str]`
+            List of feature names (columns) to be retrieved as tensors when 
+            `__getitem__` is called (indexing).'''
         
         print("Importing data...")
         if hdf_filepath is not None:
@@ -53,12 +62,32 @@ class Data:
             f'Imported {coding} protein-coding and {noncoding} non-coding ' +
             f'RNA transcripts with {len(self.all_features())} feature(s).'
         )
+
+        if tensor_features:
+            self.check_columns(tensor_features)
+        self.tensor_features = tensor_features 
     
     def __str__(self):
         return self.df.__str__()
     
     def __len__(self):
         return self.df.__len__()
+
+    def __getitem__(self, idx):
+        if self.tensor_features:
+            x = (self.df.iloc[idx][self.tensor_features].values
+                 .astype(np.float32))
+            target = self.df.iloc[idx][['label']].values
+            y = np.zeros_like(target, dtype=np.float32)
+            y[target == 'pcrna'] = 1.0 
+            return (torch.tensor(x, dtype=torch.float32),
+                    torch.tensor(y, dtype=torch.float32))
+        else:
+            raise AttributeError(
+                'No `tensor_features` set. Please call `set_tensor_features` ' +
+                'first to specify which features to retrieve as tensors, or ' +
+                'use the `tensor_features` argument during initialization.'
+            )
 
     def _read_hdf(self, hdf_filepath, pc_filepath, nc_filepath):
         '''Loads features from `hdf_filepath`, retrieving sequences from 
@@ -102,6 +131,21 @@ class Data:
         seqs = [SeqRecord(Seq(seq),id) for id, seq in 
                 zip(data['id'].values, data['sequence'].values)]
         SeqIO.write(seqs, filepath, 'fasta')
+
+    def set_tensor_features(self, feature_names):
+        '''Configures `Data` object to return a tuple of tensors (x,y) whenever 
+        `__getitem__` is called. X is the feature tensor, which features it
+        contains is controlled by `feature_names`. Y contains labels, where 1 is
+        protein-coding and 0 is non-coding RNA.
+        
+        Arguments
+        ---------
+        `feature_names`: `list[str]`
+            List of feature names (columns) to be retrieved as tensors when 
+            `__getitem__` is called (indexing).'''
+        
+        self.check_columns(feature_names)
+        self.tensor_features = feature_names
     
     def num_coding_noncoding(self):
         '''Returns a tuple of which the elements are the number of coding and 
@@ -111,7 +155,6 @@ class Data:
             len(self.df[self.df["label"]=='ncrna'])
         )
 
-    
     def to_hdf(self, path_or_buf, except_columns=['sequence'], **kwargs):
         '''Write data to .h5 file.
         

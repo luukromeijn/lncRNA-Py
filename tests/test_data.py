@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib.figure import Figure
 from sklearn.decomposition import PCA
 from Bio import SeqIO
+from torch.utils.data import DataLoader
 from rhythmnblues.data import Data
 from rhythmnblues.features import Length
 
@@ -137,3 +138,23 @@ def test_sample(data, pc, nc, N, replace):
         else:
             assert pc == coding
             assert nc == noncoding
+
+def test_set_tensor_features(data):
+    with pytest.raises(AttributeError):
+        data[0]
+    data.calculate_feature(Length())
+    data.set_tensor_features(['length'])
+    assert data[0][0].dim() == 1 # Single element indexed -> 1 dimension
+    assert data[0][0].size(0) == 1 # Length feature
+    assert data[0][1].dim() == 1 # Single element indexed -> 1 dimension
+    assert data[0][1].size(0) == 1 # Target label
+    assert data[[0,1]][0].dim() == 2 # Two elements indexed -> 2 dimensions
+    assert data[[0,1]][0].size(0) == 2 # Two elements
+    assert data[[0,1]][0].size(1) == 1 # Length feature
+    assert data[[0,1]][1].dim() == 2 # Two elements indexed -> 2 dimensions
+    assert data[[0,1]][1].size(0) == 2 # Two elements
+    assert data[[0,1]][1].size(1) == 1 # Target label
+    for x, y in DataLoader(data, batch_size=3):
+        assert len(x) == 3
+        assert len(y) == 3
+        break

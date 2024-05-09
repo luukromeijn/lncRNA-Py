@@ -31,7 +31,7 @@ class EIIPPhysicoChemical:
         `eiip_map`: `dict[str:float]`
             Mapping to convert nucleotides into EIIP values.'''
         
-        self.name = ['EIIP 1/3', 'EIIP SNR', 'EIIP Q1', 'EIIP Q2', 'EIIP min', 
+        self.name = ['EIIP 1_3', 'EIIP SNR', 'EIIP Q1', 'EIIP Q2', 'EIIP min', 
                      'EIIP max']
         self.eiip_map = eiip_map
         

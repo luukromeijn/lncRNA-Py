@@ -1,5 +1,5 @@
-'''Contains `Data` class for containing, analyzing, and manipulating RNA seq
-data.'''
+'''Contains `Data` class for containing, analyzing, and manipulating RNA 
+sequence data.'''
 
 import copy
 import matplotlib.pyplot as plt
@@ -17,7 +17,7 @@ import torch
 
 
 class Data(Dataset):
-    '''Container for RNA seq data. Contains methods for data analysis and 
+    '''Container for RNA sequence data. Contains methods for data analysis and 
     manipulation.
     
     Attributes
@@ -26,42 +26,44 @@ class Data(Dataset):
         The underlying `DataFrame` object containing the data.
     `feature_names`: `list[str]`
         List of feature names (columns) to be retrieved as tensors when 
-        `__getitem__` is called (indexing).'''
+        `__getitem__` is called (indexing).
+    `labelled`: `bool`
+        Whether the data has labels or not.'''
 
-    def __init__(self, pc_filepath=None, nc_filepath=None, hdf_filepath=None,
+    def __init__(self, fasta_filepath=None, hdf_filepath=None, 
                  tensor_features=None):
-        '''Initializes `Data` object based on two FASTA files for 
-        protein-coding and non-coding RNA provided in `pc_filepath` and 
-        `nc_filepath`, respectively.
+        '''Initializes `Data` object based on FASTA and/or .h5 file(s).
         
         Arguments
         ---------
-        `pc_filepath`: `str`
-            Path to FASTA file of protein-coding sequences.
-        `nc_filepath`: `str`
-            Path to FASTA file of non-coding sequences.
+        `fasta_filepath`: `str` | `tuple[str, str]`
+            Path to FASTA file of RNA sequences or pair of paths to two FASTA 
+            files containing protein- and non-coding RNAs, respectively.
         `hdf_filepath`: `str`
             When `hdf_filepath` is provided, will load features from this file, 
             retrieving the sequences from the provided FASTA files using their 
             sequence IDs.
-        `feature_names`: `list[str]`
+        `tensor_features`: `list[str]`
             List of feature names (columns) to be retrieved as tensors when 
             `__getitem__` is called (indexing).'''
         
         print("Importing data...")
         if hdf_filepath is not None:
-            self.df = self._read_hdf(hdf_filepath, pc_filepath, nc_filepath)
-            print('done')
-        elif pc_filepath is not None and nc_filepath is not None:
-            self.df = self._read_fasta(pc_filepath, nc_filepath)
+            self.df = self._read_hdf(hdf_filepath, fasta_filepath)
+        elif fasta_filepath is not None:
+            self.df = self._read_fasta(fasta_filepath)
         else:
-            raise ValueError("Please specify data filepaths.")
+            raise ValueError("Please specify data filepath(s).")
+        self.labelled = self.check_columns(['label'], behaviour='bool')
 
-        coding, noncoding = self.num_coding_noncoding()
-        print(
-            f'Imported {coding} protein-coding and {noncoding} non-coding ' +
-            f'RNA transcripts with {len(self.all_features())} feature(s).'
-        )
+        message = 'Imported '
+        if self.labelled:
+            coding, noncoding = self.num_coding_noncoding()
+            message += f'{coding} protein-coding and {noncoding} non-coding '
+        else:
+            message += f'{len(self.df)} '
+        message +=f'RNA transcripts with {len(self.all_features())} feature(s).'
+        print(message)
 
         if tensor_features:
             self.check_columns(tensor_features)
@@ -77,9 +79,12 @@ class Data(Dataset):
         if self.tensor_features:
             x = (self.df.iloc[idx][self.tensor_features].values
                  .astype(np.float32))
-            target = self.df.iloc[idx][['label']].values
-            y = np.zeros_like(target, dtype=np.float32)
-            y[target == 'pcrna'] = 1.0 
+            if self.labelled:
+                target = self.df.iloc[idx][['label']].values
+                y = np.zeros_like(target, dtype=np.float32)
+                y[target == 'pcrna'] = 1.0 
+            else:
+                y = -1.0 # Placeholder
             return (torch.tensor(x, dtype=torch.float32),
                     torch.tensor(y, dtype=torch.float32))
         else:
@@ -89,40 +94,46 @@ class Data(Dataset):
                 'use the `tensor_features` argument during initialization.'
             )
 
-    def _read_hdf(self, hdf_filepath, pc_filepath, nc_filepath):
+    def _read_hdf(self, hdf_filepath, fasta_filepath):
         '''Loads features from `hdf_filepath`, retrieving sequences from 
-        `pc_filepath` and `nc_filepath` using their sequence IDs.'''
+        `fasta_filepath` using their sequence IDs.'''
 
-        files = {'pcrna': pc_filepath, 'ncrna': nc_filepath}
+        files = ([fasta_filepath] if type(fasta_filepath) == str 
+                 else fasta_filepath)
         data = pd.read_hdf(hdf_filepath)
 
-        if pc_filepath is not None and nc_filepath is not None:
-            seq_dicts = {}
+        if fasta_filepath is not None:
+            seq_dict = {}
             for file in files:
-                seq_dicts[file] = SeqIO.to_dict(
-                    SeqIO.parse(files[file], 'fasta')
-                )
+                seq_dict.update(SeqIO.to_dict(SeqIO.parse(file, 'fasta')))
             sequences = []
             for _, row in data.iterrows():
                 sequences.append(
-                    str(seq_dicts[row['label']][row['id']].seq)
+                    str(seq_dict[row['id']].seq)
                 )
             data['sequence'] = sequences
 
         return data
 
-    def _read_fasta(self, pc_filepath, nc_filepath):
-        '''Reads protein-coding and non-coding sequences from FASTA files
-        specified by `pc_filepath` and `nc_filepath`, respectively, returning
-        a `pd.DataFrame` object.'''
+    def _read_fasta(self, fasta_filepath):
+        '''Reads RNA sequences from FASTA file or list of FASTA files specified
+        by `fasta_filepath`, returning a `pd.DataFrame` object.''' 
 
-        files = {'pcrna': pc_filepath, 'ncrna': nc_filepath}
-        data = {'id':[], 'sequence':[], 'label':[]}
+        labelled = type(fasta_filepath) != str
+
+        data = {'id':[], 'sequence':[]}
+        if labelled: 
+            files = {'pcrna': fasta_filepath[0], 'ncrna': fasta_filepath[1]}
+            data['label'] = []
+        else:
+            files = {'any': fasta_filepath}
+
         for file in files:
             for seqrecord in SeqIO.parse(files[file], 'fasta'):
                 data['id'].append(seqrecord.id)
                 data['sequence'].append(str(seqrecord.seq))
-                data['label'].append(file)
+                if labelled:
+                    data['label'].append(file)
 
         return pd.DataFrame(data)
     
@@ -150,6 +161,7 @@ class Data(Dataset):
     def num_coding_noncoding(self):
         '''Returns a tuple of which the elements are the number of coding and 
         non-coding sequences in the `Data` object, respectively.'''
+        self.check_columns(['label'])
         return (
             len(self.df[self.df["label"]=='pcrna']),
             len(self.df[self.df["label"]=='ncrna'])
@@ -172,18 +184,18 @@ class Data(Dataset):
                         if column not in except_columns]]
         data.to_hdf(path_or_buf, index=False, key='data', mode='w', **kwargs)
 
-    def to_fasta(self, pc_filepath=None, nc_filepath=None, filepath=None):
-        '''Writes sequence data to FASTA files(s). Either writes to two separate
-        files for coding and non-coding transcripts to `pc_filepath` and `
-        `nc_filepath`, respectively, or writes to a single `filepath`.'''
+    def to_fasta(self, fasta_filepath):
+        '''Writes sequence data to FASTA file(s) specified by `fasta_filepath`,
+        which can be a string or a list of strings (length 2) indicating the 
+        filepaths for for coding and non-coding transcripts, respectively.'''
 
-        if filepath is None:
-            paths = {'pcrna': pc_filepath, 'ncrna': nc_filepath}
+        if type(fasta_filepath) != str:
+            paths = {'pcrna': fasta_filepath[0], 'ncrna': fasta_filepath[1]}
             for label in paths:
                 data = self.df[self.df['label']==label]
                 self._write_fasta(data, paths[label])
         else:
-            self._write_fasta(self.df, filepath)
+            self._write_fasta(self.df, fasta_filepath)
 
     def calculate_feature(self, feature_extractor):
         '''Adds feature(s) from `feature_extractor` as column(s) to `Data`.'''
@@ -207,6 +219,9 @@ class Data(Dataset):
             Whether to raise an error in case of a missing column or whether to 
             return `False` or `True` (default is 'error').'''
         
+        if type(columns) != list:
+            raise TypeError("Argument 'columns' should be of type list.")
+
         if behaviour != 'error' and behaviour != 'bool':
             raise ValueError(behaviour)
 
@@ -231,6 +246,7 @@ class Data(Dataset):
     def coding_noncoding_split(self):
         '''Returns two `Data` objects, the first containing all pcRNA, the
         second containing all ncRNA'''
+        self.check_columns(['label'])
         pc = copy.deepcopy(self)
         pc.df = pc.df[pc.df['label']=='pcrna']
         nc = copy.deepcopy(self)
@@ -240,6 +256,7 @@ class Data(Dataset):
     def test_features(self, feature_names):
         '''Evaluates statistical significance of features specified in 
         `feature_names` using a t-test.'''
+        self.check_columns(['label'] + feature_names)
         coding = self.df[self.df['label']=='pcrna'][feature_names]
         non_coding = self.df[self.df['label']=='ncrna'][feature_names]
         means = self.df.groupby('label')[feature_names].mean()
@@ -257,7 +274,8 @@ class Data(Dataset):
         '''Returns a boxplot of the feature specified by `feature_name`, 
         saving the plot to `filepath` if provided.'''
         fig, ax = plt.subplots()
-        self.df.boxplot(feature_name, ax=ax, by='label', **kwargs)
+        group_by = 'label' if self.labelled else None
+        self.df.boxplot(feature_name, ax=ax, by=group_by, **kwargs)
         fig.tight_layout()
         if filepath is not None:
             fig.savefig(filepath)
@@ -286,12 +304,17 @@ class Data(Dataset):
         fig, ax = plt.subplots()
         lower = self.df[feature_name].quantile(lower)
         upper = self.df[feature_name].quantile(upper)
-        for label in ['pcrna', 'ncrna']:
-            data = self.df[self.df['label']==label][feature_name]
+        if self.labelled:
+            for label in ['pcrna', 'ncrna']:
+                data = self.df[self.df['label']==label][feature_name]
+                data.plot.density(ind=np.arange(lower,upper,(upper-lower)/1000), 
+                                label=label, **kwargs)
+            fig.legend()
+        else:
+            data = self.df[feature_name]
             data.plot.density(ind=np.arange(lower,upper,(upper-lower)/1000), 
-                              label=label, **kwargs)
+                              **kwargs)
         ax.set_xlabel(feature_name)
-        fig.legend()
         fig.tight_layout()
         if filepath is not None:
             fig.savefig(filepath)
@@ -305,12 +328,15 @@ class Data(Dataset):
 
         self.check_columns([x_feature_name, y_feature_name])
         fig, ax = plt.subplots()
-        for label in ['pcrna', 'ncrna']:
-            ax.scatter(x_feature_name, y_feature_name, 
-                        data=self.df[self.df['label']==label], label=label)
+        if self.labelled:
+            for label in ['pcrna', 'ncrna']:
+                ax.scatter(x_feature_name, y_feature_name, 
+                            data=self.df[self.df['label']==label], label=label)
+            fig.legend()
+        else:
+            ax.scatter(x_feature_name, y_feature_name, data=self.df)
         ax.set_xlabel(x_feature_name)
         ax.set_ylabel(y_feature_name)
-        fig.legend()
         fig.tight_layout()
         if filepath is not None:
             fig.savefig(filepath)
@@ -335,15 +361,18 @@ class Data(Dataset):
         if type(dim_red) == TSNE and len(feature_names) > 50:
             feature_space = PCA().fit_transform(feature_space)[:,:50]
         feature_space = dim_red.fit_transform(feature_space)
-        df = self.df[["label"]].copy()
+        df = self.df[["label"]].copy() if self.labelled else pd.DataFrame()
         df["Dim 1"] = feature_space[:,0]
         df["Dim 2"] = feature_space[:,1]
-        for label in ["pcrna", "ncrna"]:
-            ax.scatter("Dim 1", "Dim 2", label=label, s=1,
-                       data=df[df["label"]==label])
+        if self.labelled: 
+            for label in ["pcrna", "ncrna"]:
+                ax.scatter("Dim 1", "Dim 2", label=label, s=1,
+                        data=df[df["label"]==label])
+            fig.legend(markerscale=5)
+        else:
+            ax.scatter("Dim 1", "Dim 2", s=1, data=df)
         ax.set_xlabel("Dim 1")
         ax.set_ylabel("Dim 2")
-        fig.legend(markerscale=5)
         fig.tight_layout()
         if filepath is not None:
             fig.savefig(filepath)
@@ -421,25 +450,25 @@ class Data(Dataset):
         `seed`: `int`
             Seed for random number generator.'''
 
-        pcrna = self.df[self.df['label']=='pcrna']
-        ncrna = self.df[self.df['label']=='ncrna']
-
+        df = copy.deepcopy(self) # Create object copy
         if pc is not None and nc is not None:
-            if N is not None: # Use pc/nc as target ratio
+            if not self.labelled: # Data must be labelled
+                raise ValueError("Can't use pc and nc for unlabelled data. " +
+                                 "Please use N.")
+            pcrna = self.df[self.df['label']=='pcrna']
+            ncrna = self.df[self.df['label']=='ncrna']
+            if N is not None: # N is also specified? -> use nc and pc as ratio
                 _pc = (pc/(pc+nc))*N
                 nc = (nc/(pc+nc))*N
                 pc = _pc
-        elif N is not None:
-            pc = len(pcrna)/(len(self.df))*N
-            nc = len(ncrna)/(len(self.df))*N
+            df.df = pd.concat((
+                pcrna.sample(n=round(pc),replace=replace,random_state=seed),
+                ncrna.sample(n=round(nc),replace=replace,random_state=seed)
+            ))
+        elif N is not None: # Only N? Sample N samples directly.
+            df.df = self.df.sample(n=N, replace=replace, random_state=seed)
         else:
             raise ValueError("Please specify N and/or pc and nc.")
-
-        df = copy.deepcopy(self)
-        df.df = pd.concat((
-            pcrna.sample(n=int(np.round(pc)),replace=replace,random_state=seed),
-            ncrna.sample(n=int(np.round(nc)),replace=replace,random_state=seed)
-        ))
         return df
     
 

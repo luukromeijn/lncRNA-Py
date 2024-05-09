@@ -26,18 +26,22 @@ def test_init_hdf(data_hdf):
     assert len(data_hdf.df[data_hdf.df['label']=='ncrna']) == 9
     assert 'length' in data_hdf.df.columns
 
+def test_init_unlabelled(data_unlabelled):
+    assert data_unlabelled.check_columns(['label'], 'bool') == False
+    assert len(data_unlabelled) == 10
+
 def test_to_hdf(data, tmp_path):
     data.to_hdf(str(tmp_path) + '/test.h5')
 
 def test_to_fasta_split(data, tmp_path):
     tmp_path = str(tmp_path)
-    data.to_fasta(tmp_path + '/pc.fasta', tmp_path + '/nc.fasta')
-    new_data = Data(tmp_path + '/pc.fasta', tmp_path + '/nc.fasta')
+    data.to_fasta([tmp_path + '/pc.fasta', tmp_path + '/nc.fasta'])
+    new_data = Data([tmp_path + '/pc.fasta', tmp_path + '/nc.fasta'])
     assert data.num_coding_noncoding() == new_data.num_coding_noncoding()
 
 def test_to_fasta_one(data, tmp_path):
     tmp_path = str(tmp_path) + '/all.fasta'
-    data.to_fasta(filepath=tmp_path)
+    data.to_fasta(fasta_filepath=tmp_path)
     assert len([s for s in SeqIO.parse(tmp_path, 'fasta')]) == 19
 
 def test_num_coding_noncoding(data):
@@ -82,15 +86,18 @@ def test_test_features(data_hdf):
     for col, col_test in zip(result.columns, ['length']):
         assert col == col_test
 
-def test_plot_feature_boxplot(data_hdf):
-    assert type(data_hdf.plot_feature_boxplot('length')) == Figure
+def test_plot_feature_boxplot(data_hdf, data_unlabelled):
+    for data in [data_hdf, data_unlabelled]:
+        assert type(data.plot_feature_boxplot('length')) == Figure
 
-def test_plot_feature_density(data_hdf):
-    assert type(data_hdf.plot_feature_density('length')) == Figure
+def test_plot_feature_density(data_hdf, data_unlabelled):
+    for data in [data_hdf, data_unlabelled]:
+        assert type(data.plot_feature_density('length')) == Figure
 
-def test_plot_feature_space(data_hdf):
-    data_hdf.df['length 2'] = Length().calculate(data_hdf)
-    assert type(data_hdf.plot_feature_scatter('length', 'length 2')) == Figure
+def test_plot_feature_space(data_hdf, data_unlabelled):
+    for data in [data_hdf, data_unlabelled]:
+        data.df['length 2'] = Length().calculate(data)
+        assert type(data.plot_feature_scatter('length', 'length 2')) == Figure
 
 def test_plot_feature_space_pca(data):
     dummy_features = [str(i) for i in range(20)]

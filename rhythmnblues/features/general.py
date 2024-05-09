@@ -261,3 +261,25 @@ class SequenceDistribution(SequenceBase):
             else:
                 dist[index,3] += 1
         return (dist/(Q4-self.k+1+1e-7)).flatten()
+    
+
+class Quality:
+    '''Calculates the ratio of uncertain bases (bases other than ACGT) per 
+    sequence.
+    
+    Attributes
+    ----------
+    `name`: `str`
+        Name of the feature calculated by this class ('quality').'''
+
+    def __init__(self):
+        '''Initializes `Quality` object.'''
+        self.name = 'quality'
+    
+    def calculate(self, data):
+        '''Calculates the quality for all sequences in `data`.'''
+        print("Calculating sequence quality...")
+        data.check_columns(['sequence'])
+        certain = data.df['sequence'].str.count("A|C|T|G")
+        length = data.df['sequence'].str.len()
+        return (length - certain) / length

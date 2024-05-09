@@ -178,6 +178,9 @@ class TestNoError:
         data.calculate_feature(ORFCoordinates())
         data.calculate_feature(ZhangScore(data))
 
+    def test_quality(self, data):
+        data.calculate_feature(Quality())
+
 
 @pytest.mark.parametrize('apply_to', [
     'sequence', 'ORF protein', 'ORF', 'MLCDS1', 'UTR3', 'UTR5', 'acguD'

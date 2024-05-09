@@ -11,7 +11,7 @@ from rhythmnblues.features.blast import BLASTXSearch, BLASTXBinary
 from rhythmnblues.features.fickett import FickettScore
 from rhythmnblues.features.general import (
     Length, Complexity, Entropy, EntropyDensityProfile, GCContent, 
-    StdStopCodons, SequenceDistribution
+    StdStopCodons, SequenceDistribution, Quality
 )
 from rhythmnblues.features.kmer import (
     KmerDistance, KmerFreqs, KmerScore

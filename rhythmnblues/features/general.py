@@ -30,7 +30,7 @@ class Complexity:
 
     def __init__(self):
         '''Initializes `Complexity` object.'''
-        self.name = 'Complexity'
+        self.name = 'complexity'
 
     def calculate(self, data):
         '''Calculates local compositional complexity of all rows in `data`.'''
@@ -143,7 +143,7 @@ class GCContent(SequenceBase):
     
     def calculate_per_sequence(self, sequence):
         '''Calculates the GC content for a given sequence.'''
-        return len(re.findall('[CG]', sequence)) / len(sequence)
+        return len(re.findall('[CG]', sequence)) / (len(sequence) + 1e-7)
     
 
 class StdStopCodons(SequenceBase):

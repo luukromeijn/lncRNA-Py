@@ -352,7 +352,7 @@ class ORFAminoAcidFreqs:
         occ_freqs = np.array(
             [len(re.findall(aa, protein)) for aa in self.amino_acids]
         )
-        return occ_freqs / (len(protein))
+        return occ_freqs / (len(protein) + 1e-7)
     
 
 class UTRLength:

@@ -81,7 +81,7 @@ class BLASTXSearch:
     def calculate(self, data):
         '''Calculates BLASTX database search features for all rows in `data`.'''
 
-        data.to_fasta(filepath='temp.fasta') # Generate FASTA query file
+        data.to_fasta(fasta_filepath='temp.fasta') # Generate FASTA query file
 
         # Generate command based on object configuration
         command = ['blastx', '-query', 'temp.fasta', '-strand', self.strand, 

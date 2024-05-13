@@ -8,7 +8,8 @@ utils.watch_progress(on=False) # For SHARK
 def feature_extraction(pcrna_filepath, ncrna_filepath, export_table_filepath, 
                        export_features_folder, 
                        blastdbs_path='data/blastdbs/uniref90',
-                       fickett_ref='data/features/fickett_paper.txt', 
+                       fickett_ref='data/features/fickett_paper.txt',
+                       tmp_folder='', 
                        test_mode=False):
 
     data = Data([pcrna_filepath, ncrna_filepath])
@@ -68,7 +69,7 @@ def feature_extraction(pcrna_filepath, ncrna_filepath, export_table_filepath,
         lambda data: MLCDSLengthStd(),
         lambda data: MLCDSScoreDistance(),
         lambda data: MLCDSScoreStd(),
-        lambda data: BLASTXSearch(blastdbs_path),
+        lambda data: BLASTXSearch(blastdbs_path, tmp_folder=tmp_folder, threads=12),
         lambda data: BLASTXBinary(),
         lambda data: SSE(),
         lambda data: UPFrequency(),
@@ -91,8 +92,10 @@ if __name__ == '__main__':
     parser.add_argument('export_features_folder')
     parser.add_argument('--blastdbs_path', default='data/blastdbs/uniref90')
     parser.add_argument('--fickett_ref',default='data/features/fickett_paper.txt')
+    parser.add_argument('--tmp_folder', default='')
     parser.add_argument('--test_mode', type=bool, default=False)
     args = parser.parse_args()
     feature_extraction(args.pcrna_filepath, args.ncrna_filepath, 
                        args.export_table_filepath, args.export_features_folder, 
-                       args.blastdbs_path, args.fickett_ref, args.test_mode)
+                       args.blastdbs_path, args.fickett_ref, args.tmp_folder, 
+                       args.test_mode)

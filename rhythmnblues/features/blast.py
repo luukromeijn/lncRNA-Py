@@ -38,6 +38,8 @@ class BLASTXSearch:
         Which reading direction(s) to consider (default is 'plus').
     `threads`: `int`
         Specifies how many threads for BLAST to use (when running locally).
+    `tmp_folder`: `str`
+        Path to folder where temporary FASTA and output files will be saved.
     `name`: `list[str]`
         Column names for MLCDS length standard deviation ('MLCDS length (std)')
 
@@ -47,7 +49,7 @@ class BLASTXSearch:
     PLncPro: Singh et al. (2017) https://doi.org/10.1093/nar/gkx866'''
 
     def __init__(self, database, remote=False, evalue=1e-10, strand='plus', 
-                 threads=None):
+                 threads=None, tmp_folder=''):
         '''Initializes `BLASTXSearch` object. 
         
         Arguments
@@ -65,15 +67,16 @@ class BLASTXSearch:
             Which reading direction(s) to consider (default is 'plus').
         `threads`: `int`
             Specifies how many threads for BLAST to use (when running locally).
-        `name`: `list[str]`
-            Column names for MLCDS length standard deviation ('MLCDS length 
-            (std)')'''
+        `tmp_folder`: `str`
+            Path to folder where temporary FASTA and output files will be saved.
+        '''
 
         self.database = database
         self.remote = remote
         self.evalue = evalue
         self.strand = strand
         self.threads = threads
+        self.tmp_folder = tmp_folder
         self.name = ['BLASTX hits', 'BLASTX hit score', 'BLASTX frame score',
                      'BLASTX S-score', 'BLASTX bit score',
                      'BLASTX frame entropy', 'BLASTX identity']
@@ -81,12 +84,14 @@ class BLASTXSearch:
     def calculate(self, data):
         '''Calculates BLASTX database search features for all rows in `data`.'''
 
-        data.to_fasta(fasta_filepath='temp.fasta') # Generate FASTA query file
+        fasta_filepath = f'{self.tmp_folder}/temp.fasta'
+        out_filepath = f'{self.tmp_folder}/temp.csv'
+        data.to_fasta(fasta_filepath) # Generate FASTA query file
 
         # Generate command based on object configuration
-        command = ['blastx', '-query', 'temp.fasta', '-strand', self.strand, 
-                   '-db', self.database, '-out', 'temp.csv', '-outfmt', str(10),
-                   '-evalue', str(self.evalue)]
+        command = ['blastx', '-query', fasta_filepath, '-strand', self.strand, 
+                   '-db', self.database, '-out', out_filepath, '-outfmt', 
+                   str(10), '-evalue', str(self.evalue)]
         if self.remote: 
             command += ['-remote']
         elif self.threads is not None:
@@ -94,13 +99,13 @@ class BLASTXSearch:
 
         print("Running blastx...")
         subprocess.run(command, check=True) # Run the command
-        output = pd.read_csv('temp.csv', header=0, names=[ # Read dataframe
+        output = pd.read_csv(out_filepath, header=0, names=[ # Read dataframe
             'query acc.ver', 'subject acc.ver', 'identity', 'alignment length',
             'mismatches', 'gap opens', 'q. start', 'q. end', 's. start', 
             's. end', 'evalue', 'bit score']
         )
-        os.remove('temp.fasta') # Remove FASTA query file
-        os.remove('temp.csv') # Remove BLASTX output (is in memory now)
+        os.remove(fasta_filepath) # Remove FASTA query file
+        os.remove(out_filepath) # Remove BLASTX output (is in memory now)
 
         print("Calculating blastx scores...")
         results = []

@@ -200,7 +200,13 @@ class Data(Dataset):
     def calculate_feature(self, feature_extractor):
         '''Adds feature(s) from `feature_extractor` as column(s) to `Data`.'''
         self.check_columns(['sequence'])
-        self.df[feature_extractor.name] = feature_extractor.calculate(self)
+        if type(feature_extractor.name) == list:
+            new_columns = pd.DataFrame(feature_extractor.calculate(self), 
+                                       columns=feature_extractor.name, 
+                                       index=self.df.index)
+            self.df = pd.concat([self.df, new_columns], axis=1)
+        else:
+            self.df[feature_extractor.name] = feature_extractor.calculate(self)
 
     def all_features(self):
         '''Returns a list of all features present in data.'''

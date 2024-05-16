@@ -208,10 +208,10 @@ class Data(Dataset):
         else:
             self.df[feature_extractor.name] = feature_extractor.calculate(self)
 
-    def all_features(self):
+    def all_features(self, except_columns=['id', 'sequence', 'label']):
         '''Returns a list of all features present in data.'''
         return [feature for feature in self.df.columns 
-                if feature not in ['id', 'sequence', 'label']]
+                if feature not in except_columns]
 
     def check_columns(self, columns, behaviour='error'):
         '''Raises an error when a column from `columns` does not appear in this 
@@ -274,7 +274,7 @@ class Data(Dataset):
         return pd.DataFrame({'mean (pcrna)': pcrna_means,
                              'mean (ncrna)': ncrna_means,
                              'test statistic': statistics,
-                             'P value': p_values}).T
+                             'P value': p_values})
     
     def plot_feature_boxplot(self, feature_name, filepath=None, **kwargs):
         '''Returns a boxplot of the feature specified by `feature_name`, 
@@ -360,8 +360,9 @@ class Data(Dataset):
         for name in feature_names:
             feature_space[name] = (
                 feature_space[name] - feature_space[name].mean() / 
-                feature_space[name].std() + 1e-7
+                (feature_space[name].std() + 1e-7)
             )
+        feature_space = feature_space.fillna(0) # Removing rows with NaN values
 
         # Calculate and plot dimensionality reduced space
         if type(dim_red) == TSNE and len(feature_names) > 50:

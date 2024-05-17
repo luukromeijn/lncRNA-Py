@@ -36,6 +36,8 @@ class FeatureSelection:
         raise NotImplementedError
     
     def k_most_important_indices(self, feature_importance):
+        feature_importance = np.abs(feature_importance)
+        feature_importance = np.nan_to_num(feature_importance, nan=0)
         return np.argsort(np.abs(feature_importance))[::-1][:self.k]
 
 

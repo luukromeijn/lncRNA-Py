@@ -89,6 +89,7 @@ def plot_feature_importance(importances, k, method=None, trainset=None,
     importances = importances.drop(['Selection method', 'Importance metric', 
                                     'Trainset'], axis=1).T
     importances = importances.abs()
+    importances = importances.fillna(0)
     if metric == 'Rank':
         importances = importances.rank(axis=0, ascending=False)
     avg, std = importances.abs().mean(axis=1), importances.abs().std(axis=1)
@@ -119,7 +120,7 @@ def plot_feature_selection_results(results, groupby, filepath=None):
     '''TODO'''
     
     # Set inner and outer groups
-    groupby = list(groupby)
+    groupby = [groupby] if type(groupby) == str else groupby
     outer_groups = results[groupby[0]].unique()
     if len(groupby) == 1:
         inner_groups = [None] # Dummy in case of no inner groups
@@ -138,7 +139,7 @@ def plot_feature_selection_results(results, groupby, filepath=None):
             grouped = results # No inner grouping
         else:
             grouped = results[results[groupby[1]]==group] # Inner grouping
-        grouped = grouped.groupby(groupby[0]) # Outer grouping
+        grouped = grouped.groupby(groupby[0], sort=False) # Outer grouping
         
         # Calculating avg and std
         avg = grouped['F1'].mean()
@@ -162,24 +163,3 @@ def plot_feature_selection_results(results, groupby, filepath=None):
     if filepath is not None:
         fig.savefig(filepath)
     return fig
-
-importances, results = feature_importance(
-    trainsets = ['refseq_train', 'cpat_train'],
-    testsets = ['refseq_test', 'cpat_test'],
-    k = 10,
-    tables_folder = 'data/tables',
-    methods = [
-        # NoSelection,
-        TTest,
-        Regression,
-        # RandomForest,
-        # Permutation,
-        # RecFeatElim,
-    ],
-    excluded_features = ['id', 'label', 'sequence', 'ORF protein', 'SSE', 'quality'], # TODO quality is in here... :(
-    test = False,
-)
-
-results_folder = 'results'
-importances.to_csv(f'{results_folder}/importances.csv')
-results.to_csv(f'{results_folder}/results.csv')

@@ -1,6 +1,8 @@
 '''Classes for selecting features based on an importance asssesment.'''
 # NOTE/TODO This submodule is currently not part of any unittests.
 
+from scipy.ndimage import gaussian_filter1d
+from scipy.stats import entropy
 import numpy as np
 from sklearn.feature_selection import RFE
 from sklearn.ensemble import RandomForestClassifier
@@ -124,7 +126,7 @@ class Permutation(FeatureSelection):
         return np.array(feature_names)[idx], feature_importance
     
 
-class RecFeatElim(FeatureSelection):
+class RecFeatElim(FeatureSelection): # TODO: not really a nice name I guess
     '''Recursive Feature Elimination. Uses ranks as importance measure.'''
 
     def __init__(self, k):
@@ -142,3 +144,60 @@ class RecFeatElim(FeatureSelection):
         feature_importance = len(feature_names) - self.model[2].ranking_
         idx = self.k_most_important_indices(feature_importance)
         return np.array(feature_names)[idx], feature_importance
+    
+class MDS(FeatureSelection):
+    '''Method based on Minimum Distribution Similarity (mDS) as proposed by 
+    DeepCPP. Uses relative entropy (Kullback-Leibler divergence) to calculate 
+    the difference between feature distributions of pcRNA and ncRNA, selects 
+    those that are most different from each other.
+    
+    Arguments
+    ---------
+    `k`: `int`
+        Number of features that will be selected.
+    `lower`: `float`
+        Values below this percentile are considered outliers (default is 0.025).
+    `upper`: `float`
+        Values above this percentile are considered outliers (default is 0.975).
+    `smoothing`: `int`
+        Amount (sigma) of Gaussian smoothing applied to both distributions
+        (default is 35).
+    `n_bins`: `int`
+        Number of bins to calculate distribution histgram (default is 1000).
+
+    References
+    ----------
+    DeepCPP: Zhang et al. (2020) https://doi.org/10.1093/bib/bbaa039'''
+
+    def __init__(self, k, lower=0.025, upper=0.975, smoothing=35, n_bins=1000):
+        super().__init__('mDS', 'KL divergence', k)
+        self.lower = lower
+        self.upper = upper
+        self.smoothing = smoothing
+        self.n_bins = n_bins
+
+    def select_features(self, data, feature_names):
+        feature_importance = np.zeros(len(feature_names))
+        for i, feature_name in enumerate(feature_names):
+            feature_importance[i] = self.calculate(data, feature_name)
+        idx = self.k_most_important_indices(feature_importance)
+        return np.array(feature_names)[idx], feature_importance
+    
+    def calculate(self, data, feature_name):
+        '''Calculates Minimum Distribution Similarity (mDS) for given
+        `feature_name` in `data`.'''
+
+        lower = data.df[feature_name].quantile(self.lower)
+        upper = data.df[feature_name].quantile(self.upper)
+
+        hist_pcrna, bins = np.histogram(
+            data.df[data.df['label']=='pcrna'][feature_name], 
+            range=(lower,upper), bins=self.n_bins, density=True)
+        hist_ncrna, _ = np.histogram(
+            data.df[data.df['label']=='ncrna'][feature_name], 
+            bins=bins, density=True)
+
+        hist_pcrna = gaussian_filter1d(hist_pcrna, self.smoothing) 
+        hist_ncrna = gaussian_filter1d(hist_ncrna, self.smoothing) 
+
+        return entropy(hist_pcrna + 1e-10, hist_ncrna + 1e-10)

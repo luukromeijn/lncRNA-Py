@@ -26,9 +26,13 @@ class BLASTXSearch:
     
     Attributes
     ----------
-    `database`: `str`
-        Path to local BLAST database or name of official BLAST database (when 
-        running remotely).
+    `reference`: `str`
+        Reference to use for BLASTX feature extraction, usually the path to a 
+        local BLAST database. When the provided string ends with '.csv', will 
+        assume that it refers to a saved BLASTX output from a finished run. Note
+        that all other arguments will then be ignored. Alternatively, when
+        running remotely (`remote=True`), this argument should correspond to the
+        name of an official BLAST database.
     `remote`: `bool`
         Whether to run remotely or locally. If False, requires a local
         installation of BLAST with a callable blastx program (default is False).
@@ -48,15 +52,19 @@ class BLASTXSearch:
     CPC: Kong et al. (2007) https://doi.org/10.1093/nar/gkm391
     PLncPro: Singh et al. (2017) https://doi.org/10.1093/nar/gkx866'''
 
-    def __init__(self, database, remote=False, evalue=1e-10, strand='plus', 
-                 threads=None, tmp_folder=''):
+    def __init__(self, reference, remote=False, evalue=1e-10, strand='plus', 
+                 threads=None, output_dir='', save_results=False):
         '''Initializes `BLASTXSearch` object. 
         
         Arguments
         ---------
-        `database`: `str`
-            Path to local BLAST database or name of official BLAST database 
-            (when running remotely).
+        `reference`: `str`
+            Reference to use for BLASTX feature extraction, usually the path to
+            a local BLAST database. When the provided string ends with '.csv', 
+            will assume that it refers to a saved BLASTX output from a finished
+            run. Note that all other arguments will then be ignored. 
+            Alternatively, when running remotely (`remote=True`), this argument
+            should correspond to the name of an official BLAST database.
         `remote`: `bool`
             Whether to run remotely or locally. If False, requires a local
             installation of BLAST with a callable blastx program (default is 
@@ -67,16 +75,20 @@ class BLASTXSearch:
             Which reading direction(s) to consider (default is 'plus').
         `threads`: `int`
             Specifies how many threads for BLAST to use (when running locally).
-        `tmp_folder`: `str`
-            Path to folder where temporary FASTA and output files will be saved.
-        '''
+        `output_dir`: `str`
+            Path to folder where temporary FASTA and output files will be saved
+            (default is '').
+        `save_results`: `bool`
+            If True, will not delete BLASTX output after calculation (default is
+            False)'''
 
-        self.database = database
+        self.reference = reference
         self.remote = remote
         self.evalue = evalue
         self.strand = strand
         self.threads = threads
-        self.tmp_folder = tmp_folder
+        self.output_dir = output_dir
+        self.save_results = save_results
         self.name = ['BLASTX hits', 'BLASTX hit score', 'BLASTX frame score',
                      'BLASTX S-score', 'BLASTX bit score',
                      'BLASTX frame entropy', 'BLASTX identity']
@@ -84,28 +96,10 @@ class BLASTXSearch:
     def calculate(self, data):
         '''Calculates BLASTX database search features for all rows in `data`.'''
 
-        fasta_filepath = f'{self.tmp_folder}/temp.fasta'
-        out_filepath = f'{self.tmp_folder}/temp.csv'
-        data.to_fasta(fasta_filepath) # Generate FASTA query file
-
-        # Generate command based on object configuration
-        command = ['blastx', '-query', fasta_filepath, '-strand', self.strand, 
-                   '-db', self.database, '-out', out_filepath, '-outfmt', 
-                   str(10), '-evalue', str(self.evalue)]
-        if self.remote: 
-            command += ['-remote']
-        elif self.threads is not None:
-            command += ['-num_threads', str(self.threads)]
-
-        print("Running blastx...")
-        subprocess.run(command, check=True) # Run the command
-        output = pd.read_csv(out_filepath, header=0, names=[ # Read dataframe
-            'query acc.ver', 'subject acc.ver', 'identity', 'alignment length',
-            'mismatches', 'gap opens', 'q. start', 'q. end', 's. start', 
-            's. end', 'evalue', 'bit score']
-        )
-        os.remove(fasta_filepath) # Remove FASTA query file
-        os.remove(out_filepath) # Remove BLASTX output (is in memory now)
+        if self.reference.endswith('csv'):
+            output = self.read_blastx_output(self.reference)
+        else:
+            output = self.run_blastx(data)
 
         print("Calculating blastx scores...")
         results = []
@@ -149,6 +143,39 @@ class BLASTXSearch:
 
         return [len(blast_result), hit_score, frame_score, s_score, bit_score,
                 frame_entropy, identity]
+    
+    def read_blastx_output(self, out_filepath):
+        '''Reads a BLAST .csv output file (outfmt 10) with good column names.'''
+        return pd.read_csv(out_filepath, header=0, names=[ # Read dataframe
+            'query acc.ver', 'subject acc.ver', 'identity', 'alignment length',
+            'mismatches', 'gap opens', 'q. start', 'q. end', 's. start', 
+            's. end', 'evalue', 'bit score']
+        )
+
+    def run_blastx(self, data):
+        '''Runs a BLASTX database search for all rows in `data`.'''
+
+        fasta_filepath = f'{self.output_dir}/temp.fasta'
+        out_filepath = f'{self.output_dir}/BLASTX_results.csv'
+        data.to_fasta(fasta_filepath) # Generate FASTA query file
+
+        # Generate command based on object configuration
+        command = ['blastx', '-query', fasta_filepath, '-strand', self.strand, 
+                   '-db', self.reference, '-out', out_filepath, '-outfmt', 
+                   str(10), '-evalue', str(self.evalue)]
+        if self.remote: 
+            command += ['-remote']
+        elif self.threads is not None:
+            command += ['-num_threads', str(self.threads)]
+
+        print("Running blastx...")
+        subprocess.run(command, check=True) # Run the command
+        output = self.read_blastx_output(out_filepath)
+        os.remove(fasta_filepath) # Remove FASTA query file
+        if not self.save_results:
+            os.remove(out_filepath) # Remove BLASTX output (is in memory now)
+
+        return output
 
 
 class BLASTXBinary:

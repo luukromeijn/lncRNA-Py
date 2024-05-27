@@ -100,14 +100,18 @@ class BLASTXSearch:
             output = self.read_blastx_output(self.reference)
         else:
             output = self.run_blastx(data)
+        columns = output.columns
 
         print("Calculating blastx scores...")
         results = []
+        output = output.groupby(by='query acc.ver')
         for i, row in utils.progress(data.df.iterrows()):
             # Assumes query ids are same as row ids (error sensitive...?)
-            results.append(self.calculate_per_sequence( 
-                output[output['query acc.ver'] == row['id']] 
-            ))
+            try:
+                group = output.get_group(row['id'])
+            except KeyError:
+                group = pd.DataFrame(columns=columns)
+            results.append(self.calculate_per_sequence(group))
 
         return results
     

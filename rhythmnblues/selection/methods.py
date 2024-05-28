@@ -1,5 +1,4 @@
 '''Classes for selecting features based on an importance asssesment.'''
-# NOTE/TODO This submodule is currently not part of any unittests.
 
 from scipy.ndimage import gaussian_filter1d
 from scipy.stats import entropy
@@ -13,7 +12,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 
-class FeatureSelection:
+class FeatureSelectionBase:
     '''Base class for feature selection / importance analysis.
     
     Attributes
@@ -38,12 +37,16 @@ class FeatureSelection:
         raise NotImplementedError
     
     def k_most_important_indices(self, feature_importance):
+        if self.k > len(feature_importance):
+            raise RuntimeError(f"Number of to-be-selected features ({self.k}) "+ 
+                               f"exceeds number of available features " + 
+                               f"({len(feature_importance)}).")
         feature_importance = np.abs(feature_importance)
         feature_importance = np.nan_to_num(feature_importance, nan=0)
         return np.argsort(np.abs(feature_importance))[::-1][:self.k]
 
 
-class NoSelection(FeatureSelection):
+class NoSelection(FeatureSelectionBase):
     '''Dummy class that does not select or analyze features at all.'''
 
     def __init__(self, k):
@@ -53,7 +56,7 @@ class NoSelection(FeatureSelection):
         return feature_names, np.zeros(len(feature_names))
 
 
-class TTest(FeatureSelection):
+class TTestSelection(FeatureSelectionBase):
     '''Feature selection based on an association test statistic (t-test).'''
 
     def __init__(self, k, alpha=0.05):
@@ -70,7 +73,7 @@ class TTest(FeatureSelection):
         return np.array(feature_names)[idx], feature_importance
     
 
-class Regression(FeatureSelection):
+class RegressionSelection(FeatureSelectionBase):
     '''Feature selection based on the size of regression coefficients.'''
 
     def __init__(self, k):
@@ -88,7 +91,7 @@ class Regression(FeatureSelection):
         return np.array(feature_names)[idx], feature_importance
     
 
-class RandomForest(FeatureSelection):
+class ForestSelection(FeatureSelectionBase):
     '''Feature selection based on the feature importance of a random forest.'''
 
     def __init__(self, k):
@@ -96,7 +99,7 @@ class RandomForest(FeatureSelection):
         self.model = make_pipeline(
             SimpleImputer(missing_values=np.nan), 
             StandardScaler(),
-            RandomForestClassifier(max_features=k, class_weight='balanced')
+            RandomForestClassifier(max_features='log2', class_weight='balanced')
         )
     
     def select_features(self, data, feature_names):
@@ -106,7 +109,7 @@ class RandomForest(FeatureSelection):
         return np.array(feature_names)[idx], feature_importance
     
 
-class Permutation(FeatureSelection):
+class PermutationSelection(FeatureSelectionBase):
     '''Calculates feature importance by performing permutations on them.'''
 
     def __init__(self, k):
@@ -126,16 +129,17 @@ class Permutation(FeatureSelection):
         return np.array(feature_names)[idx], feature_importance
     
 
-class RecFeatElim(FeatureSelection): # TODO: not really a nice name I guess
+class RFESelection(FeatureSelectionBase): # TODO: not really a nice name I guess
     '''Recursive Feature Elimination. Uses ranks as importance measure.'''
 
-    def __init__(self, k):
+    def __init__(self, k, step=0.5):
         super().__init__('RFE', 'Rank', k)
         self.model = make_pipeline(
             SimpleImputer(missing_values=np.nan), 
             StandardScaler(),
-            RFE(RandomForestClassifier(class_weight='balanced'), 
-                n_features_to_select=k)
+            RFE(RandomForestClassifier(max_features='log2', 
+                                       class_weight='balanced'), 
+                step=step, n_features_to_select=k)
         )
     
     def select_features(self, data, feature_names):
@@ -145,7 +149,7 @@ class RecFeatElim(FeatureSelection): # TODO: not really a nice name I guess
         idx = self.k_most_important_indices(feature_importance)
         return np.array(feature_names)[idx], feature_importance
     
-class MDS(FeatureSelection):
+class MDSSelection(FeatureSelectionBase):
     '''Method based on Minimum Distribution Similarity (mDS) as proposed by 
     DeepCPP. Uses relative entropy (Kullback-Leibler divergence) to calculate 
     the difference between feature distributions of pcRNA and ncRNA, selects 

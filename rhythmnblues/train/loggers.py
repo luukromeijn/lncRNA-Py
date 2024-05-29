@@ -126,10 +126,10 @@ class LoggerPlot(LoggerBase):
                                     filepath=f'{self.dir_path}/{m.lower()}.png')
             plt.close(fig)
 
-    def plot_history(self, metric_name, filepath=None):
+    def plot_history(self, metric_name, filepath=None, figsize=None):
         '''Plots the history data for a given `metric_name`, saving the 
         resulting figure to a (optionally) specified `filepath`.'''
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
         ax.plot(np.arange(1, len(self.history)+1), 
                 self.history[f'{metric_name}|train'], label='Training')
         ax.plot(np.arange(1, len(self.history)+1), 

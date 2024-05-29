@@ -295,9 +295,9 @@ class KmerScore(KmerBase, SequenceBase):
                 continue
         return counts
     
-    def plot_bias(self, filepath=None):
+    def plot_bias(self, filepath=None, figsize=None):
         '''Plots log ratio of usage frequency of k-mers in pcRNA/ncRNA.'''
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
         plot = ax.bar(np.arange(len(self.kmers)), self.kmer_freqs)
         ax.set_xticks(np.arange(len(self.kmers)), self.kmers, fontsize=5, 
                       rotation=90)

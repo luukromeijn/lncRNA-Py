@@ -164,7 +164,7 @@ class MLCDS:
 
         return coord1, coord2
 
-    def imshow_ant_matrix(self, filepath=None, **kwargs):
+    def imshow_ant_matrix(self, filepath=None, figsize=None, **kwargs):
         '''Plots ANT matrix.
         
         Arguments
@@ -174,7 +174,7 @@ class MLCDS:
         `kwargs`:
             Any `kwargs` accepted by `matplotlib.pyplot.imshow`.
         '''
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
         plot = ax.imshow(self.ant_matrix, **kwargs)
         ax.set_xticks(np.arange(len(self.kmers)), self.kmers, fontsize=5, 
                       rotation=90)

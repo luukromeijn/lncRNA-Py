@@ -277,10 +277,11 @@ class Data(Dataset):
                              'test statistic': statistics,
                              'P value': p_values})
     
-    def plot_feature_boxplot(self, feature_name, filepath=None, **kwargs):
+    def plot_feature_boxplot(self, feature_name, filepath=None, figsize=None, 
+                             **kwargs):
         '''Returns a boxplot of the feature specified by `feature_name`, 
         saving the plot to `filepath` if provided.'''
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
         group_by = 'label' if self.labelled else None
         self.df.boxplot(feature_name, ax=ax, by=group_by, **kwargs)
         fig.tight_layout()
@@ -288,10 +289,11 @@ class Data(Dataset):
             fig.savefig(filepath)
         return fig
     
-    def plot_feature_violin(self, feature_name, filepath=None, **kwargs):
+    def plot_feature_violin(self, feature_name, filepath=None, figsize=None,
+                            **kwargs):
         '''Returns a violin plot of the feature specified by `feature_name`, 
         saving the plot to `filepath` if provided.'''
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
         if self.labelled:
             data = [self.df[self.df['label']==label][feature_name] 
                     for label in ['pcrna', 'ncrna']]
@@ -305,7 +307,7 @@ class Data(Dataset):
         return fig
     
     def plot_feature_density(self, feature_name, filepath=None, lower=0.025,
-                             upper=0.975, **kwargs):
+                             upper=0.975, figsize=None, **kwargs):
         '''Returns a density plot of the feature specified by `feature_name`, 
         saving the plot to `filepath` if provided.
         
@@ -321,10 +323,12 @@ class Data(Dataset):
         `upper`: `float`
             Upper limit of density plot, indicated as quantile (default is 
             0.975). 
+        `figsize`: `tuple[int]`
+            Matplotlib figure size (default is None).
         `kwargs`:
             Any keyword argument from `pd.DataFrame.plot.density`.'''
         
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
         lower = self.df[feature_name].quantile(lower)
         upper = self.df[feature_name].quantile(upper)
         if self.labelled:
@@ -345,12 +349,12 @@ class Data(Dataset):
         return fig
     
     def plot_feature_scatter(self, x_feature_name, y_feature_name, 
-                             filepath=None):
+                             filepath=None, figsize=None):
         '''Returns a scatter plot with `x_feature_name` on the x-axis plotted
         against `y_feature_name` on the y-axis.'''
 
         self.check_columns([x_feature_name, y_feature_name])
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
         if self.labelled:
             for label in ['pcrna', 'ncrna']:
                 ax.scatter(x_feature_name, y_feature_name, 
@@ -366,11 +370,12 @@ class Data(Dataset):
 
         return fig
     
-    def plot_feature_space(self, feature_names, filepath=None, dim_red=TSNE()):
+    def plot_feature_space(self, feature_names, dim_red=TSNE(), filepath=None, 
+                           figsize=None):
         '''Returns a visualization of the feature space of the data, reducing
         the dimensionality to 2.'''
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
 
         # Normalize data
         feature_space = self.df[feature_names].copy()
@@ -403,10 +408,11 @@ class Data(Dataset):
         
         return fig
     
-    def plot_feature_correlation(self, feature_names, filepath=None):
+    def plot_feature_correlation(self, feature_names, filepath=None, 
+                                 figsize=None):
         '''Plots heatmap of absolute correlation values.'''
         correlation = self.feature_correlation(feature_names)
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
         plot = ax.imshow(np.abs(correlation))
         s = 10 - 0.09*len(feature_names)
         ax.set_xticks(np.arange(len(feature_names)), feature_names, fontsize=s, 
@@ -509,7 +515,7 @@ def get_rna_type_refseq(fasta_header):
     '''Extract the RNA type from an input FASTA header line'''
     return fasta_header.split(",")[-1].strip()
 
-def plot_refseq_labels(fasta_filepath, filepath=None):
+def plot_refseq_labels(fasta_filepath, filepath=None, figsize=None):
     '''Plots the distribution of RNA labels of a FASTA file that follows the 
     RefSeq format, optionally saving the figure to `filepath`.'''
 
@@ -531,7 +537,7 @@ def plot_refseq_labels(fasta_filepath, filepath=None):
                  for i in sorted]
 
     # Creatin pie chart
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=figsize)
     ax.bar(np.arange(len(rna_types)), values)
     ax.set_xticks(np.arange(len(rna_types)), rna_types, rotation=90)
     ax.set_yscale('log')
@@ -561,12 +567,12 @@ def split_refseq(in_filepath, pc_filepath, nc_filepath, pc_types=['mRNA'],
 
 def plot_cross_dataset_violins(data_objects, data_names, feature_name, 
                                filepath=None, upper=0.975, lower=0.025, 
-                               **kwargs):
+                               figsize=None, **kwargs):
     '''Creates violin plots for multiple `data_objects` for a given 
     `feature_name`. This allows to compare datasets.'''
     
     labels = []
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=figsize)
     for i, label in enumerate(['pcrna', 'ncrna']): # Loop through labels
 
         # Filter for given label
@@ -596,7 +602,7 @@ def plot_cross_dataset_violins(data_objects, data_names, feature_name,
     ax.set_ylabel(feature_name)
     plt.legend(*zip(*labels))
     fig.tight_layout()
-    
+
     if filepath is not None:
         fig.savefig(filepath)
     return fig

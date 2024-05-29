@@ -109,7 +109,7 @@ def feature_importance_analysis(
 
 
 def plot_feature_importance(importances, k=None, method=None, trainset=None, 
-                            filepath=None):
+                            filepath=None, figsize=None):
     '''Creates a feature importance plot, given the `importances` dataframe from
     `feature_importance_analysis`.
     
@@ -126,12 +126,14 @@ def plot_feature_importance(importances, k=None, method=None, trainset=None,
         Trainset name to consider, if specified (default is None). If not 
         specified, averages over all trainsets.
     `filepath`: `str`
-        If specified, saves figure to this filepath (default is None).'''
+        If specified, saves figure to this filepath (default is None).
+    `figsize`: `tuple[int]`
+        Matplotlib figure size (default is None).'''
 
     importances, metric = sorted_feature_importance(importances,method,trainset)
 
     # Plot
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=figsize)
     width = 1
     if k is not None:
         importances = importances.head(k)
@@ -156,7 +158,8 @@ def plot_feature_importance(importances, k=None, method=None, trainset=None,
     return fig
 
 
-def plot_feature_selection_results(results, groupby, filepath=None):
+def plot_feature_selection_results(results, groupby, filepath=None, 
+                                   figsize=None):
     '''Plots the performance of different feature selection methods, based on 
     output from `feature_importance_analysis`.
     
@@ -169,7 +172,9 @@ def plot_feature_selection_results(results, groupby, filepath=None):
         If of type `list` or `tuple`, will apply a nested grouping where the 
         second element refers to the inner group. 
     `filepath`: `str`
-        If specified, saves figure to this filepath (default is None).'''
+        If specified, saves figure to this filepath (default is None).
+    `figsize`: `tuple[int]`
+        Matplotlib figure size (default is None).'''
     
     # Set inner and outer groups
     groupby = [groupby] if type(groupby) == str else groupby

@@ -4,7 +4,7 @@ from matplotlib.figure import Figure
 from sklearn.decomposition import PCA
 from Bio import SeqIO
 from torch.utils.data import DataLoader
-from rhythmnblues.data import Data
+from rhythmnblues.data import Data, plot_cross_dataset_violins
 from rhythmnblues.features import Length
 
 def test_init_fasta(data):
@@ -94,6 +94,10 @@ def test_plot_feature_density(data_hdf, data_unlabelled):
     for data in [data_hdf, data_unlabelled]:
         assert type(data.plot_feature_density('length')) == Figure
 
+def test_plot_feature_violin(data_hdf, data_unlabelled):
+    for data in [data_hdf, data_unlabelled]:
+        assert type(data.plot_feature_violin('length')) == Figure
+
 def test_plot_feature_space(data_hdf, data_unlabelled):
     for data in [data_hdf, data_unlabelled]:
         data.df['length 2'] = Length().calculate(data)
@@ -108,6 +112,9 @@ def test_plot_feature_correlation(data):
     dummy_features = [str(i) for i in range(20)]
     data.df[dummy_features] = np.random.random((len(data.df), 20))
     assert type(data.plot_feature_correlation(dummy_features))==Figure
+
+def test_plot_cross_dataset_violins(data_hdf):
+    assert type(plot_cross_dataset_violins([data_hdf],['a'],'length')) == Figure
 
 def test_filter_outliers(data):
     data.df['test'] = 10

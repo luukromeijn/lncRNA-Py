@@ -3,6 +3,7 @@ sequence data.'''
 
 import copy
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import pandas as pd
 import numpy as np
 from Bio import SeqIO
@@ -287,6 +288,22 @@ class Data(Dataset):
             fig.savefig(filepath)
         return fig
     
+    def plot_feature_violin(self, feature_name, filepath=None, **kwargs):
+        '''Returns a violin plot of the feature specified by `feature_name`, 
+        saving the plot to `filepath` if provided.'''
+        fig, ax = plt.subplots()
+        if self.labelled:
+            data = [self.df[self.df['label']==label][feature_name] 
+                    for label in ['pcrna', 'ncrna']]
+        else:
+            data = self.df[feature_name]
+        ax.violinplot(data, widths=0.8, **kwargs)
+        ax.set_xticks(np.arange(1,3), ['pcrna', 'ncrna'])
+        ax.set_ylabel(feature_name)
+        if filepath is not None:
+            fig.savefig(filepath)
+        return fig
+    
     def plot_feature_density(self, feature_name, filepath=None, lower=0.025,
                              upper=0.975, **kwargs):
         '''Returns a density plot of the feature specified by `feature_name`, 
@@ -541,4 +558,45 @@ def split_refseq(in_filepath, pc_filepath, nc_filepath, pc_types=['mRNA'],
     
     SeqIO.write(pcrna, pc_filepath, 'fasta')
     SeqIO.write(ncrna, nc_filepath, 'fasta')
+
+def plot_cross_dataset_violins(data_objects, data_names, feature_name, 
+                               filepath=None, upper=0.975, lower=0.025, 
+                               **kwargs):
+    '''Creates violin plots for multiple `data_objects` for a given 
+    `feature_name`. This allows to compare datasets.'''
+    
+    labels = []
+    fig, ax = plt.subplots()
+    for i, label in enumerate(['pcrna', 'ncrna']): # Loop through labels
+
+        # Filter for given label
+        data = [data.df[data.df['label']==label][feature_name] 
+                for data in data_objects]
         
+        # Remove outliers
+        upper_bounds = [df.quantile(upper) for df in data]
+        lower_bounds = [df.quantile(lower) for df in data]
+        data = [df[df < bound] for df, bound in zip(data, upper_bounds)] 
+        data = [df[df > bound] for df, bound in zip(data, lower_bounds)]
+
+        # Plot only non-emtpy datasets
+        new_data, pos = [], []
+        for j, df in enumerate(data):
+            if len(df) > 0:
+                pos.append(i + (2.5*j)) 
+                new_data.append(df)
+
+        # Plot & add label to legend
+        violin = ax.violinplot(new_data, pos, widths=0.8, **kwargs)
+        color = violin["bodies"][0].get_facecolor().flatten()
+        labels.append((mpatches.Patch(color=color), label))
+
+    # Set figure
+    ax.set_xticks(np.arange(0.5,len(data_objects)*2.5, 2.5), data_names)
+    ax.set_ylabel(feature_name)
+    plt.legend(*zip(*labels))
+    fig.tight_layout()
+    
+    if filepath is not None:
+        fig.savefig(filepath)
+    return fig

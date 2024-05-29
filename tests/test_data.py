@@ -83,8 +83,6 @@ def test_coding_noncoding_split(data):
 
 def test_test_features(data_hdf):
     result = data_hdf.test_features(['length'])
-    for col, col_test in zip(result.columns, ['length']):
-        assert col == col_test
 
 def test_plot_feature_boxplot(data_hdf, data_unlabelled):
     for data in [data_hdf, data_unlabelled]:

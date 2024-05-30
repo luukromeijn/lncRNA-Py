@@ -572,6 +572,7 @@ def plot_cross_dataset_violins(data_objects, data_names, feature_name,
     `feature_name`. This allows to compare datasets.'''
     
     labels = []
+    stats = []
     fig, ax = plt.subplots(figsize=figsize)
     for i, label in enumerate(['pcrna', 'ncrna']): # Loop through labels
 
@@ -584,6 +585,10 @@ def plot_cross_dataset_violins(data_objects, data_names, feature_name,
         lower_bounds = [df.quantile(lower) for df in data]
         data = [df[df < bound] for df, bound in zip(data, upper_bounds)] 
         data = [df[df > bound] for df, bound in zip(data, lower_bounds)]
+
+        # Calculate mean and std
+        stats.append([label, 'avg']  +[df.mean() for df in data])
+        stats.append([label, 'std'] + [df.std() for df in data])
 
         # Plot only non-emtpy datasets
         new_data, pos = [], []
@@ -602,6 +607,9 @@ def plot_cross_dataset_violins(data_objects, data_names, feature_name,
     ax.set_ylabel(feature_name)
     plt.legend(*zip(*labels))
     fig.tight_layout()
+
+    # Report mean and std
+    print(pd.DataFrame(stats, columns=['Label', 'Stat'] + data_names))
 
     if filepath is not None:
         fig.savefig(filepath)

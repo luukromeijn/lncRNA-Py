@@ -132,7 +132,7 @@ class Data(Dataset):
         for file in files:
             for seqrecord in SeqIO.parse(files[file], 'fasta'):
                 data['id'].append(seqrecord.id)
-                data['sequence'].append(str(seqrecord.seq))
+                data['sequence'].append(str(seqrecord.seq).capitalize())
                 if labelled:
                     data['label'].append(file)
 

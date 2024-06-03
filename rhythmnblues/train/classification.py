@@ -75,7 +75,7 @@ def train_classifier(
 def epoch_classifier(model, dataloader, loss_function, optimizer):
     '''Trains `model` for a single epoch.'''
     model.train() # Set training mode
-    for X, y in dataloader: # Loop through data
+    for X, y in utils.progress(dataloader): # Loop through data
         pred = model(X) # Make prediction
         loss = loss_function(pred, y) # Calculate loss
         loss.backward() # Calculate gradients
@@ -88,8 +88,8 @@ def evaluate_classifier(model, data, loss_function, metrics=METRICS):
     '''Simple evaluation function to keep track of in-training progress.'''
     scores = []
     pred = model.predict(data)
-    scores.append(loss_function(pred, data[:][1]).item())
+    scores.append(loss_function(pred, data[:][1].cpu()).item())
     for metric in metrics:
         metric_function = metrics[metric]
-        scores.append(metric_function(data[:][1], pred.round()))
+        scores.append(metric_function(data[:][1].cpu(), pred.round()))
     return scores

@@ -3,6 +3,7 @@ protein-coding or long non-coding.'''
 
 import torch
 from torch.utils.data import DataLoader
+from rhythmnblues import utils
 
 
 class Model(torch.nn.Module):
@@ -26,6 +27,7 @@ class Model(torch.nn.Module):
         self.output = torch.nn.LazyLinear(1) 
         self.sigmoid = torch.nn.Sigmoid()
         self.pred_batch_size = pred_batch_size
+        self = self.to(utils.DEVICE)
 
     def forward(self, x):
         return self.sigmoid(self.output(self.base_arch(x)))
@@ -37,6 +39,6 @@ class Model(torch.nn.Module):
         self.eval()
         with torch.no_grad():
             for X, _ in DataLoader(data, batch_size=self.pred_batch_size, 
-                                shuffle=False):
-                pred.append(self.forward(X))
+                                   shuffle=False):
+                pred.append(self.forward(X).cpu())
         return torch.concatenate(pred)

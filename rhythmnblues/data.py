@@ -15,6 +15,7 @@ from sklearn.model_selection import train_test_split
 from scipy.stats import ttest_ind
 from torch.utils.data import Dataset
 import torch
+from rhythmnblues import utils
 
 
 class Data(Dataset):
@@ -86,8 +87,8 @@ class Data(Dataset):
                 y[target == 'pcrna'] = 1.0 
             else:
                 y = -1.0 # Placeholder
-            return (torch.tensor(x, dtype=torch.float32),
-                    torch.tensor(y, dtype=torch.float32))
+            return (torch.tensor(x, dtype=torch.float32, device=utils.DEVICE),
+                    torch.tensor(y, dtype=torch.float32, device=utils.DEVICE))
         else:
             raise AttributeError(
                 'No `tensor_features` set. Please call `set_tensor_features` ' +

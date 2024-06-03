@@ -30,9 +30,9 @@ class Model(torch.nn.Module):
         self = self.to(utils.DEVICE)
 
     def forward(self, x):
-        return self.sigmoid(self.output(self.base_arch(x)))
+        return self.output(self.base_arch(x))
     
-    def predict(self, data):
+    def predict(self, data, return_logits=False):
         '''Returns protein-coding probabilities for all rows in `data`, 
         predicted in batch-wise fashion.'''
         pred = []
@@ -40,5 +40,9 @@ class Model(torch.nn.Module):
         with torch.no_grad():
             for X, _ in DataLoader(data, batch_size=self.pred_batch_size, 
                                    shuffle=False):
-                pred.append(self.forward(X).cpu())
+                X = self.forward(X)
+                if return_logits:
+                    pred.append(X.cpu())
+                else:
+                    pred.append(self.sigmoid(X).cpu())
         return torch.concatenate(pred)

@@ -157,8 +157,8 @@ def test_set_tensor_features(data):
         data[0]
     data.calculate_feature(Length())
     data.set_tensor_features(['length'])
-    assert data[0][0].device.type == utils.DEVICE
-    assert data[0][1].device.type == utils.DEVICE
+    assert data[0][0].device.type == utils.DEVICE.type
+    assert data[0][1].device.type == utils.DEVICE.type
     assert data[0][0].dim() == 1 # Single element indexed -> 1 dimension
     assert data[0][0].size(0) == 1 # Length feature
     assert data[0][1].dim() == 1 # Single element indexed -> 1 dimension

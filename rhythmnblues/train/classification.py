@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 from rhythmnblues import utils
 from rhythmnblues.train.loggers import LoggerBase
+from rhythmnblues.train.mixed_precision import get_gradient_scaler, get_amp_args
 
 
 METRICS = {
@@ -38,7 +39,7 @@ def train_classifier(
         Number of examples per batch (default is 64).
     `loss_function`: `torch.nn.Module`
         Loss function that is to be optimized. If None, falls back to Binary 
-        Cross Entropy (`torch.nn.BCELoss`) (default is None). 
+        Cross Entropy (`torch.nn.BCEWithLogitsLoss`) (default is None). 
     `optimizer`: `torch.optim`
         Optimizer to update the network's weights during training. If None 
         (default), will use Adam with learning rate 0.0001.
@@ -50,9 +51,11 @@ def train_classifier(
 
     # Initializing required objects
     train_dataloader = DataLoader(train_data, batch_size, shuffle=True)
-    loss_function = loss_function if loss_function else torch.nn.BCELoss()
+    loss_function = (loss_function if loss_function 
+                                   else torch.nn.BCEWithLogitsLoss())
     optimizer = optimizer if optimizer else torch.optim.Adam(model.parameters(), 
                                                              lr=0.0001)
+    scaler = get_gradient_scaler(utils.DEVICE)
     logger = logger if logger else LoggerBase()
     logger.set_columns(metrics)
 
@@ -60,7 +63,7 @@ def train_classifier(
     print("Training...")
     for epoch in utils.progress(range(epochs)): # Looping through epochs
         model = epoch_classifier(model, train_dataloader, loss_function, 
-                                 optimizer) # Train
+                                 optimizer, scaler) # Train
         train_results = evaluate_classifier(model, train_data, loss_function, 
                                             metrics) # Evaluate on trainset
         valid_results = evaluate_classifier(model, valid_data, loss_function, 
@@ -72,24 +75,29 @@ def train_classifier(
     return model, logger.history
 
 
-def epoch_classifier(model, dataloader, loss_function, optimizer):
+def epoch_classifier(model, dataloader, loss_function, optimizer, scaler):
     '''Trains `model` for a single epoch.'''
     model.train() # Set training mode
-    for X, y in utils.progress(dataloader): # Loop through data
-        pred = model(X) # Make prediction
-        loss = loss_function(pred, y) # Calculate loss
-        loss.backward() # Calculate gradients
-        optimizer.step() # Optimize parameters 
+    for X, y in dataloader: # Loop through data
         optimizer.zero_grad() # Zero out gradients
+        with torch.autocast(**get_amp_args(utils.DEVICE)):
+            pred = model(X) # Make prediction
+            loss = loss_function(pred, y) # Calculate loss
+        scaler.scale(loss).backward() # Calculate gradients
+        scaler.unscale_(optimizer) # Unscale before gradient clipping
+        torch.nn.utils.clip_grad_norm_(model.parameters(), utils.CLIP_NORM)
+        scaler.step(optimizer) # Optimize parameters 
+        scaler.update() # Updates scale
     return model # Return model
 
 
 def evaluate_classifier(model, data, loss_function, metrics=METRICS): 
     '''Simple evaluation function to keep track of in-training progress.'''
     scores = []
-    pred = model.predict(data)
-    scores.append(loss_function(pred, data[:][1].cpu()).item())
-    for metric in metrics:
+    pred = model.predict(data, return_logits=True) # Return as logits 
+    scores.append(loss_function(pred, data[:][1].cpu()).item()) # Calculate loss
+    pred = torch.sigmoid(pred).round() # Then convert to classes
+    for metric in metrics: # (these metrics assume classes, not logits)
         metric_function = metrics[metric]
-        scores.append(metric_function(data[:][1].cpu(), pred.round()))
+        scores.append(metric_function(data[:][1].cpu(), pred))
     return scores

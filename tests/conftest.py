@@ -1,6 +1,10 @@
 import pytest
+import torch
 from rhythmnblues.data import Data
 from rhythmnblues.features import Length
+from rhythmnblues import utils
+
+utils.DEVICE = torch.device('cpu') 
 
 @pytest.fixture(scope="class")
 def data():

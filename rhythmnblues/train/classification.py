@@ -4,7 +4,8 @@ transcripts as either protein-coding or long non-coding.'''
 import time
 import torch
 from torch.utils.data import DataLoader
-from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.metrics import (accuracy_score, precision_score, recall_score, 
+                             f1_score)
 from rhythmnblues import utils
 from rhythmnblues.train.loggers import LoggerBase
 from rhythmnblues.train.mixed_precision import get_gradient_scaler, get_amp_args
@@ -16,6 +17,7 @@ METRICS = {
     'Recall (pcrna)': lambda y_t, y_p: recall_score(y_t,y_p,pos_label=1),
     'Precision (ncrna)': lambda y_t, y_p: precision_score(y_t,y_p,pos_label=0),
     'Recall (ncrna)': lambda y_t, y_p: recall_score(y_t,y_p,pos_label=0),
+    'F1 (macro)': lambda y_t, y_p: f1_score(y_t, y_p, average='macro')
 }
 
 
@@ -38,8 +40,8 @@ def train_classifier(
     `batch_size`: `int`
         Number of examples per batch (default is 64).
     `loss_function`: `torch.nn.Module`
-        Loss function that is to be optimized. If None, falls back to Binary 
-        Cross Entropy (`torch.nn.BCEWithLogitsLoss`) (default is None). 
+        Loss function that is to be optimized. If None, falls back to weighted 
+        Binary Cross Entropy (`torch.nn.BCEWithLogitsLoss`) (default is None). 
     `optimizer`: `torch.optim`
         Optimizer to update the network's weights during training. If None 
         (default), will use Adam with learning rate 0.0001.
@@ -51,8 +53,9 @@ def train_classifier(
 
     # Initializing required objects
     train_dataloader = DataLoader(train_data, batch_size, shuffle=True)
-    loss_function = (loss_function if loss_function 
-                                   else torch.nn.BCEWithLogitsLoss())
+    if loss_function is None:
+        loss_function = torch.nn.BCEWithLogitsLoss(pos_weight=
+                                                   train_data.pos_weight())
     optimizer = optimizer if optimizer else torch.optim.Adam(model.parameters(), 
                                                              lr=0.0001)
     scaler = get_gradient_scaler(utils.DEVICE)
@@ -94,7 +97,7 @@ def epoch_classifier(model, dataloader, loss_function, optimizer, scaler):
 def evaluate_classifier(model, data, loss_function, metrics=METRICS): 
     '''Simple evaluation function to keep track of in-training progress.'''
     scores = []
-    pred = model.predict(data, return_logits=True) # Return as logits 
+    pred = model.predict(data, return_logits=True) # Return as logits
     scores.append(loss_function(pred, data[:][1].cpu()).item()) # Calculate loss
     pred = torch.sigmoid(pred).round() # Then convert to classes
     for metric in metrics: # (these metrics assume classes, not logits)

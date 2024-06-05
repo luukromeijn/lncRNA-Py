@@ -168,6 +168,12 @@ class Data(Dataset):
             len(self.df[self.df["label"]=='pcrna']),
             len(self.df[self.df["label"]=='ncrna'])
         )
+    
+    def pos_weight(self):
+        '''Ratio of non-coding/coding samples, used as weight for positive class
+        in weighted loss calculation.'''
+        coding, noncoding = self.num_coding_noncoding()
+        return torch.tensor(noncoding/coding)
 
     def to_hdf(self, path_or_buf, except_columns=['sequence'], **kwargs):
         '''Write data to .h5 file.

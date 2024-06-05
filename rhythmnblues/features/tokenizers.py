@@ -1,5 +1,6 @@
 '''Tokenization methods required for deep learning language models.'''
 
+import pandas as pd
 import io
 import itertools
 import numpy as np
@@ -164,3 +165,34 @@ class BytePairEncoding(TokenizerBase):
         # NOTE: We verified that the vocab_size parameter of sentencepiece 
         # includes the 'special' tokens like CLS, PAD, etc.
         return self.encoder.vocab_size()
+    
+    def get_length_stats(self, data):
+        '''Generates report about length distribution given current vocab.'''
+        return pd.concat([self.get_piece_length_stats(), 
+                          self.get_seq_length_stats(data)])
+    
+    def get_piece_length_stats(self):
+        '''Returns the avg, std, min, and max length of word pieces in the BPE 
+        vocabulary.'''
+        lengths = [len(self.encoder.IdToPiece(i)) 
+                   for i in range(self.get_vocab_size())]
+        return self._length_stats_table(lengths, 'Word length')
+    
+    def get_seq_length_stats(self, data):
+        '''Returns the avg, std, min, and max length of sequences in `data`
+        given the BPE vocabulary.'''
+        lengths = [len(encoding) for encoding in 
+                   self.encoder.encode(data.df['sequence'].tolist())]
+        return self._length_stats_table(lengths, 'Sequence length')
+    
+    def _length_stats_table(self, lengths, name):
+        '''Creates a DataFrame with some length statistics.'''
+        return pd.DataFrame(
+            [[self.get_vocab_size(), 
+              np.average(lengths), 
+              np.std(lengths), 
+              np.min(lengths), 
+              np.max(lengths)]], 
+            columns=['vocab size', 'avg', 'std', 'min', 'max'], 
+            index=[name]
+        )

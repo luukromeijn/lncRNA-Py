@@ -183,6 +183,9 @@ class TestNoError:
     def test_quality(self, data):
         data.calculate_feature(Quality())
 
+    def test_kmer_tokenizer(self, data):
+        data.calculate_feature(KmerTokenizer(3))
+
 
 @pytest.mark.parametrize('apply_to', [
     'sequence', 'ORF protein', 'ORF', 'MLCDS1', 'UTR3', 'UTR5'
@@ -321,3 +324,20 @@ def test_utr_length_no_orfs(data):
 ])
 def test_gc_content(sequence, GC_content):
     assert GCContent().calculate_per_sequence(sequence) == GC_content
+
+def test_kmer_tokenizer():
+    tokenizer = KmerTokenizer(3, context_length=5) # Extremely short (testing)
+    example_1 = tokenizer.calculate_kmer_tokens('AAATTTA')
+    assert len(example_1) == 5
+    assert example_1[0] == tokenizer.tokens['CLS']
+    assert example_1[1] == tokenizer.tokens['AAA']
+    assert example_1[2] == tokenizer.tokens['TTT']
+    assert example_1[3] == tokenizer.tokens['SEP']
+    assert example_1[4] == tokenizer.tokens['PAD']
+    example_2 = tokenizer.calculate_kmer_tokens('AAATTTAAATTTAAA')
+    assert len(example_2) == 5
+    assert example_2[0] == tokenizer.tokens['CLS']
+    assert example_2[1] == tokenizer.tokens['AAA']
+    assert example_2[2] == tokenizer.tokens['TTT']
+    assert example_2[3] == tokenizer.tokens['AAA']
+    assert example_2[4] == tokenizer.tokens['TTT']

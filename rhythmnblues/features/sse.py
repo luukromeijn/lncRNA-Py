@@ -1,7 +1,10 @@
 '''Feature extractors based on Secondary Structure Elements (SSEs).'''
 
 import re
-import ViennaRNA
+try:
+    import ViennaRNA
+except ModuleNotFoundError:
+    pass
 from rhythmnblues import utils
 
 HL_SSE_NAMES = ['acguD', 'acguS', 'acgu-ACGU', 'UP']

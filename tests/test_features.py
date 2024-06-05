@@ -142,10 +142,12 @@ class TestNoError:
         feature = EntropyDensityProfile(cols)
         data.calculate_feature(feature)     
 
+    @pytest.mark.skip(reason='ViennaRNA package is optional.')
     def test_sse(self, data):
         feature = SSE()
         feature.calculate(data.sample(1,1))
 
+    @pytest.mark.skip(reason='ViennaRNA package is optional.')
     def test_up_frequency(self, data):
         feature = UPFrequency()
         data = data.sample(1,1)
@@ -183,7 +185,7 @@ class TestNoError:
 
 
 @pytest.mark.parametrize('apply_to', [
-    'sequence', 'ORF protein', 'ORF', 'MLCDS1', 'UTR3', 'UTR5', 'acguD'
+    'sequence', 'ORF protein', 'ORF', 'MLCDS1', 'UTR3', 'UTR5'
 ])
 def test_sequence_feature(data, apply_to):
     if apply_to in ['ORF protein', 'ORF', 'UTR3', 'UTR5']:
@@ -192,9 +194,6 @@ def test_sequence_feature(data, apply_to):
         data.calculate_feature(ORFProtein())
     if apply_to.startswith('MLCDS'):
         data.calculate_feature(MLCDS(data))
-    if apply_to in HL_SSE_NAMES:
-        data = data.sample(1,1)
-        data.calculate_feature(SSE())
     base_class = SequenceBase(apply_to)
     base_class.check_columns(data)
     for _, row in data.df.iterrows():
@@ -296,6 +295,7 @@ def test_kmer_freqs_base():
     assert freqs[feature.kmers['CTG']]*(1+1e-7) == 0
 
 @pytest.mark.parametrize('type',['acguD', 'acguS', 'acgu-ACGU', 'UP'])
+@pytest.mark.skip(reason='ViennaRNA package is optional.')
 def test_get_hl_sse_sequence(data, type):
     data.df = data.df.iloc[[0]]
     data.calculate_feature(SSE())

@@ -4,6 +4,7 @@ protein-coding or long non-coding.'''
 import torch
 from torch.utils.data import DataLoader
 from rhythmnblues import utils
+from rhythmnblues.modules.architectures import BERT
 
 
 class Model(torch.nn.Module):
@@ -23,6 +24,8 @@ class Model(torch.nn.Module):
             Batch size used by the `predict` method (default is 64).'''
         
         super().__init__()
+        if type(base_arch) == BERT:
+            base_arch.set_mode('classification')
         self.base_arch = base_arch
         self.output = torch.nn.LazyLinear(1) 
         self.sigmoid = torch.nn.Sigmoid()

@@ -33,7 +33,7 @@ class TokenizerBase:
             names.)'''
         
         self.context_length = context_length
-        self.tokens = {'CLS': 0, 'SEP': 1, 'PAD': 2, 'UNK': 3}
+        self.tokens = utils.TOKENS.copy()
         self.name = [f'T{i} {method_name}' for i in range(self.context_length)]
     
     def get_vocab_size(self):

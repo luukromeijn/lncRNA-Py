@@ -169,7 +169,7 @@ class BytePairEncoding(TokenizerBase):
     def get_length_stats(self, data):
         '''Generates report about length distribution given current vocab.'''
         return pd.concat([self.get_piece_length_stats(), 
-                          self.get_seq_length_stats(data)])
+                          self.get_encoding_length_stats(data)])
     
     def get_piece_length_stats(self):
         '''Returns the avg, std, min, and max length of word pieces in the BPE 
@@ -178,12 +178,12 @@ class BytePairEncoding(TokenizerBase):
                    for i in range(self.get_vocab_size())]
         return self._length_stats_table(lengths, 'Word length')
     
-    def get_seq_length_stats(self, data):
-        '''Returns the avg, std, min, and max length of sequences in `data`
-        given the BPE vocabulary.'''
+    def get_encoding_length_stats(self, data):
+        '''Returns the avg, std, min, and max length of encoded sequences in 
+        `data` given the BPE vocabulary.'''
         lengths = [len(encoding) for encoding in 
                    self.encoder.encode(data.df['sequence'].tolist())]
-        return self._length_stats_table(lengths, 'Sequence length')
+        return self._length_stats_table(lengths, 'Encoding length')
     
     def _length_stats_table(self, lengths, name):
         '''Creates a DataFrame with some length statistics.'''
@@ -193,6 +193,6 @@ class BytePairEncoding(TokenizerBase):
               np.std(lengths), 
               np.min(lengths), 
               np.max(lengths)]], 
-            columns=['vocab size', 'avg', 'std', 'min', 'max'], 
+            columns=['Vocab size', 'avg', 'std', 'min', 'max'], 
             index=[name]
         )

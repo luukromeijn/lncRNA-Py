@@ -186,6 +186,9 @@ class TestNoError:
     def test_kmer_tokenizer(self, data):
         data.calculate_feature(KmerTokenizer(3))
 
+    def test_bpe_tokenizer(self, data):
+        data.calculate_feature(BytePairEncoding(data))
+
 
 @pytest.mark.parametrize('apply_to', [
     'sequence', 'ORF protein', 'ORF', 'MLCDS1', 'UTR3', 'UTR5'
@@ -341,3 +344,11 @@ def test_kmer_tokenizer():
     assert example_2[2] == tokenizer.tokens['TTT']
     assert example_2[3] == tokenizer.tokens['AAA']
     assert example_2[4] == tokenizer.tokens['TTT']
+
+def test_bpe_intialization(data, tmp_path):
+    bpe = BytePairEncoding(data) # No export
+    bpe.encoder.encode('AAA')
+    bpe = BytePairEncoding(data, export_path=f'{tmp_path}/model') # Export
+    bpe.encoder.encode('AAA')
+    bpe = BytePairEncoding(f'{tmp_path}/model') # Import
+    bpe.encoder.encode('AAA')

@@ -357,11 +357,11 @@ class Data(Dataset):
         fig, ax = plt.subplots(figsize=figsize)
         if self.labelled:
             for label in ['pcrna', 'ncrna']:
-                ax.scatter(x_feature_name, y_feature_name, 
+                ax.scatter(x_feature_name, y_feature_name, s=1, alpha=0.5,
                             data=self.df[self.df['label']==label], label=label)
-            fig.legend()
+            fig.legend(markerscale=5)
         else:
-            ax.scatter(x_feature_name, y_feature_name, data=self.df)
+            ax.scatter(x_feature_name, y_feature_name, s=1, data=self.df)
         ax.set_xlabel(x_feature_name)
         ax.set_ylabel(y_feature_name)
         fig.tight_layout()
@@ -395,11 +395,11 @@ class Data(Dataset):
         df["Dim 2"] = feature_space[:,1]
         if self.labelled: 
             for label in ["pcrna", "ncrna"]:
-                ax.scatter("Dim 1", "Dim 2", label=label, s=1,
+                ax.scatter("Dim 1", "Dim 2", label=label, s=1, alpha=0.5,
                         data=df[df["label"]==label])
             fig.legend(markerscale=5)
         else:
-            ax.scatter("Dim 1", "Dim 2", s=1, data=df)
+            ax.scatter("Dim 1", "Dim 2", s=1, data=df, alpha=0.5)
         ax.set_xlabel("Dim 1")
         ax.set_ylabel("Dim 2")
         fig.tight_layout()

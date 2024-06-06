@@ -28,5 +28,6 @@ try: # Allows ViennaRNA package to be optional
     from rhythmnblues.features.sse import SSE, UPFrequency
 except ModuleNotFoundError:
     pass
+from rhythmnblues.features.tokenizers import KmerTokenizer, BytePairEncoding
 from rhythmnblues.features.zhang import ZhangScore
 from rhythmnblues.features.eiip import EIIPPhysicoChemical

@@ -142,10 +142,12 @@ class TestNoError:
         feature = EntropyDensityProfile(cols)
         data.calculate_feature(feature)     
 
+    @pytest.mark.skip(reason='ViennaRNA package is optional.')
     def test_sse(self, data):
         feature = SSE()
         feature.calculate(data.sample(1,1))
 
+    @pytest.mark.skip(reason='ViennaRNA package is optional.')
     def test_up_frequency(self, data):
         feature = UPFrequency()
         data = data.sample(1,1)
@@ -181,9 +183,15 @@ class TestNoError:
     def test_quality(self, data):
         data.calculate_feature(Quality())
 
+    def test_kmer_tokenizer(self, data):
+        data.calculate_feature(KmerTokenizer(3))
+
+    def test_bpe_tokenizer(self, data):
+        data.calculate_feature(BytePairEncoding(data))
+
 
 @pytest.mark.parametrize('apply_to', [
-    'sequence', 'ORF protein', 'ORF', 'MLCDS1', 'UTR3', 'UTR5', 'acguD'
+    'sequence', 'ORF protein', 'ORF', 'MLCDS1', 'UTR3', 'UTR5'
 ])
 def test_sequence_feature(data, apply_to):
     if apply_to in ['ORF protein', 'ORF', 'UTR3', 'UTR5']:
@@ -192,9 +200,6 @@ def test_sequence_feature(data, apply_to):
         data.calculate_feature(ORFProtein())
     if apply_to.startswith('MLCDS'):
         data.calculate_feature(MLCDS(data))
-    if apply_to in HL_SSE_NAMES:
-        data = data.sample(1,1)
-        data.calculate_feature(SSE())
     base_class = SequenceBase(apply_to)
     base_class.check_columns(data)
     for _, row in data.df.iterrows():
@@ -296,6 +301,7 @@ def test_kmer_freqs_base():
     assert freqs[feature.kmers['CTG']]*(1+1e-7) == 0
 
 @pytest.mark.parametrize('type',['acguD', 'acguS', 'acgu-ACGU', 'UP'])
+@pytest.mark.skip(reason='ViennaRNA package is optional.')
 def test_get_hl_sse_sequence(data, type):
     data.df = data.df.iloc[[0]]
     data.calculate_feature(SSE())
@@ -321,3 +327,28 @@ def test_utr_length_no_orfs(data):
 ])
 def test_gc_content(sequence, GC_content):
     assert GCContent().calculate_per_sequence(sequence) == GC_content
+
+def test_kmer_tokenizer():
+    tokenizer = KmerTokenizer(3, context_length=5) # Extremely short (testing)
+    example_1 = tokenizer.calculate_kmer_tokens('AAATTTA')
+    assert len(example_1) == 5
+    assert example_1[0] == tokenizer.tokens['CLS']
+    assert example_1[1] == tokenizer.tokens['AAA']
+    assert example_1[2] == tokenizer.tokens['TTT']
+    assert example_1[3] == tokenizer.tokens['SEP']
+    assert example_1[4] == tokenizer.tokens['PAD']
+    example_2 = tokenizer.calculate_kmer_tokens('AAATTTAAATTTAAA')
+    assert len(example_2) == 5
+    assert example_2[0] == tokenizer.tokens['CLS']
+    assert example_2[1] == tokenizer.tokens['AAA']
+    assert example_2[2] == tokenizer.tokens['TTT']
+    assert example_2[3] == tokenizer.tokens['AAA']
+    assert example_2[4] == tokenizer.tokens['TTT']
+
+def test_bpe_intialization(data, tmp_path):
+    bpe = BytePairEncoding(data) # No export
+    bpe.encoder.encode('AAA')
+    bpe = BytePairEncoding(data, export_path=f'{tmp_path}/model') # Export
+    bpe.encoder.encode('AAA')
+    bpe = BytePairEncoding(f'{tmp_path}/model') # Import
+    bpe.encoder.encode('AAA')

@@ -26,14 +26,16 @@ class Data(Dataset):
     ----------
     `df`: `pd.DataFrame`
         The underlying `DataFrame` object containing the data.
-    `feature_names`: `list[str]`
+    `tensor_features`: `list[str]`
         List of feature names (columns) to be retrieved as tensors when 
         `__getitem__` is called (indexing).
+    `tensor_dtype`: type
+        Data type to be used for tensor features (default is `torch.float32`).
     `labelled`: `bool`
         Whether the data has labels or not.'''
 
     def __init__(self, fasta_filepath=None, hdf_filepath=None, 
-                 tensor_features=None):
+                 tensor_features=None, tensor_dtype=torch.float32):
         '''Initializes `Data` object based on FASTA and/or .h5 file(s).
         
         Arguments
@@ -47,7 +49,10 @@ class Data(Dataset):
             sequence IDs.
         `tensor_features`: `list[str]`
             List of feature names (columns) to be retrieved as tensors when 
-            `__getitem__` is called (indexing).'''
+            `__getitem__` is called (indexing).
+        `tensor_dtype`: type
+            Data type to be used for the tensor features (default is 
+            `torch.float32`)'''
         
         print("Importing data...")
         if hdf_filepath is not None:
@@ -70,6 +75,7 @@ class Data(Dataset):
         if tensor_features:
             self.check_columns(tensor_features)
         self.tensor_features = tensor_features 
+        self.tensor_dtype = tensor_dtype
     
     def __str__(self):
         return self.df.__str__()
@@ -87,7 +93,7 @@ class Data(Dataset):
                 y[target == 'pcrna'] = 1.0 
             else:
                 y = -1.0 # Placeholder
-            return (torch.tensor(x, dtype=torch.float32, device=utils.DEVICE),
+            return (torch.tensor(x, dtype=self.tensor_dtype,device=utils.DEVICE),
                     torch.tensor(y, dtype=torch.float32, device=utils.DEVICE))
         else:
             raise AttributeError(
@@ -145,7 +151,7 @@ class Data(Dataset):
                 zip(data['id'].values, data['sequence'].values)]
         SeqIO.write(seqs, filepath, 'fasta')
 
-    def set_tensor_features(self, feature_names):
+    def set_tensor_features(self, feature_names, dtype=torch.float32):
         '''Configures `Data` object to return a tuple of tensors (x,y) whenever 
         `__getitem__` is called. X is the feature tensor, which features it
         contains is controlled by `feature_names`. Y contains labels, where 1 is
@@ -155,10 +161,14 @@ class Data(Dataset):
         ---------
         `feature_names`: `list[str]`
             List of feature names (columns) to be retrieved as tensors when 
-            `__getitem__` is called (indexing).'''
+            `__getitem__` is called (indexing).
+        `dtype`: type
+            Data type to be used for the tensor features (default is 
+            `torch.float32`)'''
         
         self.check_columns(feature_names)
         self.tensor_features = feature_names
+        self.tensor_dtype = dtype
     
     def num_coding_noncoding(self):
         '''Returns a tuple of which the elements are the number of coding and 
@@ -364,11 +374,11 @@ class Data(Dataset):
         fig, ax = plt.subplots(figsize=figsize)
         if self.labelled:
             for label in ['pcrna', 'ncrna']:
-                ax.scatter(x_feature_name, y_feature_name, 
+                ax.scatter(x_feature_name, y_feature_name, s=1, alpha=0.5,
                             data=self.df[self.df['label']==label], label=label)
-            fig.legend()
+            fig.legend(markerscale=5)
         else:
-            ax.scatter(x_feature_name, y_feature_name, data=self.df)
+            ax.scatter(x_feature_name, y_feature_name, s=1, data=self.df)
         ax.set_xlabel(x_feature_name)
         ax.set_ylabel(y_feature_name)
         fig.tight_layout()
@@ -402,11 +412,11 @@ class Data(Dataset):
         df["Dim 2"] = feature_space[:,1]
         if self.labelled: 
             for label in ["pcrna", "ncrna"]:
-                ax.scatter("Dim 1", "Dim 2", label=label, s=1,
+                ax.scatter("Dim 1", "Dim 2", label=label, s=1, alpha=0.5,
                         data=df[df["label"]==label])
             fig.legend(markerscale=5)
         else:
-            ax.scatter("Dim 1", "Dim 2", s=1, data=df)
+            ax.scatter("Dim 1", "Dim 2", s=1, data=df, alpha=0.5)
         ax.set_xlabel("Dim 1")
         ax.set_ylabel("Dim 2")
         fig.tight_layout()
@@ -468,7 +478,8 @@ class Data(Dataset):
         ratio = (length - certain) / length
         self.df = self.df[(ratio <= tolerance)]
 
-    def sample(self, pc=None, nc=None, N=None, replace=False, seed=None):
+    def sample(self, pc=None, nc=None, N=None, replace=False, 
+               random_state=None):
         '''Returns a randomly sampled `Data` object.
         
         Arguments
@@ -484,7 +495,7 @@ class Data(Dataset):
         `replace`: `bool`
             Whether or not to sample with replacement. Required if `N` or 
             `pc+nc` exceeds the number of samples in the `Data` object.
-        `seed`: `int`
+        `random_state`: `int`
             Seed for random number generator.'''
 
         df = copy.deepcopy(self) # Create object copy
@@ -499,8 +510,8 @@ class Data(Dataset):
                 nc = (nc/(pc+nc))*N
                 pc = _pc
             df.df = pd.concat((
-                pcrna.sample(n=round(pc),replace=replace,random_state=seed),
-                ncrna.sample(n=round(nc),replace=replace,random_state=seed)
+                pcrna.sample(n=round(pc),replace=replace,random_state=random_state),
+                ncrna.sample(n=round(nc),replace=replace,random_state=random_state)
             ))
         elif N is not None: # Only N? Sample N samples directly.
             df.df = self.df.sample(n=N, replace=replace, random_state=seed)

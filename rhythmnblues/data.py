@@ -478,7 +478,8 @@ class Data(Dataset):
         ratio = (length - certain) / length
         self.df = self.df[(ratio <= tolerance)]
 
-    def sample(self, pc=None, nc=None, N=None, replace=False, seed=None):
+    def sample(self, pc=None, nc=None, N=None, replace=False, 
+               random_state=None):
         '''Returns a randomly sampled `Data` object.
         
         Arguments
@@ -494,7 +495,7 @@ class Data(Dataset):
         `replace`: `bool`
             Whether or not to sample with replacement. Required if `N` or 
             `pc+nc` exceeds the number of samples in the `Data` object.
-        `seed`: `int`
+        `random_state`: `int`
             Seed for random number generator.'''
 
         df = copy.deepcopy(self) # Create object copy
@@ -509,8 +510,8 @@ class Data(Dataset):
                 nc = (nc/(pc+nc))*N
                 pc = _pc
             df.df = pd.concat((
-                pcrna.sample(n=round(pc),replace=replace,random_state=seed),
-                ncrna.sample(n=round(nc),replace=replace,random_state=seed)
+                pcrna.sample(n=round(pc),replace=replace,random_state=random_state),
+                ncrna.sample(n=round(nc),replace=replace,random_state=random_state)
             ))
         elif N is not None: # Only N? Sample N samples directly.
             df.df = self.df.sample(n=N, replace=replace, random_state=seed)

@@ -186,7 +186,7 @@ def plot_feature_selection_results(results, groupby, filepath=None,
     else: 
         raise ValueError("Minimum of 1 and maximum of 2 groups.")
     
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=figsize)
 
     multiplier = 0
     width = 1/(len(inner_groups) + 1)

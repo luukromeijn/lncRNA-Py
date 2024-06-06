@@ -1,2 +1,2 @@
 from rhythmnblues.modules.model import Model
-from rhythmnblues.modules.architectures import MycoAICNN # NOTE should this be accessible from here?
+from rhythmnblues.modules.architectures import MycoAICNN, BERT # NOTE should this be accessible from here?

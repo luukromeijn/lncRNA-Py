@@ -1,8 +1,10 @@
 import pytest
+import torch
 from rhythmnblues.features import KmerFreqs
 from rhythmnblues.modules import MycoAICNN, Model
 from rhythmnblues.train.loggers import *
 from rhythmnblues.train import train_classifier
+from rhythmnblues import utils
 
 loggers = [
     ('LoggerBase',  lambda path: LoggerBase()),
@@ -34,3 +36,8 @@ def test_train_classifier(data):
     data.calculate_feature(kmers)
     data.set_tensor_features(kmers.name)
     train_classifier(model, data, data, 1)
+
+def test_utils_device():
+    '''The code assumes that device is device object (and not a string!)'''
+    assert type(utils.DEVICE) == torch.device
+    assert type(utils.DEVICE) != str

@@ -5,3 +5,7 @@ results/
 data/sequences/
 data/tables/
 data/blastdbs
+slurm/
+*.out
+*.error
+tmp/

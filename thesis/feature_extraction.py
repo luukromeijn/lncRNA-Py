@@ -8,12 +8,11 @@ utils.watch_progress(on=False) # For SHARK
 
 def feature_extraction(
         dataset_name, pcrna_filepath, ncrna_filepath, tables_folder, 
-        features_folder, blastdbs_path='data/blastdbs/uniref90', tmp_folder='', 
-        test_mode=False
+        features_folder, blast_folder, test_mode=False
 ):
     data = Data([pcrna_filepath, ncrna_filepath])
     data.calculate_feature(Length())
-    data.filter_outliers('length', [100, np.inf])
+    data.filter_outliers('length', [100, 10000])
     if test_mode:
         data = data.sample(100, 100)
 
@@ -69,11 +68,13 @@ def feature_extraction(
         lambda data: MLCDSLengthStd(),
         lambda data: MLCDSScoreDistance(),
         lambda data: MLCDSScoreStd(),
-        lambda data: BLASTXSearch(blastdbs_path, tmp_folder=f'{tmp_folder}/{dataset_name}', threads=12),
+        lambda data: BLASTXSearch(f'{blast_folder}/{dataset_name}.csv'),
         lambda data: BLASTXBinary(),
+        lambda data: KmerDistance(data, 6, 'euc', 'ORF', stride=3, export_path=f'{features_folder}/{dataset_name}/6mer_orf_dist_ref_euc.txt'),
         lambda data: SSE(),
         lambda data: UPFrequency(),
-        lambda data: KmerDistance(data, 6, 'log', 'ORF', stride=3, export_path=f'{features_folder}/{dataset_name}/6mer_orf_dist_ref.txt'),
+        # lambda data: KmerDistance(data, 6, 'log', 'ORF', stride=3, export_path=f'{features_folder}/{dataset_name}/6mer_orf_dist_ref.txt'),
+        # lambda data: KmerDistance(data, 6, 'log', 'ORF', stride=3, export_path=f'{features_folder}/{dataset_name}/6mer_orf_dist_ref_log.txt'),
         lambda data: KmerDistance(data, 4, 'log', 'acguD', stride=1, alphabet='ACGTD', export_path=f'{features_folder}/{dataset_name}/4mer_acgtd_dist_ref.txt'), 
         lambda data: KmerDistance(data, 3, 'log', 'acgu-ACGU', stride=1, alphabet='ACGTacgt', export_path=f'{features_folder}/{dataset_name}/3mer_acgu_dist_ref.txt'),
     ]
@@ -91,12 +92,11 @@ if __name__ == '__main__':
     parser.add_argument('ncrna_filepath')
     parser.add_argument('tables_folder')
     parser.add_argument('features_folder')
-    parser.add_argument('--blastdbs_path', default='data/blastdbs/uniref90')
-    parser.add_argument('--tmp_folder', default='')
+    parser.add_argument('blast_folder')
     parser.add_argument('--test_mode', type=bool, default=False)
     args = parser.parse_args()
     feature_extraction(
         args.dataset_name, args.pcrna_filepath, args.ncrna_filepath, 
-        args.tables_folder, args.features_folder, args.blastdbs_path, 
-        args.tmp_folder, args.test_mode
+        args.tables_folder, args.features_folder, args.blast_folder,
+        args.test_mode
     )

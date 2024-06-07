@@ -303,7 +303,7 @@ class ORFProteinAnalysis:
     def calculate_per_sequence(self, sequence):
         '''Calculates ORF protein feature(s) for a given amino acid 
         `sequence`.'''
-        if len(sequence) == 0 or 'X' in sequence:
+        if len(sequence) == 0 or 'X' in sequence or '*' in sequence:
             return [np.nan for name in self.features]
         else:
             sequence = ProteinAnalysis(sequence)

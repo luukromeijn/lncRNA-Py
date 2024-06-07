@@ -132,7 +132,7 @@ class PermutationSelection(FeatureSelectionBase):
 class RFESelection(FeatureSelectionBase): # TODO: not really a nice name I guess
     '''Recursive Feature Elimination. Uses ranks as importance measure.'''
 
-    def __init__(self, k, step=0.5):
+    def __init__(self, k, step=0.01):
         super().__init__('RFE', 'Rank', k)
         self.model = make_pipeline(
             SimpleImputer(missing_values=np.nan), 

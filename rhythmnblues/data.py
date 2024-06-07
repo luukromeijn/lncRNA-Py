@@ -510,11 +510,14 @@ class Data(Dataset):
                 nc = (nc/(pc+nc))*N
                 pc = _pc
             df.df = pd.concat((
-                pcrna.sample(n=round(pc),replace=replace,random_state=random_state),
-                ncrna.sample(n=round(nc),replace=replace,random_state=random_state)
+                pcrna.sample(n=round(pc),replace=replace,
+                             random_state=random_state),
+                ncrna.sample(n=round(nc),replace=replace,
+                             random_state=random_state)
             ))
         elif N is not None: # Only N? Sample N samples directly.
-            df.df = self.df.sample(n=N, replace=replace, random_state=seed)
+            df.df = self.df.sample(n=N, replace=replace, 
+                                   random_state=random_state)
         else:
             raise ValueError("Please specify N and/or pc and nc.")
         return df

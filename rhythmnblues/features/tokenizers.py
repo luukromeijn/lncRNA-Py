@@ -166,33 +166,50 @@ class BytePairEncoding(TokenizerBase):
         # includes the 'special' tokens like CLS, PAD, etc.
         return self.encoder.vocab_size()
     
-    def get_length_stats(self, data):
-        '''Generates report about length distribution given current vocab.'''
-        return pd.concat([self.get_piece_length_stats(), 
-                          self.get_encoding_length_stats(data)])
-    
     def get_piece_length_stats(self):
         '''Returns the avg, std, min, and max length of word pieces in the BPE 
         vocabulary.'''
         lengths = [len(self.encoder.IdToPiece(i)) 
                    for i in range(self.get_vocab_size())]
-        return self._length_stats_table(lengths, 'Word length')
-    
-    def get_encoding_length_stats(self, data):
-        '''Returns the avg, std, min, and max length of encoded sequences in 
-        `data` given the BPE vocabulary.'''
-        lengths = [len(encoding) for encoding in 
-                   self.encoder.encode(data.df['sequence'].tolist())]
-        return self._length_stats_table(lengths, 'Encoding length')
-    
-    def _length_stats_table(self, lengths, name):
-        '''Creates a DataFrame with some length statistics.'''
         return pd.DataFrame(
             [[self.get_vocab_size(), 
               np.average(lengths), 
               np.std(lengths), 
               np.min(lengths), 
               np.max(lengths)]], 
-            columns=['Vocab size', 'avg', 'std', 'min', 'max'], 
-            index=[name]
+            columns=['Vocab size', 'avg', 'std', 'min', 'max']
         )
+    
+
+class BytePairEncodingLength(BytePairEncoding):
+    '''Calculates the full Byte Pair Encoding length, without special tokens 
+    (e.g. CLS), assuming no context length cut-off.'''
+
+    def __init__(self, data, vocab_size=768, max_sentence_length=8000, 
+                 export_path=None):
+        '''Initializes `BytePairEncodingLength` object.
+        
+        Arguments
+        ---------
+        `data`: `Data`|`str`
+            Path to existing BPE tokenizer model.
+        `vocab_size`: `int`
+            Number of unique tokens known to the model (includes CLS, PAD, etc.)
+            Disregarded if `data` is of type `str` (default is 768).
+        `max_sentence_length`: `int`
+            Maximum length of sequences to consider for fitting the BPE model.
+            Disregarded if `data` is of type `str` (default is 8000).
+        `export_path`: `str`
+            If specified, saves BPE model to this path (default is None).'''
+        
+        super().__init__(
+            data, context_length=0, vocab_size=vocab_size, 
+            max_sentence_length=max_sentence_length, export_path=export_path
+        )
+        self.context_length = None
+        self.name = 'BPE length'
+
+    def calculate(self, data):
+        '''Calculates theoretical BPE length for every row in `data`.'''
+        return np.array([len(encoding) for encoding 
+                         in self.encoder.encode(data.df['sequence'].tolist())])

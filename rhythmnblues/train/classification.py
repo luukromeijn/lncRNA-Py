@@ -1,7 +1,6 @@
 '''Functions for training a deep learning model for the classification of RNA 
 transcripts as either protein-coding or long non-coding.'''
 
-import time
 import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import (accuracy_score, precision_score, recall_score, 
@@ -32,7 +31,10 @@ def train_classifier(
     `model`: `torch.nn.Module` | `rhythmnblues.modules.Model`
         Neural network that is to be trained.
     `train_data`: `rhythmnblues.data.Data`
-        Data to use for training, must call `set_tensor_features` first. 
+        Data to use for training, must call `set_tensor_features` first. After 
+        every training epoch, the performance of the model on a subset of the 
+        training set is determined. The length of this subset is 
+        `min(len(train_data), len(valid_data))`. 
     `valid_data`: `rhythmnblues.data.Data`
         Data to use for validation, must call `set_tensor_features` first.
     `epochs`: `int`
@@ -52,7 +54,8 @@ def train_classifier(
         Metrics (name + function) that will be evaluated at every epoch.'''
 
     # Initializing required objects
-    train_dataloader = DataLoader(train_data, batch_size, shuffle=True)
+    train_dataloader = DataLoader(train_data, batch_size, shuffle=True) 
+    train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))
     if loss_function is None:
         loss_function = torch.nn.BCEWithLogitsLoss(pos_weight=
                                                    train_data.pos_weight())
@@ -60,13 +63,13 @@ def train_classifier(
                                                              lr=0.0001)
     scaler = get_gradient_scaler(utils.DEVICE)
     logger = logger if logger else LoggerBase()
-    logger.set_columns(metrics)
-
-    print("Training...")
+    logger.start(metrics)
+    
+    print("Training classifier...")
     for epoch in utils.progress(range(epochs)): # Looping through epochs
         model = epoch_classifier(model, train_dataloader, loss_function, 
                                  optimizer, scaler) # Train
-        train_results = evaluate_classifier(model, train_data, loss_function, 
+        train_results = evaluate_classifier(model, train_subset, loss_function, 
                                             metrics) # Evaluate on trainset
         valid_results = evaluate_classifier(model, valid_data, loss_function, 
                                             metrics) # Evaluate on valid set

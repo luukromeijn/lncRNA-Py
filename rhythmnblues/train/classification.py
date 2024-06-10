@@ -62,7 +62,6 @@ def train_classifier(
     logger = logger if logger else LoggerBase()
     logger.set_columns(metrics)
 
-    t0 = time.time()
     print("Training...")
     for epoch in utils.progress(range(epochs)): # Looping through epochs
         model = epoch_classifier(model, train_dataloader, loss_function, 
@@ -74,7 +73,7 @@ def train_classifier(
         logger.log(train_results + valid_results) # Log
 
     # Finish
-    print(f"Training finished in {round(time.time()-t0, 2)} seconds.")
+    logger.finish()
     return model, logger.history
 
 

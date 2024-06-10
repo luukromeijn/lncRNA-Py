@@ -7,6 +7,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 
 class LoggerBase:
@@ -24,6 +25,7 @@ class LoggerBase:
         '''Initializes `LoggerBase object.`'''
         self.history = pd.DataFrame()
         self.columns = None
+        self.t0 = time.time()
 
     def set_columns(self, metrics):
         '''Sets columns according to the specified `metrics` (assuming loss 
@@ -40,6 +42,13 @@ class LoggerBase:
     def log(self, epoch_results):
         '''Logs `epoch_results`.'''
         self.log_history(epoch_results)
+
+    def finish(self):
+        '''Finishes logging, reports training time and final performance.'''
+        self.t1 = time.time()
+        print(f"Training finished in {round(self.t1-self.t0, 2)} seconds.")
+        print("Final performance:")
+        print(self.history.iloc[-1])
 
 
 class LoggerPrint(LoggerBase):

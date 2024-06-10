@@ -4,7 +4,7 @@ from `rhythmnblues`.'''
 
 import torch
 from torch.utils.data import DataLoader
-from rhythmnblues.modules.architectures import BERT
+from rhythmnblues.modules.bert import BERT
 
 
 class WrapperBase(torch.nn.Module):

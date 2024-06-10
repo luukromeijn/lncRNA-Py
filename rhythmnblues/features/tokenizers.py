@@ -15,6 +15,8 @@ class TokenizerBase:
     ----------
     `context_length`: `int`
         Number of tokens this tokenizer generates per sample.
+    `vocab_size`: `int`
+        The number of unique tokens known by the model.
     `tokens`: `dict[str:int]`
         Mapping of sequences (or token indicators such as 'CLS') to the integer
         values that these tokens are represented by.
@@ -36,8 +38,9 @@ class TokenizerBase:
         self.tokens = utils.TOKENS.copy()
         self.name = [f'T{i} {method_name}' for i in range(self.context_length)]
     
-    def get_vocab_size(self):
-        '''Returns the number of unique tokens known by the model.'''
+    @property
+    def vocab_size(self):
+        '''The number of unique tokens known by the model.'''
         return len(self.tokens)
         
 
@@ -161,7 +164,8 @@ class BytePairEncoding(TokenizerBase):
              for encoding in self.encoder.encode(data.df['sequence'].tolist())]
         )
 
-    def get_vocab_size(self):
+    @property
+    def vocab_size(self):
         # NOTE: We verified that the vocab_size parameter of sentencepiece 
         # includes the 'special' tokens like CLS, PAD, etc.
         return self.encoder.vocab_size()
@@ -170,9 +174,9 @@ class BytePairEncoding(TokenizerBase):
         '''Returns the avg, std, min, and max length of word pieces in the BPE 
         vocabulary.'''
         lengths = [len(self.encoder.IdToPiece(i)) 
-                   for i in range(self.get_vocab_size())]
+                   for i in range(self.vocab_size)]
         return pd.DataFrame(
-            [[self.get_vocab_size(), 
+            [[self.vocab_size, 
               np.average(lengths), 
               np.std(lengths), 
               np.min(lengths), 

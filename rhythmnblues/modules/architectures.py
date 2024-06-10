@@ -66,8 +66,8 @@ class BERT(torch.nn.Module):
     BERT: Devlin et al. (2019) https://doi.org/10.48550/arXiv.1810.04805
     MycoAI: Romeijn et al. (2024) https://doi.org/todo''' # TODO update
 
-    def __init__(self, vocab_size, d_model=256, d_ff=512, h=8, N=6, dropout=0.1, 
-                 mode='default'):
+    def __init__(self, vocab_size, d_model=256, d_ff=512, h=8, N=6, 
+                 dropout=0.1):
         '''Initializes the transformer given the source/target vocabulary.
         
         Parameters
@@ -84,153 +84,29 @@ class BERT(torch.nn.Module):
         N: int
             How many encoder/decoder layers the transformer has (default is 6)
         dropout: float
-            Dropout probability to use throughout network (default is 0.1)
-        mode: str
-            BERT will use different forward method when mode=='classification'
-        '''
+            Dropout probability to use throughout network (default is 0.1)'''
 
         super().__init__()
         self.src_pos_embed = PositionalEmbedding(d_model, vocab_size, dropout)
         self.encoder = Encoder(d_model, d_ff, h, N, dropout)
-        self.mlm_layer = torch.nn.Linear(d_model, vocab_size)
+        # self.mlm_layer = torch.nn.Linear(d_model, vocab_size) # TODO remove
         self.vocab_size = vocab_size
         self.d_model = d_model
         self.d_ff = d_ff
         self.h = h
         self.N = N
-        self.set_mode(mode)
 
         # Initialize parameters with Glorot / fan_avg.
         for p in self.parameters():
             if p.dim() > 1:
                 torch.nn.init.xavier_uniform_(p)
 
-    def set_mode(self, mode):
-        '''Uses alternative forward method when mode == 'classificiation'.'''
-        if mode == 'classification':
-            self.forward = self._forward_classification
-        elif mode == 'mlm':
-            self.forward = self._forward_mlm
-        else:
-            self.forward = self._forward_default
-
-    def _forward_default(self, src, src_mask):
-        '''Given a source (and mask), retrieve encoded representation'''
+    def forward(self, src):
+        '''Given a source, retrieve encoded representation'''
+        src_mask = (src != utils.TOKENS['PAD']).unsqueeze(-2) # Mask padding
         src_embedding = self.src_pos_embed(src)
         return self.encoder(src_embedding, src_mask)
     
-    def _forward_classification(self, src):
-        '''Given input sequence, retrieve embedding aggregated in CLS token'''
-        src_mask = (src != utils.TOKENS['PAD']).unsqueeze(-2) # Mask padding
-        src_embedding = self.src_pos_embed(src) 
-        # Return only the part of the tensor that corresponds to CLS token
-        return self.encoder(src_embedding, src_mask)[:,0,:]
-
-    def _forward_mlm(self, src):
-        '''Given input sequence, predict masked tokens'''
-        src_mask = (src != utils.TOKENS['PAD']).unsqueeze(-2) # Mask padding
-        src = self.encoder(self.src_pos_embed(src), src_mask)
-        return self.mlm_layer(src)
-    
-    def get_config(self):
-        config = {}
-        if hasattr(self, 'pretraining'):
-            config = {'pretraining': self.pretraining}
-        return {
-            'type':         utils.get_type(self),
-            'd_model':      self.d_model,
-            'd_ff':         self.d_ff,
-            'h':            self.h,
-            'N':            self.N,
-            **config
-        }
-
-
-class EncoderDecoder(torch.nn.Module):
-    '''Transformer encoder-decoder model'''
-
-    def __init__(self, vocab_size, classes, d_model=256, d_ff=512, h=8, 
-                 N_encoder=4, N_decoder=2, decoder_self_attn=True, dropout=0.1):
-        '''Initializes the transformer given the source/target vocabulary.
-        
-        Parameters
-        ----------
-        vocab_size: int
-            Number of unique tokens in vocabulary. Can be the vocab_size
-            attribute of a BytePairEncoder or KmerTokenizer object. 
-        classes: list 
-            List that indicates the number of taxonomic classes per level. Can 
-            be the classes attribute of a TaxonEncoder object.
-        d_model: int
-            Dimension of sequence repr. (embedding) in model (default is 512)
-        d_ff: int
-            Dimension of hidden layer FFN sublayers (default is 2048)
-        h: int
-            Number of heads used for multi-head self-attention (default is 8)
-        N_encoder: int
-            How many encoder layers the transformer has (default is 4)
-        N_decoder: int
-            How many encoder layers the transformer has (default is 2)
-        decoder_self_attn: bool
-            Whether or not the decoder should have self-attention (default True)
-        dropout: float
-            Dropout probability to use throughout network (default is 0.1)'''
-
-        super().__init__()
-        self.src_pos_embed = PositionalEmbedding(d_model, vocab_size, dropout)
-        self.encoder = Encoder(d_model, d_ff, h, N_encoder, dropout)
-        self.tgt_pos_embed = PositionalEmbedding(d_model,sum(classes)+2,dropout)
-        self.decoder = Decoder(d_model, d_ff, h, N_decoder, dropout, 
-                               decoder_self_attn)
-        
-        self.vocab_size = vocab_size
-        self.d_model = d_model
-        self.d_ff = d_ff
-        self.h = h
-        self.N_encoder = N_encoder
-        self.N_decoder = N_decoder
-        self.N = N_encoder + N_decoder
-        self.decoder_self_attn = decoder_self_attn
-
-        # Initialize parameters with Glorot / fan_avg.
-        for p in self.parameters():
-            if p.dim() > 1:
-                torch.nn.init.xavier_uniform_(p)
-
-    def forward(self, src, tgt):
-        '''Full pass through transformer (embedding, encoding, decoding)'''
-        src_mask = (src != utils.TOKENS['PAD']).unsqueeze(-2) # Mask padding
-        # No target mask used (model always only inputted with 'allowed' part)
-        tgt_mask = torch.ones_like(tgt, dtype=torch.bool).unsqueeze(-2) # All 1
-        memory = self.encode(src, src_mask)
-        return self.decode(memory, src_mask, tgt, tgt_mask)
-    
-    def encode(self, src, src_mask):
-        '''Given a source (and mask), retrieve encoded representation'''
-        src_embedding = self.src_pos_embed(src)
-        return self.encoder(src_embedding, src_mask)
-
-    def decode(self, encoding, src_mask, tgt, tgt_mask):
-        '''Given an encoding and target (+ masks), retrieve decoded repr.'''
-        tgt_embedding = self.tgt_pos_embed(tgt)
-        return self.decoder(tgt_embedding, encoding, src_mask, tgt_mask)
-    
-    def get_config(self):
-        config = {}
-        if hasattr(self, 'pretraining'):
-            config = {'pretraining': self.pretraining}
-        return {
-            'type':                 utils.get_type(self),
-            'd_model':              self.d_model,
-            'd_ff':                 self.d_ff,
-            'h':                    self.h,
-            'N':                    self.N,
-            'N_encoder':            self.N_encoder,
-            'N_decoder':            self.N_decoder,
-            'decoder_self_attn':    self.decoder_self_attn,
-            **config
-        }
-
 
 class Encoder(torch.nn.Module):
     '''N layers of consisting of self-attention and feed forward sublayers,

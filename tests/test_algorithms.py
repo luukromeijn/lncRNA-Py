@@ -2,7 +2,7 @@ import pytest
 from rhythmnblues.algorithms import Algorithm
 from rhythmnblues.algorithms.traditional import *
 from rhythmnblues.features import *
-from rhythmnblues.modules import Model
+from rhythmnblues.modules import Classifier
 from rhythmnblues.modules import MycoAICNN
 
 algorithms = [
@@ -57,7 +57,7 @@ def test_algorithm_base_multi_extractors_and_feature_names():
     assert alg.used_features[1] == 'ATG'
 
 def test_algorithm_base_deep(data):
-    alg = Algorithm(Model(MycoAICNN()), KmerFreqs(3))
+    alg = Algorithm(Classifier(MycoAICNN()), KmerFreqs(3))
     with pytest.raises(AttributeError):
         alg.fit(data)
     pred = alg.predict(data)

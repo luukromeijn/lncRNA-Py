@@ -6,7 +6,7 @@ MycoAI: Romeijn et al. (2024) https://github.com/MycoAI/MycoAI/'''
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, RandomSampler
 from sklearn.metrics import (accuracy_score, precision_score, recall_score, 
                              f1_score)
 from rhythmnblues import utils
@@ -28,7 +28,7 @@ METRICS = {
 def train_mlm(
         model, train_data, valid_data, epochs, batch_size=64, p_mlm=0.15, 
         p_mask=0.8, p_random=0.1, loss_function=None, optimizer=None, 
-        logger=None, metrics=METRICS
+        n_samples_per_epoch=None, logger=None, metrics=METRICS
     ):
     '''Trains `model` for Masked Language Modelling task, using `train_data`, 
     for specified amount of `epochs`.
@@ -61,6 +61,9 @@ def train_mlm(
     `optimizer`: `torch.optim`
         Optimizer to update the network's weights during training. If None 
         (default), will use Adam with `lr=0.0001` and `betas=(0.9, 0.98)`.
+    `n_samples_per_epoch`: `int`
+        If specified, indicates the number of samples per training epoch. If 
+        None, will sample the full training set.
     `logger`: `rhythmnblues.train.loggers`
     	Logger object whose `log` method will be called at every epoch. If None
         (default), will use LoggerBase, which only keeps track of the history.
@@ -68,7 +71,10 @@ def train_mlm(
         Metrics (name + function) that will be evaluated at every epoch.'''
 
     # Initializing required objects
-    train_dataloader = DataLoader(train_data, batch_size, shuffle=True)
+    if n_samples_per_epoch is None:
+        n_samples_per_epoch = len(train_data)
+    sampler = RandomSampler(train_data, num_samples=n_samples_per_epoch)
+    train_dataloader = DataLoader(train_data, batch_size, sampler=sampler)
     train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))
     if loss_function is None:
         loss_function = torch.nn.CrossEntropyLoss(
@@ -98,7 +104,7 @@ def epoch_mlm(model, dataloader, p_mlm, p_mask, p_random,
               loss_function, optimizer, scaler):
     '''Trains `model` for a single epoch.'''
     model.train() # Set training mode
-    for X, _ in utils.progress(dataloader): # Loop through data
+    for X, _ in dataloader: # Loop through data
         X, y = mask_batch(X, model.vocab_size, p_mlm, p_mask, p_random)
         optimizer.zero_grad() # Zero out gradients
         with torch.autocast(**get_amp_args(utils.DEVICE)):
@@ -153,7 +159,7 @@ def evaluate_mlm(model, data, p_mlm, p_mask, p_random, loss_function, metrics):
     # Prediction
     model.eval() # Set in evaluation mode and turn off gradient calculation
     with torch.no_grad():
-        for X, _ in utils.progress(dataloader): # Loop through + mask data
+        for X, _ in dataloader: # Loop through + mask data
             X, y_true = mask_batch(X, model.vocab_size, p_mlm, p_mask, p_random)
             y_pred = model(X) # Make a prediction
             y_true = y_true.view(-1) # Flatten target

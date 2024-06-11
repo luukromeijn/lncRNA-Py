@@ -2,7 +2,7 @@
 transcripts as either protein-coding or long non-coding.'''
 
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, RandomSampler
 from sklearn.metrics import (accuracy_score, precision_score, recall_score, 
                              f1_score)
 from rhythmnblues import utils
@@ -22,7 +22,8 @@ METRICS = {
 
 def train_classifier(
         model, train_data, valid_data, epochs, batch_size=64, 
-        loss_function=None, optimizer=None, logger=None, metrics=METRICS
+        loss_function=None, optimizer=None, n_samples_per_epoch=None, 
+        logger=None, metrics=METRICS
     ):
     '''Trains `model` for classification task, using `train_data`, for specified
     amount of `epochs`.
@@ -55,7 +56,10 @@ def train_classifier(
         Metrics (name + function) that will be evaluated at every epoch.'''
 
     # Initializing required objects
-    train_dataloader = DataLoader(train_data, batch_size, shuffle=True) 
+    if n_samples_per_epoch is None:
+        n_samples_per_epoch = len(train_data)
+    sampler = RandomSampler(train_data, num_samples=n_samples_per_epoch)
+    train_dataloader = DataLoader(train_data, batch_size, sampler=sampler)
     train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))
     if loss_function is None:
         loss_function = torch.nn.BCEWithLogitsLoss(pos_weight=

@@ -21,8 +21,9 @@ DEVICE = (torch.device('cuda') if torch.cuda.is_available()
 CLIP_NORM = 1.0 
 '''Maximum L2-norm of gradients (all above are clipped) (default is 1.0).'''
 
-TOKENS = {'CLS': 0, 'SEP': 1, 'PAD': 2, 'UNK': 3}
-'''Look-up table of special tokens and their associated values.'''
+TOKENS = {'MASK': 0, 'CLS': 1, 'SEP': 2, 'PAD': 3, 'UNK': 4}
+'''Look-up table of special tokens and their associated values. Note that we set
+BPE to assume that MASK=0, hence this value should not be changed.'''
 
 
 ##### HELPER FUNCTIONS #####

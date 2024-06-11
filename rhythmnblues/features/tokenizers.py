@@ -141,10 +141,10 @@ class BytePairEncoding(TokenizerBase):
             spm.SentencePieceTrainer.train(
                 sentence_iterator=sequences, model_writer=stream,
                 vocab_size=vocab_size, model_type='bpe', 
-                bos_id=self.tokens['CLS'], eos_id=self.tokens['SEP'],
-                pad_id=self.tokens['PAD'], unk_id=self.tokens['UNK'],
-                add_dummy_prefix=False, character_coverage=1.0,
-                max_sentence_length=max_sentence_length
+                control_symbols=['MASK'], bos_id=self.tokens['CLS'], # MASK=0
+                eos_id=self.tokens['SEP'], pad_id=self.tokens['PAD'], 
+                unk_id=self.tokens['UNK'], add_dummy_prefix=False, 
+                character_coverage=1.0, max_sentence_length=max_sentence_length
             )
             if export_path is None:
                 self.encoder = self.encoder(model_proto=stream.getvalue())

@@ -24,11 +24,12 @@ def train_classifier(
         model, train_data, valid_data, epochs, batch_size=64, 
         loss_function=None, optimizer=None, logger=None, metrics=METRICS
     ):
-    '''Trains `model` with `train_data` for specified amount of `epochs`.
+    '''Trains `model` for classification task, using `train_data`, for specified
+    amount of `epochs`.
     
     Arguments
     ---------
-    `model`: `torch.nn.Module` | `rhythmnblues.modules.Model`
+    `model`: `torch.nn.Module` | `rhythmnblues.modules.Classifier`
         Neural network that is to be trained.
     `train_data`: `rhythmnblues.data.Data`
         Data to use for training, must call `set_tensor_features` first. After 

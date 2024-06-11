@@ -39,7 +39,6 @@ class BERT(torch.nn.Module):
         super().__init__()
         self.src_pos_embed = PositionalEmbedding(d_model, vocab_size, dropout)
         self.encoder = Encoder(d_model, d_ff, h, N, dropout)
-        # self.mlm_layer = torch.nn.Linear(d_model, vocab_size) # TODO remove
         self.vocab_size = vocab_size
         self.d_model = d_model
         self.d_ff = d_ff

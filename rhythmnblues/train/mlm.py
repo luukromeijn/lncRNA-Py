@@ -14,6 +14,11 @@ from rhythmnblues.train.mixed_precision import get_gradient_scaler, get_amp_args
 from rhythmnblues.train.loggers import LoggerBase
 
 
+def experimental(y_true, y_pred):
+    return (np.unique(y_true.numpy(), return_counts=True),
+            np.unique(y_pred.numpy(), return_counts=True))
+
+
 METRICS = {
     'Accuracy': accuracy_score,
     'Precision (macro)': lambda y_t, y_p: precision_score(
@@ -21,7 +26,8 @@ METRICS = {
     'Recall (macro)': lambda y_t, y_p: recall_score(
         y_t, y_p, average='macro', zero_division=np.nan),
     'F1 (macro)': lambda y_t, y_p: f1_score(
-        y_t, y_p, average='macro', zero_division=np.nan)
+        y_t, y_p, average='macro', zero_division=np.nan),
+    'Experimental': lambda y_t, y_p: experimental(y_t, y_p) 
 }
 
 

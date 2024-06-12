@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import torch
+from rhythmnblues import utils
 
 
 class LoggerBase:
@@ -209,3 +210,36 @@ class EarlyStopping(LoggerBase):
             self.sign * self.best_score):
             torch.save(model, self.filepath)
         print(f"Model saved at epoch {self.epoch}.")
+
+
+class LoggerExperimental(LoggerBase):
+    '''TODO'''
+
+    def __init__(self, vocab_size, filepath):
+        super().__init__()
+        self.filepath = filepath
+        self.vocab_size = vocab_size
+
+    def _action(self, model):
+        counts = np.zeros((2, self.vocab_size-len(utils.TOKENS)))
+        data = self.history.iloc[-1]["Experimental|valid"]
+        for i, token_counts in enumerate(data):
+            for token, count in zip(token_counts[0], token_counts[1]):
+                if token < len(utils.TOKENS):
+                    continue
+                else:
+                    counts[i, token-len(utils.TOKENS)] = count
+        # ratio = np.log10(counts[1]) / (counts[0])
+        order = np.argsort(counts[0])[::-1]
+
+        fig, ax = plt.subplots()
+        bar = ax.bar(np.arange(self.vocab_size-len(utils.TOKENS)), counts[0][order], width=1, alpha=0.5, label='Target')
+        ax.bar(np.arange(self.vocab_size-len(utils.TOKENS)), counts[1][order], width=1, color=bar[0].get_facecolor(), alpha=1.0, label='Predicted')
+        ax.set_yscale('log')
+        ax.set_xlabel('Tokens')
+        ax.set_ylabel('log(count)')
+        fig.legend()
+        fig.tight_layout()
+        fig.savefig(self.filepath)
+        plt.close(fig)
+        # Check the ratio and then sort or whatever

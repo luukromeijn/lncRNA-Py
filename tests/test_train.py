@@ -11,6 +11,7 @@ loggers = [
     ('LoggerPrint', lambda path: LoggerPrint()),
     ('LoggerWrite', lambda path: LoggerWrite(str(path) + '/test.csv')),
     ('LoggerPlot',  lambda path: LoggerPlot(path)),
+    ('LoggerList',  lambda path: LoggerList(LoggerPrint(), LoggerPlot(path)))
 ]
 
 @pytest.fixture(scope="function", params=loggers, ids=[n for n,_ in loggers])
@@ -28,7 +29,7 @@ def test_logger_start(logger):
 
 def test_logger_log(logger):
     logger.start({})
-    logger.log([0,0])
+    logger.log([0,0], 'model_dummy')
 
 def test_train_classifier(data):
     kmers = KmerFreqs(3)

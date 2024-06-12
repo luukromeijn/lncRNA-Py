@@ -93,7 +93,7 @@ def train_mlm(
                                      p_random, loss_function, metrics) 
         valid_results = evaluate_mlm(model, valid_data, p_mlm, p_mask, p_random,
                                      loss_function, metrics) 
-        logger.log(train_results + valid_results)
+        logger.log(train_results+valid_results, model)
 
     # Finish
     logger.finish()

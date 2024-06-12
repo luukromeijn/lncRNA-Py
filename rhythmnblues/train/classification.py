@@ -78,7 +78,7 @@ def train_classifier(
                                             metrics) # Evaluate on trainset
         valid_results = evaluate_classifier(model, valid_data, loss_function, 
                                             metrics) # Evaluate on valid set
-        logger.log(train_results + valid_results) # Log
+        logger.log(train_results+valid_results, model) # Log
 
     # Finish
     logger.finish()

@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+import torch
 
 
 class LoggerBase:
@@ -41,16 +42,22 @@ class LoggerBase:
         print(f"Training finished in {round(self.t1-self.t0, 2)} seconds.")
         print("Final performance:")
         print(self.history.iloc[-1])
-        
-    def log_history(self, epoch_results):
+    
+    def log(self, epoch_results, model):
+        '''Logs `epoch_results` for given `model`.'''
+        self._add_to_history(epoch_results)
+        self._action(model)
+
+    def _add_to_history(self, epoch_results):
         '''Adds row to history DataFrame.'''
         epoch_results = pd.DataFrame([epoch_results], columns=self.columns)
         self.history = pd.concat([self.history, epoch_results], 
                                  ignore_index=True)
-    
-    def log(self, epoch_results):
-        '''Logs `epoch_results`.'''
-        self.log_history(epoch_results)
+
+    def _action(self, model):
+        '''Action to perform at every call of `.log`. Assumes the latest epoch
+        has been added to the `.history` attribute.'''
+        pass # LoggerBase has no action
 
 
 class LoggerPrint(LoggerBase):
@@ -73,10 +80,7 @@ class LoggerPrint(LoggerBase):
         self.epoch = 0
         self.metric_names = metric_names
 
-    def log(self, epoch_results):
-        '''Logs `epoch_results`.'''
-        
-        self.log_history(epoch_results)
+    def _action(self, model):
         self.epoch += 1
 
         print(f'Epoch {self.epoch}:')
@@ -104,9 +108,7 @@ class LoggerWrite(LoggerBase):
         super().__init__()
         self.filepath = filepath
 
-    def log(self, epoch_results):
-        '''Logs `epoch_results`.'''
-        self.log_history(epoch_results)
+    def _action(self, model):
         self.history.to_csv(self.filepath, float_format="%.6f")
 
 
@@ -128,9 +130,8 @@ class LoggerPlot(LoggerBase):
         Path(dir_path).mkdir(parents=True, exist_ok=True)
         self.dir_path = dir_path
 
-    def log(self, epoch_results):
+    def _action(self, model):
         '''Logs `epoch_results`.'''
-        self.log_history(epoch_results)
         for m in self.history.columns[:int(len(self.history.columns)/2)]:
             m = m.split('|')[0]
             fig = self.plot_history(m, 
@@ -152,3 +153,59 @@ class LoggerPlot(LoggerBase):
         if filepath is not None:
             fig.savefig(filepath)
         return fig
+
+
+class LoggerList(LoggerBase):
+    '''Combine multiple loggers into one, executing all of their actions per 
+    logging event while keeping track of a single, shared history.
+    
+    Attributes
+    ----------
+    `loggers`: `list`
+        List of loggers from rhythmnblues.train.loggers.'''
+
+    def __init__(self, *args):
+        '''Initializes `LoggerList` object with specified loggers.'''
+        super().__init__()
+        self.loggers = [logger for logger in args]
+
+    def log(self, epoch_results, model):
+        self._add_to_history(epoch_results)
+        for logger in self.loggers:
+            logger.history = self.history
+            logger._action(model)
+
+
+class EarlyStopping(LoggerBase):
+    '''Special logger that saves the model if it has the best-so-far 
+    performance.
+    
+    Attributes
+    ----------
+    `metric_name`: `str`
+        Column name of the metric that the early stopping is based on.
+    `filepath`: `str`
+        Path to and name of file where model should be saved to.
+    `sign`: `int`
+        Whether the goal is max-/minimization (1/-1).
+    `best_score`: `float`
+        Current best score of metric.
+    `epoch`: `int`
+        Epoch counter.'''
+
+    def __init__(self, metric_name, filepath, maximize=True):
+        '''Initializes `EarlyStopping` object. If `metric_name` is not
+        specified, will use validation loss for early stopping.'''
+        super().__init__()
+        self.metric_name = metric_name
+        self.filepath = filepath
+        self.sign = 1 if maximize else -1
+        self.best_score = np.inf
+        self.epoch = 0
+
+    def _action(self, model):
+        self.epoch += 1
+        if (self.sign * self.history.iloc[-1][self.metric_name] > 
+            self.sign * self.best_score):
+            torch.save(model, self.filepath)
+        print(f"Model saved at epoch {self.epoch}.")

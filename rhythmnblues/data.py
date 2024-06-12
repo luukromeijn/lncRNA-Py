@@ -216,15 +216,18 @@ class Data(Dataset):
             self._write_fasta(self.df, fasta_filepath)
 
     def calculate_feature(self, feature_extractor):
-        '''Adds feature(s) from `feature_extractor` as column(s) to `Data`.'''
-        self.check_columns(['sequence'])
-        if type(feature_extractor.name) == list:
-            new_columns = pd.DataFrame(feature_extractor.calculate(self), 
-                                       columns=feature_extractor.name, 
-                                       index=self.df.index)
-            self.df = pd.concat([self.df, new_columns], axis=1)
+        '''Extracts feature(s) from `Data` using `feature_extractor`.'''
+        self.add_feature(feature_extractor.calculate(self), 
+                         feature_extractor.name)
+
+    def add_feature(self, feature_data, feature_names):
+        '''Safely adds `feature_data` as new columns to `Data`.'''
+        if type(feature_names) == list:
+            new = pd.DataFrame(feature_data, columns=feature_names, 
+                               index=self.df.index)
+            self.df = pd.concat([self.df, new], axis=1)
         else:
-            self.df[feature_extractor.name] = feature_extractor.calculate(self)
+            self.df[feature_names] = feature_data
 
     def all_features(self, except_columns=['id', 'sequence', 'label']):
         '''Returns a list of all features present in data.'''

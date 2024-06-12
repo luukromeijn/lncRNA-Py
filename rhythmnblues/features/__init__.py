@@ -31,4 +31,3 @@ except ModuleNotFoundError:
 from rhythmnblues.features.tokenizers import KmerTokenizer, BytePairEncoding
 from rhythmnblues.features.zhang import ZhangScore
 from rhythmnblues.features.eiip import EIIPPhysicoChemical
-from rhythmnblues.features.latent_space import LatentSpace

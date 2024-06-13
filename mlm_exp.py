@@ -33,8 +33,9 @@ data_dir = '/exports/sascstudent/lromeijn/data'
 results_dir = '/exports/sascstudent/lromeijn/results'
 
 # FOR DURANIUM
-data_dir = '/data/s2592800/data'
-results_dir = 'results'
+# utils.DEVICE = torch.device('cuda:2')
+# data_dir = '/data/s2592800/data'
+# results_dir = 'results'
 
 # CONSTANTS
 lr = 0.0001

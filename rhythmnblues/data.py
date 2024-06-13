@@ -152,7 +152,7 @@ class Data(Dataset):
         SeqIO.write(seqs, filepath, 'fasta')
 
     def get_token_weights(self, strength=1):
-        weights = np.zeros(4096)
+        weights = np.zeros(512) # NOTE: WARNING THIS IS HARDCODED!
         values = self.df[self.tensor_features].values
         for token, count in zip(*np.unique(values, return_counts=True)):
             weights[token] = count

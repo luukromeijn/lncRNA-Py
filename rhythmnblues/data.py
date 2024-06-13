@@ -151,6 +151,17 @@ class Data(Dataset):
                 zip(data['id'].values, data['sequence'].values)]
         SeqIO.write(seqs, filepath, 'fasta')
 
+    def get_token_weights(self, strength=1):
+        weights = np.zeros(4096)
+        values = self.df[self.tensor_features].values
+        for token, count in zip(*np.unique(values, return_counts=True)):
+            weights[token] = count
+        weights = 1/((weights**strength)+1)
+        for token in utils.TOKENS:
+            weights[utils.TOKENS[token]] = 0
+        weights = torch.tensor(weights, device=utils.DEVICE, dtype=torch.float)
+        return weights
+
     def set_tensor_features(self, feature_names, dtype=torch.float32):
         '''Configures `Data` object to return a tuple of tensors (x,y) whenever 
         `__getitem__` is called. X is the feature tensor, which features it

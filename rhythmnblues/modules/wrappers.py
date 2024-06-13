@@ -129,6 +129,7 @@ class MLM(WrapperBase):
         super().__init__(base_arch, pred_batch_size)
         self.mlm_layer = torch.nn.Linear(base_arch.d_model,base_arch.vocab_size)
         self.vocab_size = base_arch.vocab_size
+        self.d_model = base_arch.d_model
 
     def forward(self, X):
         return self.mlm_layer(self.base_arch(X))

@@ -243,16 +243,17 @@ class LoggerMLMCounts(LoggerBase):
     '''Plots, at every epoch, the true token count vs the predicted token
     counts, based on the 'Counts' metric.'''
 
-    def __init__(self, vocab_size, filepath):
+    def __init__(self, vocab_size, filepath, valid=True):
         super().__init__()
         self.filepath = filepath
         self.vocab_size = vocab_size
+        self.train_or_valid = 'valid' if valid else 'train'
 
     def _action(self, model):
         
         # Format counts from history data into an array
         counts = np.zeros((2, self.vocab_size-len(utils.TOKENS)))
-        data = self.history.iloc[-1]["Experimental|valid"]
+        data = self.history.iloc[-1][f"Counts|{self.train_or_valid}"]
         for i, token_counts in enumerate(data):
             for token, count in zip(token_counts[0], token_counts[1]):
                 if token < len(utils.TOKENS):

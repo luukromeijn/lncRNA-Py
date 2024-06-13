@@ -33,8 +33,7 @@ class LoggerBase:
         It sets columns according to the specified `metrics`, and starts the
         timrer. The class assumes the loss function as first logged value and 
         train/validation results).'''
-        self.columns = [f'{metric}|{t_or_v}' for t_or_v in ['train', 'valid'] 
-                        for metric in ['Loss'] + list(metrics.keys())]
+        self.columns = self._get_metric_columns(['Loss'] + list(metrics.keys()))
         self.t0 = time.time()
 
     def finish(self):
@@ -60,6 +59,11 @@ class LoggerBase:
         has been added to the `.history` attribute.'''
         pass # LoggerBase has no action
 
+    def _get_metric_columns(self, metric_names):
+        '''Adds train/valid to `metric_names` (list) to get column names.'''
+        return [f'{metric}|{t_or_v}' for t_or_v in ['train', 'valid'] 
+                for metric in metric_names]
+
 
 class LoggerPrint(LoggerBase):
     '''Prints the results per epoch.
@@ -69,7 +73,7 @@ class LoggerPrint(LoggerBase):
     `epoch`: `int`
         Epoch counter.
     `metric_names`: `list[str]`
-        Indicates which names in `columns` to print per epoch.
+        Indicates which metrics to print per epoch.
     `history`: `pd.DataFrame`
         Contains all logged data throughout training. 
     `columns`: `list[str]`
@@ -79,14 +83,15 @@ class LoggerPrint(LoggerBase):
         '''Initializes `LoggerPrint` object for specified `metric_names`.'''
         super().__init__()
         self.epoch = 0
-        self.metric_names = metric_names
+        self.metric_names = (None if metric_names is None 
+                                  else self._get_metric_columns(metric_names))
 
     def _action(self, model):
         self.epoch += 1
 
         print(f'Epoch {self.epoch}:')
         last_epoch = self.history.iloc[-1]
-        if self.metric_names:
+        if self.metric_names is not None:
             print(last_epoch[self.metric_names])
         else:
             print(last_epoch)
@@ -99,18 +104,25 @@ class LoggerWrite(LoggerBase):
     ----------
     `filepath`: `str`
         Path to new .csv file to which to write the results to.
+    `metric_names`: `list[str]`
+        Indicates which metrics to write per epoch.
     `history`: `pd.DataFrame`
         Contains all logged data throughout training. 
     `columns`: `list[str]`
         Column names of the values that are received every log.''' 
 
-    def __init__(self, filepath):
+    def __init__(self, filepath, metric_names=None):
         '''Initializes `LoggerWrite` object for given `filepath`.'''
         super().__init__()
         self.filepath = filepath
+        self.metric_names = (None if metric_names is None 
+                                  else self._get_metric_columns(metric_names))
 
     def _action(self, model):
-        self.history.to_csv(self.filepath, float_format="%.6f")
+        history = self.history
+        if self.metric_names is not None:
+            history = history[self.metric_names]
+        history.to_csv(self.filepath, float_format="%.6f")
 
 
 class LoggerPlot(LoggerBase):
@@ -120,23 +132,31 @@ class LoggerPlot(LoggerBase):
     ----------
     `dir_path`: `str`
         Path to new/existing directory in which figures will be stored.
+    `metric_names`: `list[str]`
+        Indicates which metrics to plot per epoch.
     `history`: `pd.DataFrame`
         Contains all logged data throughout training. 
     `columns`: `list[str]`
         Column names of the values that are received every log.''' 
 
-    def __init__(self, dir_path):
+    def __init__(self, dir_path, metric_names=None):
         '''Initializes `LoggerPlot` object.'''
         super().__init__()
         Path(dir_path).mkdir(parents=True, exist_ok=True)
         self.dir_path = dir_path
+        self.metric_names = metric_names # We don't add '|train'/'|valid' here
+
+    def start(self, metrics):
+        super().start(metrics)
+        if self.metric_names is None:
+            self.metric_names = ['Loss'] + list(metrics.keys())
 
     def _action(self, model):
         '''Logs `epoch_results`.'''
-        for m in self.history.columns[:int(len(self.history.columns)/2)]:
-            m = m.split('|')[0]
-            fig = self.plot_history(m, 
-                                    filepath=f'{self.dir_path}/{m.lower()}.png')
+        for metric in self.metric_names:
+            fig = self.plot_history(
+                metric, filepath=f'{self.dir_path}/{metric.lower()}.png'
+            )
             plt.close(fig)
 
     def plot_history(self, metric_name, filepath=None, figsize=None):
@@ -170,6 +190,11 @@ class LoggerList(LoggerBase):
         super().__init__()
         self.loggers = [logger for logger in args]
 
+    def start(self, metrics):
+        super().start(metrics)
+        for logger in self.loggers:
+            logger.start(metrics)
+
     def log(self, epoch_results, model):
         self._add_to_history(epoch_results)
         for logger in self.loggers:
@@ -177,6 +202,7 @@ class LoggerList(LoggerBase):
             logger._action(model)
 
 
+# TODO add unittest
 class EarlyStopping(LoggerBase):
     '''Special logger that saves the model if it has the best-so-far 
     performance.
@@ -212,8 +238,10 @@ class EarlyStopping(LoggerBase):
         print(f"Model saved at epoch {self.epoch}.")
 
 
-class LoggerExperimental(LoggerBase):
-    '''TODO'''
+# TODO add unittest
+class LoggerMLMCounts(LoggerBase):
+    '''Plots, at every epoch, the true token count vs the predicted token
+    counts, based on the 'Counts' metric.'''
 
     def __init__(self, vocab_size, filepath):
         super().__init__()
@@ -221,6 +249,8 @@ class LoggerExperimental(LoggerBase):
         self.vocab_size = vocab_size
 
     def _action(self, model):
+        
+        # Format counts from history data into an array
         counts = np.zeros((2, self.vocab_size-len(utils.TOKENS)))
         data = self.history.iloc[-1]["Experimental|valid"]
         for i, token_counts in enumerate(data):
@@ -229,12 +259,17 @@ class LoggerExperimental(LoggerBase):
                     continue
                 else:
                     counts[i, token-len(utils.TOKENS)] = count
-        # ratio = np.log10(counts[1]) / (counts[0])
+        
+        # Sort based on true count
         order = np.argsort(counts[0])[::-1]
 
+        # Plot
         fig, ax = plt.subplots()
-        bar = ax.bar(np.arange(self.vocab_size-len(utils.TOKENS)), counts[0][order], width=1, alpha=0.5, label='Target')
-        ax.bar(np.arange(self.vocab_size-len(utils.TOKENS)), counts[1][order], width=1, color=bar[0].get_facecolor(), alpha=1.0, label='Predicted')
+        bar1 = ax.bar(np.arange(self.vocab_size-len(utils.TOKENS)), 
+                     counts[0][order], width=1, alpha=0.5, label='Target')
+        bar2 = ax.bar(np.arange(self.vocab_size-len(utils.TOKENS)), 
+                      counts[1][order], width=1, alpha=1.0, label='Predicted',
+                      color=bar1[0].get_facecolor(), )
         ax.set_yscale('log')
         ax.set_xlabel('Tokens')
         ax.set_ylabel('log(count)')
@@ -242,4 +277,3 @@ class LoggerExperimental(LoggerBase):
         fig.tight_layout()
         fig.savefig(self.filepath)
         plt.close(fig)
-        # Check the ratio and then sort or whatever

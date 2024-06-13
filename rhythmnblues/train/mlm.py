@@ -50,7 +50,7 @@ class LrSchedule:
 def train_mlm(
         model, train_data, valid_data, epochs, batch_size=64, p_mlm=0.15, 
         p_mask=0.8, p_random=0.1, loss_function=None, optimizer=None, 
-        n_samples_per_epoch=None, logger=None, metrics=METRICS
+        n_samples_per_epoch=None, logger=None, metrics=METRICS, s=None, ls=None,
     ):
     '''Trains `model` for Masked Language Modelling task, using `train_data`, 
     for specified amount of `epochs`.
@@ -99,24 +99,24 @@ def train_mlm(
     train_dataloader = DataLoader(train_data, batch_size, sampler=sampler)
     train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))
     if loss_function is None:
-        loss_function = torch.nn.CrossEntropyLoss(weight=train_data.get_token_weights(),
-                          label_smoothing=0.1, ignore_index=utils.TOKENS['PAD']) # TODO set label smoothing back to 0.1
-    # optimizer = optimizer if optimizer else torch.optim.Adam(
-    #                             model.parameters(), lr=0.0001, betas=(0.9,0.98)) # TODO uncomment when finished
+        loss_function = torch.nn.CrossEntropyLoss(weight=train_data.get_token_weights(strength=s),
+                          label_smoothing=ls, ignore_index=utils.TOKENS['PAD']) # TODO set label smoothing back to 0.1
+    optimizer = optimizer if optimizer else torch.optim.Adam(
+                                model.parameters(), lr=0.00001, betas=(0.9,0.98)) # TODO uncomment when finished
     scaler = get_gradient_scaler(utils.DEVICE)
     logger = logger if logger else LoggerBase()
     logger.start(metrics)
 
     # Experimental part
-    optimizer = torch.optim.Adam(model.parameters(), lr=1, betas=(0.9,0.98))
-    schedule = LrSchedule(model.d_model, 4000) 
-    lr_scheduler = torch.optim.lr_scheduler.LambdaLR(
-                            optimizer, lambda step: schedule.get_lr(step))
+    # optimizer = torch.optim.Adam(model.parameters(), lr=1, betas=(0.9,0.98))
+    # schedule = LrSchedule(model.d_model, 4000) 
+    # lr_scheduler = torch.optim.lr_scheduler.LambdaLR(
+    #                         optimizer, lambda step: schedule.get_lr(step))
 
     print("Training MLM...")
     for epoch in utils.progress(range(epochs)):
         model = epoch_mlm(model, train_dataloader, p_mlm, p_mask, p_random, 
-                          loss_function, optimizer, scaler, lr_scheduler)
+                          loss_function, optimizer, scaler)
         train_results = evaluate_mlm(model, train_subset, p_mlm, p_mask, 
                                      p_random, loss_function, metrics) 
         valid_results = evaluate_mlm(model, valid_data, p_mlm, p_mask, p_random,
@@ -129,7 +129,7 @@ def train_mlm(
 
 
 def epoch_mlm(model, dataloader, p_mlm, p_mask, p_random,
-              loss_function, optimizer, scaler, lr_scheduler):
+              loss_function, optimizer, scaler):
     '''Trains `model` for a single epoch.'''
     model.train() # Set training mode
     for X, _ in utils.progress(dataloader): # Loop through data
@@ -143,8 +143,7 @@ def epoch_mlm(model, dataloader, p_mlm, p_mask, p_random,
         scaler.scale(loss).backward() # Calculate gradients
         scaler.unscale_(optimizer) # Unscale before gradient clipping
         torch.nn.utils.clip_grad_norm_(model.parameters(), utils.CLIP_NORM)
-        scaler.step(optimizer) # Optimize parameters 
-        lr_scheduler.step() # Update learning rate
+        scaler.step(optimizer) # Optimize parameters
         scaler.update() # Updates scale
     return model # Return model
 

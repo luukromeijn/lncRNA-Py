@@ -125,11 +125,12 @@ class Classifier(WrapperBase):
 class MLM(WrapperBase):
     '''Wrapper class for model that performs Masked Language Modelling.'''
 
-    def __init__(self, base_arch, pred_batch_size=64):
+    def __init__(self, base_arch, dropout=0.0, pred_batch_size=64):
         super().__init__(base_arch, pred_batch_size)
+        self.dropout = torch.nn.Dropout(p=dropout)
         self.mlm_layer = torch.nn.Linear(base_arch.d_model,base_arch.vocab_size)
         self.vocab_size = base_arch.vocab_size
         self.d_model = base_arch.d_model
 
     def forward(self, X):
-        return self.mlm_layer(self.base_arch(X))
+        return self.mlm_layer(self.dropout(self.base_arch(X)))

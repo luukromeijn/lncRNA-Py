@@ -97,8 +97,9 @@ class Classifier(WrapperBase):
     '''Wrapper class that uses a base architecture to perform binary
     classification.'''
 
-    def __init__(self, base_arch, pred_batch_size=64):
+    def __init__(self, base_arch, dropout=0.0, pred_batch_size=64):
         super().__init__(base_arch, pred_batch_size)
+        self.dropout = torch.nn.Dropout(p=dropout)
         self.output = torch.nn.LazyLinear(1) 
         self.sigmoid = torch.nn.Sigmoid()
         if type(base_arch) == BERT:
@@ -108,7 +109,7 @@ class Classifier(WrapperBase):
         self.data_columns = 'P(pcrna)'
 
     def forward(self, X, return_logits=True):
-        X = self.output(self._forward_base_arch(X))
+        X = self.output(self.dropout(self._forward_base_arch(X)))
         if return_logits:
             return X
         else:

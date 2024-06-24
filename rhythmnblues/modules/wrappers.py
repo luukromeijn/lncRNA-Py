@@ -6,6 +6,7 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 from rhythmnblues.modules.bert import BERT
+from rhythmnblues import utils
 
 
 class WrapperBase(torch.nn.Module):
@@ -63,15 +64,42 @@ class WrapperBase(torch.nn.Module):
         else:
             return predictions
     
-    def latent_space(self, data, inplace=False, CLS_only=True):
-        '''Calculates latent representation for all rows in `data`.'''
+    def latent_space(self, data, inplace=False, pooling=None):
+        '''Calculates latent representation for all rows in `data`.
+        
+        Arguments
+        ---------
+        `data`: `rhythmnblues.data.Data`
+            Data object for which latent space should be calculated.
+        `inplace`: `bool`
+            If True, adds latent space as feature columns to `data`.
+        `pooling`: ['CLS', 'max', 'mean', None]
+            How to aggregate token embeddings (for BERT architectures).
+            * 'CLS': use only CLS token.
+            * 'max': max pooling over (non-padding) token embeddings.
+            * 'mean': mean pooling over (non-padding) token embeddings.
+            * None (default): no pooling, e.g. for CNN base architectures.'''
+        
         spaces = []
         self.eval()
         with torch.no_grad():
             for X, _ in self._get_predict_dataloader(data):
                 y = self.base_arch(X)
-                if CLS_only:
+                if pooling is None:
+                    pass
+                elif pooling == 'CLS':
                     y = y[:,0,:] # CLS is assumed to be first input position
+                else:
+                    not_padding = X != utils.TOKENS['PAD']
+                    y[~not_padding] = 0 # Set padding tokens to 0
+                    if pooling == 'max':
+                        y, _ = y.abs().max(dim=1)
+                    elif pooling == 'mean':
+                        y = (y.sum(axis=1) / 
+                             not_padding.sum(axis=1).unsqueeze(dim=1))
+                    else: 
+                        raise ValueError('Invalid `pooling` value.') 
+                    
                 spaces.append(y.cpu())
         spaces = torch.concatenate(spaces)
         if inplace:
@@ -135,3 +163,17 @@ class MLM(WrapperBase):
 
     def forward(self, X):
         return self.mlm_layer(self.dropout(self.base_arch(X)))
+    
+
+class Regressor(WrapperBase):
+    '''Wrapper class for model that performs linear regression on the base 
+    architecture embedding.'''
+
+    def __init__(self, base_arch, n_features=1, dropout=0.0, pred_batch_size=64):
+        super().__init__(base_arch, pred_batch_size)
+        self.dropout = torch.nn.Dropout(p=dropout)
+        self.output = torch.nn.LazyLinear(out_features=n_features)
+        self.data_columns = [f'F{i}' for i in range(n_features)]
+
+    def forward(self, X):
+        return self.output(self.dropout(self.base_arch(X)))

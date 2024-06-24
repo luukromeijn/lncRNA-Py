@@ -26,16 +26,20 @@ class Data(Dataset):
     ----------
     `df`: `pd.DataFrame`
         The underlying `DataFrame` object containing the data.
-    `tensor_features`: `list[str]`
-        List of feature names (columns) to be retrieved as tensors when 
-        `__getitem__` is called (indexing).
-    `tensor_dtype`: type
-        Data type to be used for tensor features (default is `torch.float32`).
     `labelled`: `bool`
-        Whether the data has labels or not.'''
+        Whether the data has labels or not.
+    `X_name`: `list[str]`
+        List of predictory feature names (columns) to be retrieved as 
+        tensors when `__getitem__` is called.
+    `X_dtype`: type
+        Data type for X (default is `torch.float32`).
+    `y_name`: `list[str]`
+        List of target feature names (columns) to be retrieved as tensors 
+        when `__getitem__` is called.
+    `y_dtype`: type
+        Data type for y (default is `torch.float32`).'''
 
-    def __init__(self, fasta_filepath=None, hdf_filepath=None, 
-                 tensor_features=None, tensor_dtype=torch.float32):
+    def __init__(self, fasta_filepath=None, hdf_filepath=None):
         '''Initializes `Data` object based on FASTA and/or .h5 file(s).
         
         Arguments
@@ -46,13 +50,7 @@ class Data(Dataset):
         `hdf_filepath`: `str`
             When `hdf_filepath` is provided, will load features from this file, 
             retrieving the sequences from the provided FASTA files using their 
-            sequence IDs.
-        `tensor_features`: `list[str]`
-            List of feature names (columns) to be retrieved as tensors when 
-            `__getitem__` is called (indexing).
-        `tensor_dtype`: type
-            Data type to be used for the tensor features (default is 
-            `torch.float32`)'''
+            sequence IDs.'''
         
         print("Importing data...")
         if hdf_filepath is not None:
@@ -71,11 +69,6 @@ class Data(Dataset):
             message += f'{len(self.df)} '
         message +=f'RNA transcripts with {len(self.all_features())} feature(s).'
         print(message)
-
-        if tensor_features:
-            self.check_columns(tensor_features)
-        self.tensor_features = tensor_features 
-        self.tensor_dtype = tensor_dtype
     
     def __str__(self):
         return self.df.__str__()
@@ -84,17 +77,19 @@ class Data(Dataset):
         return self.df.__len__()
 
     def __getitem__(self, idx):
-        if self.tensor_features:
-            x = (self.df.iloc[idx][self.tensor_features].values
-                 .astype(np.float32))
-            if self.labelled:
-                target = self.df.iloc[idx][['label']].values
-                y = np.zeros_like(target, dtype=np.float32)
-                y[target == 'pcrna'] = 1.0 
+        if self.X_name:
+            X = self.df.iloc[idx][self.X_name].values.astype(np.float32)
+            if self.y_name[0] == 'label':
+                if self.labelled:
+                    target = self.df.iloc[idx][self.y_name].values
+                    y = np.zeros_like(target, dtype=np.float32)
+                    y[target == 'pcrna'] = 1.0 
+                else:
+                    y = -1.0 # Placeholder
             else:
-                y = -1.0 # Placeholder
-            return (torch.tensor(x, dtype=self.tensor_dtype,device=utils.DEVICE),
-                    torch.tensor(y, dtype=torch.float32, device=utils.DEVICE))
+                y = self.df.iloc[idx][self.y_name].values.astype(np.float32)
+            return (torch.tensor(X, dtype=self.X_dtype, device=utils.DEVICE),
+                    torch.tensor(y, dtype=self.y_dtype, device=utils.DEVICE))
         else:
             raise AttributeError(
                 'No `tensor_features` set. Please call `set_tensor_features` ' +
@@ -152,7 +147,7 @@ class Data(Dataset):
         SeqIO.write(seqs, filepath, 'fasta')
 
     def get_token_weights(self, strength=1):
-        weights = np.zeros(512) # NOTE: WARNING THIS IS HARDCODED!
+        weights = np.zeros(768) # NOTE: WARNING THIS IS HARDCODED!
         values = self.df[self.tensor_features].values
         for token, count in zip(*np.unique(values, return_counts=True)):
             weights[token] = count
@@ -162,24 +157,31 @@ class Data(Dataset):
         weights = torch.tensor(weights, device=utils.DEVICE, dtype=torch.float)
         return weights
 
-    def set_tensor_features(self, feature_names, dtype=torch.float32):
-        '''Configures `Data` object to return a tuple of tensors (x,y) whenever 
-        `__getitem__` is called. X is the feature tensor, which features it
-        contains is controlled by `feature_names`. Y contains labels, where 1 is
-        protein-coding and 0 is non-coding RNA.
+    def set_tensor_features(self, X_name, X_dtype=torch.float32, 
+                            y_name=['label'], y_dtype=torch.float32):
+        '''Configures `Data` object to return a tuple of tensors (X,y) whenever 
+        `__getitem__` is called.
         
         Arguments
         ---------
-        `feature_names`: `list[str]`
-            List of feature names (columns) to be retrieved as tensors when 
-            `__getitem__` is called (indexing).
-        `dtype`: type
-            Data type to be used for the tensor features (default is 
-            `torch.float32`)'''
+        `X_name`: `list[str]`
+            List of predictory feature names (columns) to be retrieved as 
+            tensors when `__getitem__` is called.
+        `X_dtype`: type
+            Data type for X (default is `torch.float32`)
+        `y_name`: `list[str]`
+            List of target feature names (columns) to be retrieved as tensors 
+            when `__getitem__` is called. By default, this is set to 'label', 
+            with 1 indicating pcRNA and 0 to lncRNA. 
+        `y_dtype`: type
+            Data type for y (default is `torch.float32`)'''
         
-        self.check_columns(feature_names)
-        self.tensor_features = feature_names
-        self.tensor_dtype = dtype
+        self.check_columns(X_name)
+        self.check_columns(y_name)
+        self.X_name = X_name
+        self.X_dtype = X_dtype
+        self.y_name = y_name
+        self.y_dtype = y_dtype
     
     def num_coding_noncoding(self):
         '''Returns a tuple of which the elements are the number of coding and 

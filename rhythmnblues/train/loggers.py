@@ -89,13 +89,17 @@ class LoggerPrint(LoggerBase):
     def _action(self, model):
         self.epoch += 1
 
-        print(f'Epoch {self.epoch}:')
-        last_epoch = self.history.iloc[-1]
+        last_epoch = self.history.iloc[[-1]]
         if self.metric_names is not None:
-            print(last_epoch[self.metric_names])
+            row = last_epoch[self.metric_names]
         else:
-            print(last_epoch)
+            row = last_epoch
 
+        row = row.__str__()
+        header_eol_idx = row.find('\n')
+        if self.epoch == 1:
+            print(row[:header_eol_idx])
+        print(row[header_eol_idx+1:])
 
 class LoggerWrite(LoggerBase):
     '''Writes the results to a file at every epoch.

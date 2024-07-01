@@ -59,7 +59,6 @@ class Data(Dataset):
             self.df = self._read_fasta(fasta_filepath)
         else:
             raise ValueError("Please specify data filepath(s).")
-        self.labelled = self.check_columns(['label'], behaviour='bool')
 
         message = 'Imported '
         if self.labelled:
@@ -145,6 +144,10 @@ class Data(Dataset):
         seqs = [SeqRecord(Seq(seq),id) for id, seq in 
                 zip(data['id'].values, data['sequence'].values)]
         SeqIO.write(seqs, filepath, 'fasta')
+
+    @property
+    def labelled(self):
+        return self.check_columns(['label'], behaviour='bool')
 
     def get_token_weights(self, strength=1):
         weights = np.zeros(768) # NOTE: WARNING THIS IS HARDCODED!

@@ -149,17 +149,6 @@ class Data(Dataset):
     def labelled(self):
         return self.check_columns(['label'], behaviour='bool')
 
-    def get_token_weights(self, strength=1):
-        weights = np.zeros(768) # NOTE: WARNING THIS IS HARDCODED!
-        values = self.df[self.tensor_features].values
-        for token, count in zip(*np.unique(values, return_counts=True)):
-            weights[token] = count
-        weights = 1/((weights**strength)+1)
-        for token in utils.TOKENS:
-            weights[utils.TOKENS[token]] = 0
-        weights = torch.tensor(weights, device=utils.DEVICE, dtype=torch.float)
-        return weights
-
     def set_tensor_features(self, X_name, X_dtype=torch.float32, 
                             y_name=['label'], y_dtype=torch.float32):
         '''Configures `Data` object to return a tuple of tensors (X,y) whenever 

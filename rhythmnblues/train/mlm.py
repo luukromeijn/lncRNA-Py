@@ -2,7 +2,8 @@
 
 References
 ----------
-MycoAI: Romeijn et al. (2024) https://github.com/MycoAI/MycoAI/'''
+MycoAI: Romeijn et al. (2024) https://github.com/MycoAI/MycoAI/
+Huang et al. (2022) https://nlp.seas.harvard.edu/annotated-transformer'''
 
 import numpy as np
 import torch
@@ -12,6 +13,7 @@ from sklearn.metrics import (accuracy_score, precision_score, recall_score,
 from rhythmnblues import utils
 from rhythmnblues.train.mixed_precision import get_gradient_scaler, get_amp_args
 from rhythmnblues.train.loggers import LoggerBase
+from rhythmnblues.train.lr_schedule import LrSchedule
 
 
 METRICS = {
@@ -22,35 +24,18 @@ METRICS = {
         y_t, y_p, average='macro', zero_division=np.nan),
     'F1 (macro)': lambda y_t, y_p: f1_score(
         y_t, y_p, average='macro', zero_division=np.nan),
-    'Counts': lambda y_t, y_p: ( # Where to put it
+    'Counts': lambda y_t, y_p: (
         np.unique(y_t.numpy(), return_counts=True),
         np.unique(y_p.numpy(), return_counts=True)
     ) 
 }
 
-class LrSchedule:
-    '''Linearly increases the learning rate for the first warmup_steps, then
-    then decreases the learning rate proportionally to 1/sqrt(step_number)'''
-
-    def __init__(self, d_model, warmup_steps):
-        self.d_model = d_model
-        self.warmup_steps = warmup_steps
-
-    def get_lr(self, step):
-        if step == 0:
-            step = 1
-        print(
-            (self.d_model**(-0.5) * 
-                min(step**(-0.5), step * self.warmup_steps ** (-1.5)))
-        )
-        return (self.d_model**(-0.5) * 
-                min(step**(-0.5), step * self.warmup_steps ** (-1.5)))
-
 
 def train_mlm(
         model, train_data, valid_data, epochs, batch_size=64, p_mlm=0.15, 
-        p_mask=0.8, p_random=0.1, loss_function=None, optimizer=None, 
-        n_samples_per_epoch=None, logger=None, metrics=METRICS, s=None, ls=None,
+        p_mask=0.8, p_random=0.1, loss_function=None, warmup_steps=8000, 
+        label_smoothing=0.1, n_samples_per_epoch=None, logger=None, 
+        metrics=METRICS
     ):
     '''Trains `model` for Masked Language Modelling task, using `train_data`, 
     for specified amount of `epochs`.
@@ -79,10 +64,14 @@ def train_mlm(
         is 0.1).
     `loss_function`: `torch.nn.Module`
         Loss function that is to be optimized. If None, falls back to 
-        `torch.nn.CrossEntropyLoss`) (default is None). 
-    `optimizer`: `torch.optim`
-        Optimizer to update the network's weights during training. If None 
-        (default), will use Adam with `lr=0.0001` and `betas=(0.9, 0.98)`.
+        `torch.nn.CrossEntropyLoss`) (default is None).
+    `warmup_steps`: `int`
+        Number of training steps in which learning rate linearly increases. 
+        After this amount of steps, the learning rate decreases proportional to
+        the invserse square root of the step number (default is 8000).
+    `label_smoothing`: `float`
+        How much weight should be subtracted from the target token and divided
+        over the remaining tokens, for regularization (default is 0.1).
     `n_samples_per_epoch`: `int`
         If specified, indicates the number of samples per training epoch. If 
         None, will sample the full training set.
@@ -99,24 +88,18 @@ def train_mlm(
     train_dataloader = DataLoader(train_data, batch_size, sampler=sampler)
     train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))
     if loss_function is None:
-        loss_function = torch.nn.CrossEntropyLoss(weight=train_data.get_token_weights(strength=s),
-                          label_smoothing=ls, ignore_index=utils.TOKENS['PAD']) # TODO set label smoothing back to 0.1
-    optimizer = optimizer if optimizer else torch.optim.Adam(
-                                model.parameters(), lr=0.00001, betas=(0.9,0.98)) # TODO uncomment when finished
+        loss_function = torch.nn.CrossEntropyLoss(
+              label_smoothing=label_smoothing, ignore_index=utils.TOKENS['PAD'])
+    optimizer = torch.optim.Adam(model.parameters(), lr=1, betas=(0.9,0.98))
+    lr_scheduler = LrSchedule(optimizer, model.d_model, warmup_steps)
     scaler = get_gradient_scaler(utils.DEVICE)
     logger = logger if logger else LoggerBase()
     logger.start(metrics)
 
-    # Experimental part
-    # optimizer = torch.optim.Adam(model.parameters(), lr=1, betas=(0.9,0.98))
-    # schedule = LrSchedule(model.d_model, 4000) 
-    # lr_scheduler = torch.optim.lr_scheduler.LambdaLR(
-    #                         optimizer, lambda step: schedule.get_lr(step))
-
     print("Training MLM...")
     for epoch in utils.progress(range(epochs)):
         model = epoch_mlm(model, train_dataloader, p_mlm, p_mask, p_random, 
-                          loss_function, optimizer, scaler)
+                          loss_function, optimizer, scaler, lr_scheduler)
         train_results = evaluate_mlm(model, train_subset, p_mlm, p_mask, 
                                      p_random, loss_function, metrics) 
         valid_results = evaluate_mlm(model, valid_data, p_mlm, p_mask, p_random,
@@ -129,7 +112,7 @@ def train_mlm(
 
 
 def epoch_mlm(model, dataloader, p_mlm, p_mask, p_random,
-              loss_function, optimizer, scaler):
+              loss_function, optimizer, scaler, lr_scheduler):
     '''Trains `model` for a single epoch.'''
     model.train() # Set training mode
     for X, _ in utils.progress(dataloader): # Loop through data
@@ -144,6 +127,7 @@ def epoch_mlm(model, dataloader, p_mlm, p_mask, p_random,
         scaler.unscale_(optimizer) # Unscale before gradient clipping
         torch.nn.utils.clip_grad_norm_(model.parameters(), utils.CLIP_NORM)
         scaler.step(optimizer) # Optimize parameters
+        lr_scheduler.step() # Update learning rate
         scaler.update() # Updates scale
     return model # Return model
 

@@ -169,11 +169,26 @@ class Regressor(WrapperBase):
     '''Wrapper class for model that performs linear regression on the base 
     architecture embedding.'''
 
-    def __init__(self, base_arch, n_features=1, dropout=0.0, pred_batch_size=64):
+    def __init__(self, base_arch, n_features=1, fcn_layers=[], dropout=0.0, 
+                 pred_batch_size=64):
         super().__init__(base_arch, pred_batch_size)
         self.dropout = torch.nn.Dropout(p=dropout)
-        self.output = torch.nn.LazyLinear(out_features=n_features)
+        self.output = torch.nn.LazyLinear(n_features)
+        self.fcn_layers = torch.nn.ModuleList([torch.nn.LazyLinear(n_nodes) 
+                                               for n_nodes in fcn_layers])
+        self.output = torch.nn.LazyLinear(n_features)
         self.data_columns = [f'F{i}' for i in range(n_features)]
+        if type(base_arch) == BERT:
+            self._forward_base_arch = self._forward_base_arch_bert
+        else:
+            self._forward_base_arch = self.base_arch
 
     def forward(self, X):
-        return self.output(self.dropout(self.base_arch(X)))
+        X = self.dropout(self._forward_base_arch(X))
+        for layer in self.fcn_layers:
+            X = torch.relu(layer(X))
+        return self.output(X)
+    
+    def _forward_base_arch_bert(self, X):
+        '''Forward function that extracts the CLS token embedding from BERT.'''
+        return self.base_arch(X)[:,0,:] # # CLS assumed at first input position

@@ -62,8 +62,7 @@ def train_classifier(
     train_dataloader = DataLoader(train_data, batch_size, sampler=sampler)
     train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))
     if loss_function is None:
-        loss_function = torch.nn.BCEWithLogitsLoss(pos_weight=
-                                                   train_data.pos_weight())
+        loss_function = torch.nn.BCEWithLogitsLoss()
     optimizer = optimizer if optimizer else torch.optim.Adam(model.parameters(), 
                                                              lr=0.0001)
     scaler = get_gradient_scaler(utils.DEVICE)

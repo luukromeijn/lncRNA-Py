@@ -217,3 +217,22 @@ class BytePairEncodingLength(BytePairEncoding):
         '''Calculates theoretical BPE length for every row in `data`.'''
         return np.array([len(encoding) for encoding 
                          in self.encoder.encode(data.df['sequence'].tolist())])
+
+
+class TokenLocalization:
+    '''Adds special MASK token to tokenized input sequence, with the location of
+    this MASK as new feature.'''
+
+    def __init__(self, tokenizer):
+        '''Initializes `TokenLocalization` object for given `tokenizer`, which
+        should inherit from `TokenizerBase`.'''
+        self.context_length = tokenizer.context_length
+        self.apply_to = tokenizer.name
+        self.name = 'TL'
+
+    def calculate(self, data):
+        '''Adds MASK token and localization target to every row in `data`.'''
+        idx = np.random.randint(0, self.context_length, len(data))
+        for i, j in utils.progress(enumerate(idx)):
+            data.df[self.apply_to[j]].iat[i] = utils.TOKENS['MASK']
+        return idx

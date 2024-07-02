@@ -150,24 +150,26 @@ class Data(Dataset):
         return self.check_columns(['label'], behaviour='bool')
 
     def set_tensor_features(self, X_name, X_dtype=torch.float32, 
-                            y_name=['label'], y_dtype=torch.float32):
+                            y_name='label', y_dtype=torch.float32):
         '''Configures `Data` object to return a tuple of tensors (X,y) whenever 
         `__getitem__` is called.
         
         Arguments
         ---------
-        `X_name`: `list[str]`
-            List of predictory feature names (columns) to be retrieved as 
-            tensors when `__getitem__` is called.
+        `X_name`: `list[str]` | str
+            Predictory feature names (columns) to be retrieved as tensors when 
+            `__getitem__` is called.
         `X_dtype`: type
             Data type for X (default is `torch.float32`)
-        `y_name`: `list[str]`
-            List of target feature names (columns) to be retrieved as tensors 
-            when `__getitem__` is called. By default, this is set to 'label', 
-            with 1 indicating pcRNA and 0 to lncRNA. 
+        `y_name`: `list[str]` | str
+            Target feature names (columns) to be retrieved as tensors when 
+            `__getitem__` is called. By default, this is set to 'label', with 
+            1 indicating pcRNA and 0 to lncRNA. 
         `y_dtype`: type
             Data type for y (default is `torch.float32`)'''
         
+        X_name = [X_name] if type(X_name) == str else X_name
+        y_name = [y_name] if type(y_name) == str else y_name
         self.check_columns(X_name)
         self.check_columns(y_name)
         self.X_name = X_name

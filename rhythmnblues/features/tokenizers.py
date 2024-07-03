@@ -5,6 +5,7 @@ import io
 import itertools
 import numpy as np
 import sentencepiece as spm
+import matplotlib.pyplot as plt
 from rhythmnblues import utils
 
 
@@ -109,8 +110,9 @@ class BytePairEncoding(TokenizerBase):
     BPE: Sennrich et al. (2016) https://doi.org/10.18653/v1/P16-1162
     DNABERT-2: Zhou et al. (2023) https://doi.org/10.48550/arXiv.2306.15006'''
 
-    def __init__(self, data, context_length=512, vocab_size=768, 
-                 max_sentence_length=8000, export_path=None):
+    def __init__(self, data, context_length=768, vocab_size=4096, 
+                 user_defined_symbols=None, max_sentence_length=8000, 
+                 export_path=None):
         '''Initializes `BytePairEncoding` object.
         
         Arguments
@@ -118,10 +120,13 @@ class BytePairEncoding(TokenizerBase):
         `data`: `Data`|`str`
             Data object to fit BPE tokenizer on, or path to existing model.
         `context_length`: `int`
-            Number of tokens this tokenizer generates per sample (default 512).
+            Number of tokens this tokenizer generates per sample (default 768).
         `vocab_size`: `int`
             Number of unique tokens known to the model (includes CLS, PAD, etc.)
-            Disregarded if `data` is of type `str` (default is 768).
+            Disregarded if `data` is of type `str` (default is 4096).
+        `user_defined_symbols`: `list[str]`
+            If specified, will always extract the symbols in this list as one
+            piece/token (default is None).
         `max_sentence_length`: `int`
             Maximum length of sequences to consider for fitting the BPE model.
             Disregarded if `data` is of type `str` (default is 8000).
@@ -144,7 +149,8 @@ class BytePairEncoding(TokenizerBase):
                 control_symbols=['MASK'], bos_id=self.tokens['CLS'], # MASK=0
                 eos_id=self.tokens['SEP'], pad_id=self.tokens['PAD'], 
                 unk_id=self.tokens['UNK'], add_dummy_prefix=False, 
-                character_coverage=1.0, max_sentence_length=max_sentence_length
+                character_coverage=1.0, max_sentence_length=max_sentence_length,
+                user_defined_symbols=user_defined_symbols
             )
             if export_path is None:
                 self.encoder = self.encoder(model_proto=stream.getvalue())
@@ -185,13 +191,13 @@ class BytePairEncoding(TokenizerBase):
         )
     
 
-class BytePairEncodingLength(BytePairEncoding):
+class BPELength(BytePairEncoding):
     '''Calculates the full Byte Pair Encoding length, without special tokens 
     (e.g. CLS), assuming no context length cut-off.'''
 
-    def __init__(self, data, vocab_size=768, max_sentence_length=8000, 
-                 export_path=None):
-        '''Initializes `BytePairEncodingLength` object.
+    def __init__(self, data, vocab_size=768, user_defined_symbols=None,
+                 max_sentence_length=8000, export_path=None):
+        '''Initializes `BPELength` object.
         
         Arguments
         ---------
@@ -200,6 +206,9 @@ class BytePairEncodingLength(BytePairEncoding):
         `vocab_size`: `int`
             Number of unique tokens known to the model (includes CLS, PAD, etc.)
             Disregarded if `data` is of type `str` (default is 768).
+        `user_defined_symbols`: `list[str]`
+            If specified, will always extract the symbols in this list as one
+            piece/token (default is None).
         `max_sentence_length`: `int`
             Maximum length of sequences to consider for fitting the BPE model.
             Disregarded if `data` is of type `str` (default is 8000).
@@ -208,15 +217,127 @@ class BytePairEncodingLength(BytePairEncoding):
         
         super().__init__(
             data, context_length=0, vocab_size=vocab_size, 
+            user_defined_symbols=user_defined_symbols,
             max_sentence_length=max_sentence_length, export_path=export_path
         )
         self.context_length = None
-        self.name = 'BPE length'
+        self.name = [f'BPE length (vs={self.vocab_size})']
 
     def calculate(self, data):
         '''Calculates theoretical BPE length for every row in `data`.'''
         return np.array([len(encoding) for encoding 
                          in self.encoder.encode(data.df['sequence'].tolist())])
+    
+
+class BPEPieces(BytePairEncoding):
+    '''Calculates a piecewise representation of the sequence with Byte Pair 
+    Encoding, without converting the pieces to token indices.'''
+
+    def __init__(self, data, vocab_size=768, user_defined_symbols=None,
+                 max_sentence_length=8000, export_path=None):
+        '''Initializes `BPEPiecesSequence` object.
+        
+        Arguments
+        ---------
+        `data`: `Data`|`str`
+            Path to existing BPE tokenizer model.
+        `vocab_size`: `int`
+            Number of unique tokens known to the model (includes CLS, PAD, etc.)
+            Disregarded if `data` is of type `str` (default is 768).
+        `user_defined_symbols`: `list[str]`
+            If specified, will always extract the symbols in this list as one
+            piece/token (default is None).
+        `max_sentence_length`: `int`
+            Maximum length of sequences to consider for fitting the BPE model.
+            Disregarded if `data` is of type `str` (default is 8000).
+        `export_path`: `str`
+            If specified, saves BPE model to this path (default is None).''' 
+        super().__init__(
+            data, context_length=0, vocab_size=vocab_size, 
+            user_defined_symbols=user_defined_symbols,
+            max_sentence_length=max_sentence_length, export_path=export_path
+        )
+        self.context_length = None
+        self.name = 'BPE pieces'
+
+    def calculate(self, data):
+        '''Calculates the piecewise BPE sequence for all rows in `data`.'''
+        return [' '.join(enc) for enc in 
+                self.encoder.EncodeAsPieces(data.df['sequence'].tolist())]
+    
+    def print(self, sequence, inspect_codon='ATG', line_chars=100):
+        '''Prints a (piecewise BPE) sequence, highlighting the codon specified 
+        in `inspect_codon`.'''
+
+        to_highlight = 0
+        n_complete = 0
+        n_broken = 0
+
+        for i in range(0,len(sequence), line_chars):
+            print(sequence[i:i+line_chars])
+            line = ''
+            for j in range(i,min((i+line_chars),len(sequence))):
+                if sequence[j:j+3] == inspect_codon:
+                    to_highlight = 3
+                    n_complete += 1
+                elif sequence[j:j+4] in ['A TG', 'AT G']:
+                    to_highlight = 4
+                    n_broken += 1
+                elif sequence[j:j+5] == ['A T G']:
+                    to_highlight = 5
+                    n_broken += 1
+                if to_highlight > 0:
+                    line += '^'
+                    to_highlight -= 1
+                else:
+                    line += ' '
+            print(line)
+        print(to_highlight)
+
+        print(f"Proportion of broken {inspect_codon}'s:", 
+              n_broken/(n_broken + n_complete))
+        
+
+def coverage_table(data, vocab_sizes, context_lengths, show_num_tokens=False):
+    '''Creates a table that for ever combination of vocabulary size and context
+    length, calculates the proportion of deprecated sequences. When 
+    `show_num_tokens` is True, will report the average number of skipped tokens.
+    '''
+    bpe_length_cols = [f'BPE length (vs={vs})' for vs in vocab_sizes]
+    data.check_columns(bpe_length_cols)
+    table = []
+    for cl in context_lengths:
+        diff = data.df[bpe_length_cols] - cl
+        n_deprecated = (diff >= 0).sum()
+        diff[diff < 0] = 0
+        if show_num_tokens:
+            table.append(diff.sum()/n_deprecated)
+        else:
+            table.append(n_deprecated/len(data))
+    table = pd.concat(table, axis=1).T
+    table.columns = [f'vs={vs}' for vs in vocab_sizes]
+    table.index = [f'cl={cl}' for cl in context_lengths]
+    return table
+
+
+def plot_bpe_lengths(data, vocab_sizes, upper=0.975, lower=0.025, 
+                     filepath=None):
+    '''Combined density plot of BPE encoding length for all `vocab_sizes`.'''
+    fig, ax = plt.subplots()
+    for vs in vocab_sizes:
+        lengths = data.df[f'BPE length (vs={vs})']
+        up = lengths.quantile(upper)
+        low = lengths.quantile(lower)
+        lengths.plot.density(ind=np.arange(low,up,(up-low)/1000), 
+                             label=f'vs={vs}')
+    ax.set_xlabel('BPE length')
+    fig.legend()
+    fig.tight_layout
+    
+    if filepath is not None:
+        fig.savefig(filepath)
+    plt.show()
+    return fig
 
 
 class TokenLocalization:

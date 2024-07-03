@@ -1,9 +1,10 @@
 import pytest
 import torch
-from rhythmnblues.features import KmerFreqs, KmerTokenizer
-from rhythmnblues.modules import MycoAICNN, Classifier, BERT, MLM
+from rhythmnblues.features import (KmerFreqs, KmerTokenizer, ORFCoordinates, 
+                                   Standardizer)
+from rhythmnblues.modules import MycoAICNN, Classifier, BERT, MLM, Regressor
 from rhythmnblues.train.loggers import *
-from rhythmnblues.train import train_classifier, train_mlm
+from rhythmnblues.train import train_classifier, train_mlm, train_regressor
 from rhythmnblues import utils
 
 loggers = [
@@ -44,6 +45,17 @@ def test_train_mlm(data):
     data.calculate_feature(kmers)
     data.set_tensor_features(kmers.name, torch.long)
     train_mlm(model, data, data, 1)
+
+def test_train_regression(data):
+    kmers = KmerTokenizer(3)
+    model = Regressor(BERT(kmers.vocab_size, d_model=16, d_ff=32), n_features=2)
+    orf = ORFCoordinates()
+    data.calculate_feature(kmers)
+    data.calculate_feature(orf)
+    s_orf = Standardizer(data, orf.name)
+    data.calculate_feature(s_orf)
+    data.set_tensor_features(kmers.name, torch.long, s_orf.name)
+    train_regressor(model, data, data, 1, standardizer=s_orf)
 
 def test_utils_device():
     '''The code assumes that device is device object (and not a string!)'''

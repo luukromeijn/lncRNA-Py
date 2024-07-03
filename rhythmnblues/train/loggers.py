@@ -282,3 +282,40 @@ class LoggerMLMCounts(LoggerBase):
         fig.tight_layout()
         fig.savefig(self.filepath)
         plt.close(fig)
+
+
+class LoggerDistribution(LoggerBase):
+
+    def __init__(self, filepath, apply_to=None):
+        super().__init__()
+        self.filepath = filepath
+        self.sufx = f' ({apply_to})' if apply_to else ''
+
+    def _action(self, model):
+
+        # Preparing the data
+        medians = [[] for j in range(2)]
+        ranges = [[[] for i in range(6)] for j in range(2)]
+        for _, row in self.history.iterrows():
+            for j, t_and_p in enumerate(row[f'Distribution{self.sufx}|valid']):
+                for i, perc in enumerate(t_and_p):
+                    if i == 3:
+                        medians[j].append(perc)
+                    elif i < 3:
+                        ranges[j][i].append(perc)
+                    elif i > 3:
+                        ranges[j][i-1].append(perc)
+        
+        # Plotting
+        fig, ax = plt.subplots()
+        for j in range(2):
+            line = ax.plot(np.arange(1, len(self.history)+1), medians[j])
+            color = line[0].get_color()
+            for i in range(3):
+                ax.fill_between(np.arange(1, len(self.history)+1), ranges[j][i],
+                                ranges[j][5-i], alpha=0.15, color=color)
+        ax.set_xlabel('Epoch')
+        ax.set_ylabel('Output')
+        
+        fig.tight_layout()
+        fig.savefig(self.filepath)

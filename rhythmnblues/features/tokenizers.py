@@ -232,6 +232,7 @@ class TokenLocalization:
 
     def calculate(self, data):
         '''Adds MASK token and localization target to every row in `data`.'''
+        data.check_columns(self.apply_to)
         idx = np.random.randint(0, self.context_length, len(data))
         for i, j in utils.progress(enumerate(idx)):
             data.df[self.apply_to[j]].iat[i] = utils.TOKENS['MASK']

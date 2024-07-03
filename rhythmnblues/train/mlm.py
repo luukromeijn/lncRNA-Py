@@ -5,37 +5,19 @@ References
 MycoAI: Romeijn et al. (2024) https://github.com/MycoAI/MycoAI/
 Huang et al. (2022) https://nlp.seas.harvard.edu/annotated-transformer'''
 
-import numpy as np
 import torch
 from torch.utils.data import DataLoader, RandomSampler
-from sklearn.metrics import (accuracy_score, precision_score, recall_score, 
-                             f1_score)
 from rhythmnblues import utils
 from rhythmnblues.train.mixed_precision import get_gradient_scaler, get_amp_args
 from rhythmnblues.train.loggers import LoggerBase
 from rhythmnblues.train.lr_schedule import LrSchedule
-
-
-METRICS = {
-    'Accuracy': accuracy_score,
-    'Precision (macro)': lambda y_t, y_p: precision_score(
-        y_t, y_p, average='macro', zero_division=np.nan),
-    'Recall (macro)': lambda y_t, y_p: recall_score(
-        y_t, y_p, average='macro', zero_division=np.nan),
-    'F1 (macro)': lambda y_t, y_p: f1_score(
-        y_t, y_p, average='macro', zero_division=np.nan),
-    'Counts': lambda y_t, y_p: (
-        np.unique(y_t.numpy(), return_counts=True),
-        np.unique(y_p.numpy(), return_counts=True)
-    ) 
-}
-
+from rhythmnblues.train.metrics import mlm_metrics
 
 def train_mlm(
         model, train_data, valid_data, epochs, batch_size=64, p_mlm=0.15, 
         p_mask=0.8, p_random=0.1, loss_function=None, warmup_steps=8000, 
         label_smoothing=0.1, n_samples_per_epoch=None, logger=None, 
-        metrics=METRICS
+        metrics=mlm_metrics
     ):
     '''Trains `model` for Masked Language Modelling task, using `train_data`, 
     for specified amount of `epochs`.

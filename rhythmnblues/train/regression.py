@@ -1,20 +1,19 @@
-'''Functions for training a deep learning model for the classification of RNA 
-transcripts as either protein-coding or long non-coding.'''
+'''Functions for training a rhythmnblues deep learning model for regression.'''
 
 import torch
 from torch.utils.data import DataLoader, RandomSampler
 from rhythmnblues import utils
 from rhythmnblues.train.loggers import LoggerBase
 from rhythmnblues.train.mixed_precision import get_gradient_scaler, get_amp_args
-from rhythmnblues.train.metrics import classification_metrics
+from rhythmnblues.train.metrics import regression_metrics
 
 
-def train_classifier(
+def train_regressor(
         model, train_data, valid_data, epochs, batch_size=64, 
-        loss_function=None, optimizer=None, n_samples_per_epoch=None, 
-        logger=None, metrics=classification_metrics
+        loss_function=None, optimizer=None, standardizer=None, 
+        n_samples_per_epoch=None, logger=None, metrics=regression_metrics
     ):
-    '''Trains `model` for classification task, using `train_data`, for specified
+    '''Trains `model` for regression task, using `train_data`, for specified
     amount of `epochs`.
     
     Arguments
@@ -33,11 +32,14 @@ def train_classifier(
     `batch_size`: `int`
         Number of examples per batch (default is 64).
     `loss_function`: `torch.nn.Module`
-        Loss function that is to be optimized. If None, falls back to weighted 
-        Binary Cross Entropy (`torch.nn.BCEWithLogitsLoss`) (default is None). 
+        Loss function that is to be optimized. If None, falls back to Mean 
+        Squared Error loss (`torch.nn.MSELoss`) (default is None). 
     `optimizer`: `torch.optim`
         Optimizer to update the network's weights during training. If None 
         (default), will use Adam with learning rate 0.0001.
+    `standardizer`: `rhythmnblues.train.standardizer.Standardizer`
+        If specified, will use this standardizer to transform the data back to
+        its original scale during epoch evaluation (default is None).
     `logger`: `rhythmnblues.train.loggers`
     	Logger object whose `log` method will be called at every epoch. If None
         (default), will use LoggerBase, which only keeps track of the history.
@@ -51,21 +53,22 @@ def train_classifier(
     train_dataloader = DataLoader(train_data, batch_size, sampler=sampler)
     train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))
     if loss_function is None:
-        loss_function = torch.nn.BCEWithLogitsLoss()
+        loss_function = torch.nn.MSELoss()
     optimizer = optimizer if optimizer else torch.optim.Adam(model.parameters(), 
                                                              lr=0.0001)
     scaler = get_gradient_scaler(utils.DEVICE)
     logger = logger if logger else LoggerBase()
     logger.start(metrics)
     
-    print("Training classifier...")
+    print("Training regressor...")
     for epoch in utils.progress(range(epochs)): # Looping through epochs
-        model = epoch_classifier(model, train_dataloader, loss_function, 
-                                 optimizer, scaler) # Train
-        train_results = evaluate_classifier(model, train_subset, loss_function, 
-                                            metrics) # Evaluate on trainset
-        valid_results = evaluate_classifier(model, valid_data, loss_function, 
-                                            metrics) # Evaluate on valid set
+        model = epoch_regressor(model, train_dataloader, loss_function, 
+                                optimizer, scaler) # Train
+        # Evaluate on train/validation set
+        train_results = evaluate_regressor(model, train_subset, loss_function, 
+                                           standardizer, metrics)
+        valid_results = evaluate_regressor(model, valid_data, loss_function, 
+                                           standardizer, metrics) 
         logger.log(train_results+valid_results, model) # Log
 
     # Finish
@@ -73,7 +76,7 @@ def train_classifier(
     return model, logger.history
 
 
-def epoch_classifier(model, dataloader, loss_function, optimizer, scaler):
+def epoch_regressor(model, dataloader, loss_function, optimizer, scaler):
     '''Trains `model` for a single epoch.'''
     model.train() # Set training mode
     for X, y in dataloader: # Loop through data
@@ -89,14 +92,17 @@ def epoch_classifier(model, dataloader, loss_function, optimizer, scaler):
     return model # Return model
 
 
-def evaluate_classifier(model, data, loss_function, 
-                        metrics=classification_metrics): 
+def evaluate_regressor(model, data, loss_function, standardizer=None, 
+                       metrics=regression_metrics):
     '''Simple evaluation function to keep track of in-training progress.'''
     scores = []
-    pred = model.predict(data, return_logits=True) # Return as logits
-    scores.append(loss_function(pred, data[:][1].cpu()).item()) # Calculate loss
-    pred = torch.sigmoid(pred).round() # Then convert to classes
-    for metric in metrics: # (these metrics assume classes, not logits)
+    y_true = data[:][1].cpu()
+    y_pred = model.predict(data)
+    scores.append(loss_function(y_pred, y_true).item()) # Calculate loss
+    if standardizer is not None:
+        y_pred = standardizer.inverse_transform(y_pred)
+        y_true = standardizer.inverse_transform(data[:][1].cpu())
+    for metric in metrics: 
         metric_function = metrics[metric]
-        scores.append(metric_function(data[:][1].cpu(), pred))
+        scores.append(metric_function(y_true, y_pred))
     return scores

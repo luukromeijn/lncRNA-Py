@@ -32,12 +32,12 @@ class Data(Dataset):
         List of predictory feature names (columns) to be retrieved as 
         tensors when `__getitem__` is called.
     `X_dtype`: type
-        Data type for X (default is `torch.float32`).
+        Data type for X.
     `y_name`: `list[str]`
         List of target feature names (columns) to be retrieved as tensors 
         when `__getitem__` is called.
     `y_dtype`: type
-        Data type for y (default is `torch.float32`).'''
+        Data type for y.'''
 
     def __init__(self, fasta_filepath=None, hdf_filepath=None):
         '''Initializes `Data` object based on FASTA and/or .h5 file(s).
@@ -78,13 +78,12 @@ class Data(Dataset):
     def __getitem__(self, idx):
         if self.X_name:
             X = self.df.iloc[idx][self.X_name].values.astype(np.float32)
-            if self.y_name[0] == 'label':
-                if self.labelled:
-                    target = self.df.iloc[idx][self.y_name].values
-                    y = np.zeros_like(target, dtype=np.float32)
-                    y[target == 'pcrna'] = 1.0 
-                else:
-                    y = -1.0 # Placeholder
+            if self.y_name is None:
+                y = -1.0 # Placeholder
+            elif self.y_name[0] == 'label':
+                target = self.df.iloc[idx][self.y_name].values
+                y = np.zeros_like(target, dtype=np.float32)
+                y[target == 'pcrna'] = 1.0
             else:
                 y = self.df.iloc[idx][self.y_name].values.astype(np.float32)
             return (torch.tensor(X, dtype=self.X_dtype, device=utils.DEVICE),
@@ -149,8 +148,8 @@ class Data(Dataset):
     def labelled(self):
         return self.check_columns(['label'], behaviour='bool')
 
-    def set_tensor_features(self, X_name, X_dtype=torch.float32, 
-                            y_name='label', y_dtype=torch.float32):
+    def set_tensor_features(self, X_name, X_dtype=torch.float32, y_name=None, 
+                            y_dtype=torch.float32):
         '''Configures `Data` object to return a tuple of tensors (X,y) whenever 
         `__getitem__` is called.
         
@@ -163,17 +162,22 @@ class Data(Dataset):
             Data type for X (default is `torch.float32`)
         `y_name`: `list[str]` | str
             Target feature names (columns) to be retrieved as tensors when 
-            `__getitem__` is called. By default, this is set to 'label', with 
-            1 indicating pcRNA and 0 to lncRNA. 
+            `__getitem__` is called. If None (default) and the data is labelled,
+            will set 'label' as target feature, with 1 indicating pcRNA and 0 
+            lncRNA. 
         `y_dtype`: type
             Data type for y (default is `torch.float32`)'''
         
         X_name = [X_name] if type(X_name) == str else X_name
         y_name = [y_name] if type(y_name) == str else y_name
         self.check_columns(X_name)
-        self.check_columns(y_name)
         self.X_name = X_name
         self.X_dtype = X_dtype
+        if y_name is None:
+            if self.labelled:
+                y_name = ['label']
+        else:
+            self.check_columns(y_name)
         self.y_name = y_name
         self.y_dtype = y_dtype
     

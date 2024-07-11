@@ -239,7 +239,7 @@ class EarlyStopping(LoggerBase):
         if (self.sign * self.history.iloc[-1][self.metric_name] > 
             self.sign * self.best_score):
             torch.save(model, self.filepath)
-        print(f"Model saved at epoch {self.epoch}.")
+            print(f"Model saved at epoch {self.epoch}.")
 
 
 # TODO add unittest

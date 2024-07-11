@@ -15,7 +15,8 @@ def encode_simple(vocab_size, context_length):
     valid = Data([f'{data_dir}/sequences/valid_pcrna.fasta',
                 f'{data_dir}/sequences/valid_ncrna.fasta'])
     
-    bpe = BytePairEncoding(f'{data_dir}/features/{vocab_size}', context_length)
+    bpe = BytePairEncoding(f'{data_dir}/features/{vocab_size}.bpe', 
+                           context_length)
 
     train.calculate_feature(bpe)
     valid.calculate_feature(bpe)

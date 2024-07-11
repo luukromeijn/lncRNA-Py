@@ -225,13 +225,12 @@ class EarlyStopping(LoggerBase):
         Epoch counter.'''
 
     def __init__(self, metric_name, filepath, maximize=True):
-        '''Initializes `EarlyStopping` object. If `metric_name` is not
-        specified, will use validation loss for early stopping.'''
+        '''Initializes `EarlyStopping` object.'''
         super().__init__()
         self.metric_name = metric_name
         self.filepath = filepath
         self.sign = 1 if maximize else -1
-        self.best_score = np.inf
+        self.best_score = self.sign * -np.inf
         self.epoch = 0
 
     def _action(self, model):

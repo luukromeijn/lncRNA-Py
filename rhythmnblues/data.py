@@ -109,7 +109,7 @@ class Data(Dataset):
         return torch.tensor(
             [self._get_4d_seq(seq[0]) for seq in 
              self.df.iloc[idx][['sequence']].values.reshape(-1,1)], 
-            dtype=torch.float32
+            dtype=self.X_dtype, device=utils.DEVICE
         ).transpose(1,2).squeeze()
     
     def _get_4d_seq(self, sequence):

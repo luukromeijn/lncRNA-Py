@@ -25,6 +25,19 @@ TOKENS = {'MASK': 0, 'CLS': 1, 'SEP': 2, 'PAD': 3, 'UNK': 4}
 '''Look-up table of special tokens and their associated values. Note that we set
 BPE to assume that MASK=0, hence this value should not be changed.'''
 
+NUC_TO_4D = {
+    'A': [1,    0,    0,    0   ],
+    'C': [0,    1,    0,    0   ],
+    'G': [0,    0,    1,    0   ],
+    'T': [0,    0,    0,    1   ],
+    'N': [0.25, 0.25, 0.25, 0.25],
+}
+'''Mapping from nucleotide indicator to 4D_DNA representation, which is the 
+format suitable for convolutional neural network layers.'''
+
+LEN_4D_DNA = 8000
+'''Length of the 4D-DNA representation. Longer sequences are truncated, shorter
+sequences are zero-padded.'''
 
 ##### HELPER FUNCTIONS #####
 def watch_progress(on=True):

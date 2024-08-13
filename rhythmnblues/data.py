@@ -76,24 +76,47 @@ class Data(Dataset):
         return self.df.__len__()
 
     def __getitem__(self, idx):
+        
+        # Input (X)
         if self.X_name:
-            X = self.df.iloc[idx][self.X_name].values.astype(np.float32)
-            if self.y_name is None:
-                y = -1.0 # Placeholder
-            elif self.y_name[0] == 'label':
-                target = self.df.iloc[idx][self.y_name].values
-                y = np.zeros_like(target, dtype=np.float32)
-                y[target == 'pcrna'] = 1.0
+            if self.X_name[0] == '4D-DNA':
+                X = self._get_4d_batch(idx)
             else:
-                y = self.df.iloc[idx][self.y_name].values.astype(np.float32)
-            return (torch.tensor(X, dtype=self.X_dtype, device=utils.DEVICE),
-                    torch.tensor(y, dtype=self.y_dtype, device=utils.DEVICE))
+                X = self.df.iloc[idx][self.X_name].values.astype(np.float32)
+                X = torch.tensor(X, dtype=self.X_dtype, device=utils.DEVICE)
         else:
             raise AttributeError(
                 'No `tensor_features` set. Please call `set_tensor_features` ' +
                 'first to specify which features to retrieve as tensors, or ' +
                 'use the `tensor_features` argument during initialization.'
             )
+        
+        # Target (y)
+        if self.y_name is None:
+            y = -1.0 # Placeholder
+        elif self.y_name[0] == 'label':
+            target = self.df.iloc[idx][self.y_name].values
+            y = np.zeros_like(target, dtype=np.float32)
+            y[target == 'pcrna'] = 1.0
+        else:
+            y = self.df.iloc[idx][self.y_name].values.astype(np.float32)
+        y = torch.tensor(y, dtype=self.y_dtype, device=utils.DEVICE)
+        
+        return X, y
+        
+    def _get_4d_batch(self, idx):
+        '''Retrieves 4D-DNA encoded batch of data (rows specified by `idx`.)'''
+        return torch.tensor(
+            [self._get_4d_seq(seq[0]) for seq in 
+             self.df.iloc[idx][['sequence']].values.reshape(-1,1)], 
+            dtype=torch.float32
+        ).transpose(1,2).squeeze()
+    
+    def _get_4d_seq(self, sequence):
+        '''Encodes sequence in 4D-DNA encoding, returns a list.'''
+        encoding = [utils.NUC_TO_4D[base] for base in sequence] # Encode
+        encoding = encoding[:utils.LEN_4D_DNA] # Truncate
+        return encoding + (utils.LEN_4D_DNA - len(encoding))*[[0,0,0,0]] # Pad
 
     def _read_hdf(self, hdf_filepath, fasta_filepath):
         '''Loads features from `hdf_filepath`, retrieving sequences from 
@@ -264,7 +287,9 @@ class Data(Dataset):
             raise ValueError(behaviour)
 
         for column in columns:
-            if column not in self.df.columns:
+            if column == '4D-DNA':
+                continue
+            elif column not in self.df.columns:
                 if behaviour == 'error':
                     raise RuntimeError(f"Column '{column}' missing.")
                 elif behaviour == 'bool':

@@ -93,10 +93,13 @@ def evaluate_classifier(model, data, loss_function,
                         metrics=classification_metrics): 
     '''Simple evaluation function to keep track of in-training progress.'''
     scores = []
-    pred = model.predict(data, return_logits=True) # Return as logits
-    scores.append(loss_function(pred, data[:][1].cpu()).item()) # Calculate loss
-    pred = torch.sigmoid(pred).round() # Then convert to classes
+    y_pred = model.predict(data, return_logits=True) # Return as logits
+    target = data.df['label'].values # TODO integrate these lines in other training tasks as well 
+    y_true = torch.zeros(len(target),1) # Also, NOTE: is this hard-coding the label column or should that be fine and allowed?
+    y_true[target == 'pcrna'] = 1.0
+    scores.append(loss_function(y_pred, y_true).item()) # Calculate loss
+    y_pred = torch.sigmoid(y_pred).round() # Then convert to classes
     for metric in metrics: # (these metrics assume classes, not logits)
         metric_function = metrics[metric]
-        scores.append(metric_function(data[:][1].cpu(), pred))
+        scores.append(metric_function(y_true, y_pred))
     return scores

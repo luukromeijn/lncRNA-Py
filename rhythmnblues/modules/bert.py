@@ -4,6 +4,7 @@ network designs.'''
 import math
 import torch
 from rhythmnblues import utils
+from rhythmnblues.modules.cnn import MotifEncoding
 
 
 class BERT(torch.nn.Module):
@@ -230,3 +231,67 @@ def attention(query, key, value, mask=None, dropout=None):
     if dropout is not None:
         p_attn = dropout(p_attn) 
     return torch.matmul(p_attn, value), p_attn
+
+
+class PositionalEncoding(torch.nn.Module):
+    '''TODO'''
+
+    def __init__(self, d_model, dropout, max_len=5000):
+        super().__init__()
+
+        self.dropout = torch.nn.Dropout(p=dropout)
+        self.d_model = d_model
+
+        # Compute the positional encodings once in log space.
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len).unsqueeze(1)
+        div_term = torch.exp(
+            torch.arange(0, d_model, 2) * -(math.log(10000.0) / d_model)
+        )
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        pe = pe.unsqueeze(0)
+        self.register_buffer("pe", pe)
+
+    def forward(self, x):
+        x = x + self.pe[:, : x.size(1)].requires_grad_(False) # + positional enc
+        return self.dropout(x) # Apply dropout
+
+
+class MotifBERT(torch.nn.Module):
+    '''TODO'''
+
+    def __init__(self, n_motifs, motif_size, pool_size):
+        super().__init__()
+        self.motif_encoder = MotifEncoding(n_motifs, motif_size, pool_size)
+        self.positional_encoder = PositionalEncoding(256, 0.1)
+        self.encoder = Encoder(256, 512, 8, 6, 0.1)
+        self.d_model = 256
+        self.d_ff = 512
+        self.h = 8
+        self.N = 6
+        self.pool_size = pool_size
+
+        # Initialize parameters with Glorot / fan_avg.
+        for p in self.parameters():
+            if p.dim() > 1:
+                torch.nn.init.xavier_uniform_(p)
+
+    def forward(self, src):
+        '''Given a source, retrieve encoded representation'''
+
+        src_lengths = ( # Calculate start of zero-padding in convolved output...
+            torch.count_nonzero(src.sum(axis=1), dim=1) / self.pool_size 
+        ).to(torch.int32).unsqueeze(-1) # ... and round down to nearest int
+        
+        # Embed using motif encoding and add positional encoding
+        src_embedding = self.motif_encoder(src).transpose(1,2)
+        src_embedding = self.positional_encoder(src_embedding)
+
+        # Calculate mask
+        src_mask = ( # Range to full length
+            torch.arange(src_embedding.shape[1], device=utils.DEVICE) 
+            < src_lengths # True when not part of the zero-padding
+        ).unsqueeze(-2)
+
+        return self.encoder(src_embedding, src_mask)

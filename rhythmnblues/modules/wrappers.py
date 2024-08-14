@@ -5,7 +5,7 @@ from `rhythmnblues`.'''
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
-from rhythmnblues.modules.bert import BERT
+from rhythmnblues.modules.bert import BERT, MotifBERT
 from rhythmnblues import utils
 
 
@@ -55,7 +55,7 @@ class WrapperBase(torch.nn.Module):
         predictions = []
         self.eval()
         with torch.no_grad():
-            for X, _ in self._get_predict_dataloader(data):
+            for X, _ in utils.progress(self._get_predict_dataloader(data)): # TODO undo progress thing
                 predictions.append(self(X, **kwargs).cpu())
         predictions = torch.concatenate(predictions)
         if inplace:
@@ -130,7 +130,7 @@ class Classifier(WrapperBase):
         self.dropout = torch.nn.Dropout(p=dropout)
         self.output = torch.nn.LazyLinear(1) 
         self.sigmoid = torch.nn.Sigmoid()
-        if type(base_arch) == BERT:
+        if type(base_arch) == BERT or type(base_arch) == MotifBERT:
             self._forward_base_arch = self._forward_base_arch_bert
         else:
             self._forward_base_arch = self.base_arch
@@ -178,7 +178,7 @@ class Regressor(WrapperBase):
                                                for n_nodes in fcn_layers])
         self.output = torch.nn.LazyLinear(n_features)
         self.data_columns = [f'F{i}' for i in range(n_features)]
-        if type(base_arch) == BERT:
+        if type(base_arch) == BERT or type(base_arch) == MotifBERT: # TODO come up with a nicer solution here
             self._forward_base_arch = self._forward_base_arch_bert
         else:
             self._forward_base_arch = self.base_arch

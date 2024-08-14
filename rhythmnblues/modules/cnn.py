@@ -2,6 +2,7 @@
 `rhythmnblues`.'''
 
 import torch
+from rhythmnblues.modules.motif_encoding import MotifEncoding
 
 
 class MycoAICNN(torch.nn.Module):
@@ -129,41 +130,15 @@ class ResidualBlock(torch.nn.Module):
         out += residual
         out = self.relu(out)
         return out
-
-
-class MotifEncoding(torch.nn.Module):
-    '''TODO'''
-    
-    def __init__(self, n_motifs, motif_size, pool_size):
-        '''TODO'''
-        
-        super().__init__()
-    
-        self.motif_learner = torch.nn.Conv1d(
-            in_channels=4,
-            out_channels=n_motifs,
-            kernel_size=motif_size,
-            padding='same'
-        )
-
-        self.relu = torch.nn.ReLU()
-
-        self.max_pooling = torch.nn.MaxPool1d(
-            kernel_size=pool_size,
-            stride=pool_size,
-        )
-    
-    def forward(self, x):
-        x = x.view(x.shape[0], -1, x.shape[-1])
-        return self.max_pooling(self.relu(self.motif_learner(x)))
     
 
 class MotifResNet(torch.nn.Module):
+    '''Like ResNet, but initial layers correspond to learnt motifs.'''
 
-    def __init__(self, n_motifs, motif_size, pool_size):
+    def __init__(self, n_motifs, motif_size, layers):
         super().__init__()
-        self.motif_encoding = MotifEncoding(n_motifs, motif_size, pool_size)
-        self.resnet = ResNet([1,1,1,1], in_channels=n_motifs)
+        self.motif_encoding = MotifEncoding(n_motifs, motif_size)
+        self.resnet = ResNet(layers, in_channels=n_motifs)
 
     def forward(self, x):
         return self.resnet(self.motif_encoding(x))

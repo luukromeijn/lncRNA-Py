@@ -4,9 +4,10 @@ network designs.'''
 import math
 import torch
 from rhythmnblues import utils
-from rhythmnblues.modules.cnn import MotifEncoding
+from rhythmnblues.modules.motif_encoding import MotifEmbedding
 
 
+# TODO test now that positional embedding has been split up
 class BERT(torch.nn.Module):
     '''BERT base model, transformer encoder to be used for various tasks
     
@@ -38,7 +39,8 @@ class BERT(torch.nn.Module):
             Dropout probability to use throughout network (default is 0.1)'''
 
         super().__init__()
-        self.src_pos_embed = PositionalEmbedding(d_model, vocab_size, dropout)
+        self.embedder = torch.nn.Embedding(vocab_size, d_model)
+        self.pos_encoder = PositionalEncoding(d_model, dropout)
         self.encoder = Encoder(d_model, d_ff, h, N, dropout)
         self.vocab_size = vocab_size
         self.d_model = d_model
@@ -54,7 +56,8 @@ class BERT(torch.nn.Module):
     def forward(self, src):
         '''Given a source, retrieve encoded representation'''
         src_mask = (src != utils.TOKENS['PAD']).unsqueeze(-2) # Mask padding
-        src_embedding = self.src_pos_embed(src)
+        src_embedding = self.embedder(src) * math.sqrt(self.d_model) # Get embedding
+        src_embedding = self.pos_encoder(src)
         return self.encoder(src_embedding, src_mask)
     
 
@@ -178,15 +181,14 @@ class FeedForward(torch.nn.Module):
         x = self.relu(self.lin_1(x))
         x = self.dropout(x)
         return self.lin_2(x)
+    
 
+class PositionalEncoding(torch.nn.Module):
+    '''Adds positional information to an inputted embedding.'''
 
-class PositionalEmbedding(torch.nn.Module):
-    '''Converts input into sum of a learned embedding and positional encoding'''
-
-    def __init__(self, d_model, vocab, dropout, max_len=5000):
+    def __init__(self, d_model, dropout, max_len=5000):
         super().__init__()
 
-        self.embedder = torch.nn.Embedding(vocab, d_model)
         self.dropout = torch.nn.Dropout(p=dropout)
         self.d_model = d_model
 
@@ -202,7 +204,6 @@ class PositionalEmbedding(torch.nn.Module):
         self.register_buffer("pe", pe)
 
     def forward(self, x):
-        x = self.embedder(x) * math.sqrt(self.d_model) # Get embedding
         x = x + self.pe[:, : x.size(1)].requires_grad_(False) # + positional enc
         return self.dropout(x) # Apply dropout
     
@@ -233,44 +234,45 @@ def attention(query, key, value, mask=None, dropout=None):
     return torch.matmul(p_attn, value), p_attn
 
 
-class PositionalEncoding(torch.nn.Module):
-    '''TODO'''
-
-    def __init__(self, d_model, dropout, max_len=5000):
-        super().__init__()
-
-        self.dropout = torch.nn.Dropout(p=dropout)
-        self.d_model = d_model
-
-        # Compute the positional encodings once in log space.
-        pe = torch.zeros(max_len, d_model)
-        position = torch.arange(0, max_len).unsqueeze(1)
-        div_term = torch.exp(
-            torch.arange(0, d_model, 2) * -(math.log(10000.0) / d_model)
-        )
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
-        pe = pe.unsqueeze(0)
-        self.register_buffer("pe", pe)
-
-    def forward(self, x):
-        x = x + self.pe[:, : x.size(1)].requires_grad_(False) # + positional enc
-        return self.dropout(x) # Apply dropout
-
-
+# TODO unittests
 class MotifBERT(torch.nn.Module):
-    '''TODO'''
+    '''BERT variant that takes learnt sequence motifs (instead of tokens) as 
+    input. Based on vision transformer. 
+    
+    References
+    ----------
+    ViT: Dosovitskiy et al. (2020) https://doi.org/10.48550/arXiv.2010.11929'''
 
-    def __init__(self, n_motifs, motif_size, pool_size):
+    def __init__(self, n_motifs, motif_size=12, d_model=256, d_ff=512, h=8, N=6, 
+                 dropout=0.1):
+        '''Initializes `MotifBERT`.
+        
+        Parameters
+        ----------
+        n_motifs: int
+            Number of motifs to learn from the data.
+        motif_size: int
+            Number of nucleotides that make up a single motif (default is 12).
+        d_model: int
+            Dimension of sequence repr. (embedding) in model (default is 256)
+        d_ff: int
+            Dimension of hidden layer FFN sublayers (default is 512)
+        h: int
+            Number of heads used for multi-head self-attention (default is 8)
+        N: int
+            How many encoder/decoder layers the transformer has (default is 6)
+        dropout: float
+            Dropout probability to use throughout network (default is 0.1)'''
+
         super().__init__()
-        self.motif_encoder = MotifEncoding(n_motifs, motif_size, pool_size)
+        self.motif_embedder = MotifEmbedding(n_motifs, 256, motif_size)
         self.positional_encoder = PositionalEncoding(256, 0.1)
         self.encoder = Encoder(256, 512, 8, 6, 0.1)
         self.d_model = 256
         self.d_ff = 512
         self.h = 8
         self.N = 6
-        self.pool_size = pool_size
+        self.motif_size = motif_size
 
         # Initialize parameters with Glorot / fan_avg.
         for p in self.parameters():
@@ -281,17 +283,17 @@ class MotifBERT(torch.nn.Module):
         '''Given a source, retrieve encoded representation'''
 
         src_lengths = ( # Calculate start of zero-padding in convolved output...
-            torch.count_nonzero(src.sum(axis=1), dim=1) / self.pool_size 
+            torch.count_nonzero(src.sum(axis=1), dim=1) / self.motif_size
         ).to(torch.int32).unsqueeze(-1) # ... and round down to nearest int
         
         # Embed using motif encoding and add positional encoding
-        src_embedding = self.motif_encoder(src).transpose(1,2)
+        src_embedding = self.motif_embedder(src) * math.sqrt(self.d_model)
         src_embedding = self.positional_encoder(src_embedding)
 
         # Calculate mask
         src_mask = ( # Range to full length
             torch.arange(src_embedding.shape[1], device=utils.DEVICE) 
-            < src_lengths # True when not part of the zero-padding
+            <= src_lengths # True when CLS or not part of the zero-padding
         ).unsqueeze(-2)
 
         return self.encoder(src_embedding, src_mask)

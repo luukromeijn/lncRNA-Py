@@ -110,7 +110,7 @@ class Data(Dataset):
             [self._get_4d_seq(seq[0]) for seq in 
              self.df.iloc[idx][['sequence']].values.reshape(-1,1)], 
             dtype=self.X_dtype, device=utils.DEVICE
-        ).transpose(1,2).squeeze()
+        ).transpose(1,2)
     
     def _get_4d_seq(self, sequence):
         '''Encodes sequence in 4D-DNA encoding, returns a list.'''

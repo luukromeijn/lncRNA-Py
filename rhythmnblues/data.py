@@ -106,11 +106,12 @@ class Data(Dataset):
         
     def _get_4d_batch(self, idx):
         '''Retrieves 4D-DNA encoded batch of data (rows specified by `idx`.)'''
-        return torch.tensor(
-            [self._get_4d_seq(seq[0]) for seq in 
-             self.df.iloc[idx][['sequence']].values.reshape(-1,1)], 
-            dtype=self.X_dtype, device=utils.DEVICE
-        ).transpose(1,2)
+        if type(idx) == int:
+            X = self._get_4d_seq(self.df.iloc[idx]['sequence'])
+        else:
+            X = [self._get_4d_seq(seq) for seq in self.df.iloc[idx]['sequence']]
+        return (torch.tensor(X, dtype=self.X_dtype, device=utils.DEVICE)
+                .transpose(-2,-1))
     
     def _get_4d_seq(self, sequence):
         '''Encodes sequence in 4D-DNA encoding, returns a list.'''

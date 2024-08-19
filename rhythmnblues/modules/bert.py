@@ -244,7 +244,7 @@ class MotifBERT(torch.nn.Module):
     ViT: Dosovitskiy et al. (2020) https://doi.org/10.48550/arXiv.2010.11929'''
 
     def __init__(self, n_motifs, motif_size=12, d_model=256, d_ff=512, h=8, N=6, 
-                 dropout=0.1):
+                 dropout=0.1, relu=False):
         '''Initializes `MotifBERT`.
         
         Parameters
@@ -262,24 +262,27 @@ class MotifBERT(torch.nn.Module):
         N: int
             How many encoder/decoder layers the transformer has (default is 6)
         dropout: float
-            Dropout probability to use throughout network (default is 0.1)'''
+            Dropout probability to use throughout network (default is 0.1)
+        relu: bool
+            Whether or not motifs are relu-activated (default is False)'''
 
         super().__init__()
-        self.motif_embedder = MotifEmbedding(n_motifs, 256, motif_size)
-        self.positional_encoder = PositionalEncoding(256, 0.1)
-        self.encoder = Encoder(256, 512, 8, 6, 0.1)
-        self.d_model = 256
-        self.d_ff = 512
-        self.h = 8
-        self.N = 6
-        self.motif_size = motif_size
+        self.motif_embedder = MotifEmbedding(n_motifs, d_model, motif_size,relu)
+        self.positional_encoder = PositionalEncoding(d_model, dropout)
+        self.encoder = Encoder(d_model, d_ff, h, N, dropout)
+        self.motif_size = motif_size # TODO decide if these attribtues are necessary
+        self.n_motifs = n_motifs
+        self.d_model = d_model
+        self.d_ff = d_ff
+        self.h = h
+        self.N = N
 
         # Initialize parameters with Glorot / fan_avg.
         for p in self.parameters():
             if p.dim() > 1:
                 torch.nn.init.xavier_uniform_(p)
 
-    def forward(self, src):
+    def forward(self, src, mmm_mask=None):
         '''Given a source, retrieve encoded representation'''
 
         src_lengths = ( # Calculate start of zero-padding in convolved output...
@@ -287,7 +290,8 @@ class MotifBERT(torch.nn.Module):
         ).to(torch.int32).unsqueeze(-1) # ... and round down to nearest int
         
         # Embed using motif encoding and add positional encoding
-        src_embedding = self.motif_embedder(src) * math.sqrt(self.d_model)
+        src_embedding = self.motif_embedder(src, mmm_mask)
+        src_embedding = src_embedding*math.sqrt(self.d_model)
         src_embedding = self.positional_encoder(src_embedding)
 
         # Calculate mask

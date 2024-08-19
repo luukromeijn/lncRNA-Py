@@ -163,7 +163,32 @@ class MLM(WrapperBase):
 
     def forward(self, X):
         return self.mlm_layer(self.dropout(self.base_arch(X)))
-    
+
+
+class MMM(WrapperBase):
+    '''Wrapper class for model that performs Masked Motif Modelling.'''
+
+    def __init__(self, base_arch, dropout=0.0, relu=False, pred_batch_size=64):
+        super().__init__(base_arch, pred_batch_size)
+        self.dropout = torch.nn.Dropout(p=dropout)
+        if type(base_arch) != MotifBERT:
+            raise TypeError("Base architecture should be of type MotifBERT.")
+        self.linear = torch.nn.Linear(base_arch.d_model, base_arch.n_motifs)
+        self.relu = torch.nn.ReLU() if relu else None
+        self.transpose_conv = torch.nn.ConvTranspose1d(
+            in_channels=base_arch.n_motifs, out_channels=4, 
+            kernel_size=base_arch.motif_size, stride=base_arch.motif_size
+        )
+        self.log_softmax = torch.nn.LogSoftmax(dim=1)
+
+    def forward(self, X, mask):
+        X = self.base_arch(X, mask)[:,1:,:] # Forward pass base arch, remove CLS
+        X = self.linear(X) # Transform to motif 'space' 
+        if self.relu: # Activate 
+            X = self.relu(X)
+        X = X.transpose(1,2) # Swap axes
+        X = self.transpose_conv(self.dropout(X)) # Apply deconvolution
+        return self.log_softmax(X)
 
 class Regressor(WrapperBase):
     '''Wrapper class for model that performs linear regression on the base 

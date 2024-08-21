@@ -107,13 +107,15 @@ def epoch_mlm(model, dataloader, p_mlm, p_mask, p_random,
             y_pred = y_pred.view(-1, y_pred.shape[-2])
             selected = y.sum(dim=1) > 0 # Only select non-zero entries
             y, y_pred = y[selected], y_pred[selected] 
-            loss = loss_function(y_pred, y) # Calculate loss
-        scaler.scale(loss).backward() # Calculate gradients
-        scaler.unscale_(optimizer) # Unscale before gradient clipping
-        torch.nn.utils.clip_grad_norm_(model.parameters(), utils.CLIP_NORM)
-        scaler.step(optimizer) # Optimize parameters
-        lr_scheduler.step() # Update learning rate
-        scaler.update() # Updates scale
+            if y.shape[0] > 0: # Check that at least one is selected
+                loss = loss_function(y_pred, y) # Calculate loss
+        if y.shape[0] > 0:
+            scaler.scale(loss).backward() # Calculate gradients
+            scaler.unscale_(optimizer) # Unscale before gradient clipping
+            torch.nn.utils.clip_grad_norm_(model.parameters(), utils.CLIP_NORM)
+            scaler.step(optimizer) # Optimize parameters
+            lr_scheduler.step() # Update learning rate
+            scaler.update() # Updates scale
     return model # Return model
 
 
@@ -131,6 +133,11 @@ def mask_batch(X, motif_size, p_mlm, p_mask, p_random):
     select = ((torch.rand(shape, device=utils.DEVICE) < p_mlm) & # Select masked
               (indices > 0) & # But no CLS patch
               (indices <= len_seqs)) # Or padding parts
+    
+    # Creating the target before making any modifications to X
+    y = X[:,:,:len_out].clone()
+    select_nucs_b = motifs_to_nucs_mask(select, y.shape, motif_size, len_out)
+    y = torch.where(select_nucs_b, y, 0)
                
     probs = torch.rand(shape, device=utils.DEVICE)
     masked = select & (probs < p_mask)
@@ -140,11 +147,6 @@ def mask_batch(X, motif_size, p_mlm, p_mask, p_random):
     random_nucs_b = motifs_to_nucs_mask(random, X.shape, motif_size, len_out)
     random_nucs = get_random_nucs(X.shape)
     X = torch.where(random_nucs_b, random_nucs, X)
-
-    # Creating the target
-    y = X[:,:,:len_out].clone()
-    select_nucs_b = motifs_to_nucs_mask(select, y.shape, motif_size, len_out)
-    y = torch.where(select_nucs_b, y, 0)
 
     return X, masked, y
 
@@ -208,6 +210,4 @@ def evaluate_mmm(model, data, p_mlm, p_mask, p_random, loss_function, metrics):
         metric_function = metrics[metric]
         scores.append(metric_function(y_true_all, y_pred_all))
 
-    print(scores)
-    exit() # TODO fix
     return scores

@@ -21,7 +21,7 @@ classification_metrics = {
 pcRNA and lncRNA), and F1 (macro-averaged over both classes).'''
 
 
-mlm_metrics = {
+mtm_metrics = {
     'Accuracy': accuracy_score,
     'Precision (macro)': lambda y_t, y_p: precision_score(
         y_t, y_p, average='macro', zero_division=np.nan),
@@ -34,7 +34,7 @@ mlm_metrics = {
         np.unique(y_p.numpy(), return_counts=True)
     ) 
 }
-'''Default MLM evaluation metrics: accuracy, precision, recal, and F1 (macro-
+'''Default MTM evaluation metrics: accuracy, precision, recal, and F1 (macro-
 averaged), as well as counts per token.'''
 
 

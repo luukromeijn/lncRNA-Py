@@ -2,9 +2,9 @@ import argparse
 import torch
 from rhythmnblues.data import Data
 from rhythmnblues.features import BytePairEncoding
-from rhythmnblues.modules import BERT, MLM
-from rhythmnblues.train import train_mlm
-from rhythmnblues.train.loggers import LoggerList, LoggerPlot, LoggerMLMCounts, LoggerWrite
+from rhythmnblues.modules import BERT, MaskedTokenModel
+from rhythmnblues.train import train_masked_token_modeling
+from rhythmnblues.train.loggers import LoggerList, LoggerPlot, LoggerTokenCounts, LoggerWrite
 from rhythmnblues import utils
 
 # DEVICE-SPECIFIC
@@ -43,17 +43,17 @@ def tune_mlm_sizes(N, d_model, d_ff, vocab_size, batch_size):
     
     # Initializing a model
     base_arch = BERT(vocab_size, d_model=d_model, d_ff=d_ff, h=8, N=N)
-    model = MLM(base_arch, pred_batch_size=batch_size).to(utils.DEVICE)
+    model = MaskedTokenModel(base_arch, pred_batch_size=batch_size).to(utils.DEVICE)
 
     # Preparing the loggers
     logger_list = LoggerList(
         LoggerPlot(f'{results_dir}/{exp_name}', metric_names),
-        LoggerMLMCounts(bpe.vocab_size, f'{results_dir}/{exp_name}/counts.png'),
+        LoggerTokenCounts(bpe.vocab_size, f'{results_dir}/{exp_name}/counts.png'),
         LoggerWrite(f'{results_dir}/{exp_name}/history.csv', metric_names)
     )
 
     # Training
-    model, _ = train_mlm(
+    model, _ = train_masked_token_modeling(
         model, train, valid, epochs, batch_size, warmup_steps=warmup_steps,
         n_samples_per_epoch=samples_per_epoch, logger=logger_list
     )

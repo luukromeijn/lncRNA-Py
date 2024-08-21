@@ -1,4 +1,5 @@
-'''Masked Language Modelling pre-training task for nucleotide sequences.
+'''Masked Language Modeling pre-training task for nucleotide sequences that are
+encoded using Motif Encoding.
 
 References
 ----------
@@ -13,24 +14,25 @@ from rhythmnblues.train.loggers import LoggerBase
 from rhythmnblues.train.lr_schedule import LrSchedule
 from rhythmnblues.train.metrics import mmm_metrics
 
-# TODO: update documentation to replace all MLM references to MMM!!!
-def train_mmm(
-        model, train_data, valid_data, epochs, batch_size=64, p_mlm=0.15, 
+
+def train_masked_motif_modeling(
+        model, train_data, valid_data, epochs, batch_size=8, p_mlm=0.15, 
         p_mask=0.8, p_random=0.1, loss_function=None, warmup_steps=8000, 
-        label_smoothing=0.1, n_samples_per_epoch=None, logger=None, 
-        metrics=mmm_metrics
+        n_samples_per_epoch=None, logger=None, metrics=mmm_metrics
     ):
-    '''Trains `model` for Masked Language Modelling task, using `train_data`, 
-    for specified amount of `epochs`.
+    '''Trains `model` for Masked Language Modeling task, using `train_data`, 
+    for specified amount of `epochs`. Assumes sequence data is inputted in 
+    four channels (using `Data.set_tensor_features('4D-DNA')`), then encoded
+    using Motif Encoding (using `MotifBERT`).
     
     Arguments
     ---------
-    `model`: `torch.nn.Module` | `rhythmnblues.modules.MLM`
+    `model`: `torch.nn.Module` | `rhythmnblues.modules.MaskedMotifModel`
         Neural network that is to be trained.
     `train_data`: `rhythmnblues.data.Data`
-        Data to use for training, must call `set_tensor_features` first. After 
-        every training epoch, the performance of the model on a subset of the 
-        training set is determined. The length of this subset is 
+        Data to use for training, must call `set_tensor_features(4D-DNA)` first.
+        After every training epoch, the performance of the model on a subset of 
+        the training set is determined. The length of this subset is 
         `min(len(train_data), len(valid_data))`. 
     `valid_data`: `rhythmnblues.data.Data`
         Data to use for validation, must call `set_tensor_features` first.
@@ -39,22 +41,19 @@ def train_mmm(
     `batch_size`: `int`
         Number of examples per batch (default is 64).
     `p_mlm`: `float`
-        Probability for a token to be selected for MLM (default is 0.15).
+        Probability for a motif window to be selected for MLM (default is 0.15).
     `p_mask`: `float`
-        Probability for a token to be masked when selected (default is 0.8).
+        Probability for a motif window to be masked when selected (default 0.8).
     `p_random`: `float`
-        Probability for a token to be randomly replaced when selected (default
-        is 0.1).
+        Probability for a motif window to be randomly replaced when selected 
+        (default is 0.1).
     `loss_function`: `torch.nn.Module`
         Loss function that is to be optimized. If None, falls back to 
-        `torch.nn.CrossEntropyLoss`) (default is None).
+        `torch.nn.KLDivLoss`) (default is None).
     `warmup_steps`: `int`
         Number of training steps in which learning rate linearly increases. 
         After this amount of steps, the learning rate decreases proportional to
         the invserse square root of the step number (default is 8000).
-    `label_smoothing`: `float`
-        How much weight should be subtracted from the target token and divided
-        over the remaining tokens, for regularization (default is 0.1).
     `n_samples_per_epoch`: `int`
         If specified, indicates the number of samples per training epoch. If 
         None, will sample the full training set.
@@ -71,7 +70,7 @@ def train_mmm(
     train_dataloader = DataLoader(train_data, batch_size, sampler=sampler)
     train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))
     if loss_function is None:
-        loss_function = torch.nn.KLDivLoss(reduction='batchmean') # TODO might need to implement label smoothing?
+        loss_function = torch.nn.KLDivLoss(reduction='batchmean')
     optimizer = torch.optim.Adam(model.parameters(), lr=1, betas=(0.9,0.98))
     lr_scheduler = LrSchedule(optimizer, model.base_arch.d_model, warmup_steps)
     scaler = get_gradient_scaler(utils.DEVICE)
@@ -79,13 +78,13 @@ def train_mmm(
     logger.start(metrics)
 
     print("Training MLM...")
-    for epoch in utils.progress(range(epochs)):
-        model = epoch_mlm(model, train_dataloader, p_mlm, p_mask, p_random, 
-                          loss_function, optimizer, scaler, lr_scheduler)
-        train_results = evaluate_mmm(model, train_subset, p_mlm, p_mask, 
-                                     p_random, loss_function, metrics) 
-        valid_results = evaluate_mmm(model, valid_data, p_mlm, p_mask, p_random,
-                                     loss_function, metrics) 
+    for i in utils.progress(range(epochs)):
+        model = epoch(model, train_dataloader, p_mlm, p_mask, p_random, 
+                      loss_function, optimizer, scaler, lr_scheduler)
+        train_results = evaluate(model, train_subset, p_mlm, p_mask, p_random, 
+                                 loss_function, metrics) 
+        valid_results = evaluate(model, valid_data, p_mlm, p_mask, p_random,
+                                 loss_function, metrics) 
         logger.log(train_results+valid_results, model)
 
     # Finish
@@ -93,11 +92,11 @@ def train_mmm(
     return model, logger.history
 
 
-def epoch_mlm(model, dataloader, p_mlm, p_mask, p_random,
-              loss_function, optimizer, scaler, lr_scheduler):
+def epoch(model, dataloader, p_mlm, p_mask, p_random, loss_function, optimizer,
+          scaler, lr_scheduler):
     '''Trains `model` for a single epoch.'''
     model.train() # Set training mode
-    for X, _ in utils.progress(dataloader): # Loop through data
+    for X, _ in dataloader: # Loop through data
         X, mask, y = mask_batch(X, model.base_arch.motif_size, p_mlm, p_mask, 
                                 p_random)
         optimizer.zero_grad() # Zero out gradients
@@ -120,7 +119,7 @@ def epoch_mlm(model, dataloader, p_mlm, p_mask, p_random,
 
 
 def mask_batch(X, motif_size, p_mlm, p_mask, p_random):
-    '''Maks a batch of sequence data for MLM'''
+    '''Maks a batch of sequence data for MMM'''
 
     len_embedding = int(X.shape[2]/motif_size)+1 # int(len(seq)/motif_size)+CLS
     len_out = (len_embedding-1)*motif_size # length output tensor 
@@ -178,7 +177,7 @@ def get_random_nucs(X_shape):
     return random_nucs
 
 
-def evaluate_mmm(model, data, p_mlm, p_mask, p_random, loss_function, metrics):
+def evaluate(model, data, p_mlm, p_mask, p_random, loss_function, metrics):
     '''Evaluation function to keep track of in-training progress for MMM.'''
     
     # Initialization

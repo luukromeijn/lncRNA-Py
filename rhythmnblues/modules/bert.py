@@ -7,7 +7,6 @@ from rhythmnblues import utils
 from rhythmnblues.modules.motif_encoding import MotifEmbedding
 
 
-# TODO test now that positional embedding has been split up
 class BERT(torch.nn.Module):
     '''BERT base model, transformer encoder to be used for various tasks
     
@@ -44,9 +43,6 @@ class BERT(torch.nn.Module):
         self.encoder = Encoder(d_model, d_ff, h, N, dropout)
         self.vocab_size = vocab_size
         self.d_model = d_model
-        self.d_ff = d_ff
-        self.h = h
-        self.N = N
 
         # Initialize parameters with Glorot / fan_avg.
         for p in self.parameters():
@@ -57,7 +53,7 @@ class BERT(torch.nn.Module):
         '''Given a source, retrieve encoded representation'''
         src_mask = (src != utils.TOKENS['PAD']).unsqueeze(-2) # Mask padding
         src_embedding = self.embedder(src) * math.sqrt(self.d_model) # Get embedding
-        src_embedding = self.pos_encoder(src)
+        src_embedding = self.pos_encoder(src_embedding)
         return self.encoder(src_embedding, src_mask)
     
 
@@ -234,7 +230,6 @@ def attention(query, key, value, mask=None, dropout=None):
     return torch.matmul(p_attn, value), p_attn
 
 
-# TODO unittests
 class MotifBERT(torch.nn.Module):
     '''BERT variant that takes learnt sequence motifs (instead of tokens) as 
     input. Based on vision transformer. 
@@ -270,12 +265,9 @@ class MotifBERT(torch.nn.Module):
         self.motif_embedder = MotifEmbedding(n_motifs, d_model, motif_size,relu)
         self.positional_encoder = PositionalEncoding(d_model, dropout)
         self.encoder = Encoder(d_model, d_ff, h, N, dropout)
-        self.motif_size = motif_size # TODO decide if these attribtues are necessary
+        self.motif_size = motif_size
         self.n_motifs = n_motifs
         self.d_model = d_model
-        self.d_ff = d_ff
-        self.h = h
-        self.N = N
 
         # Initialize parameters with Glorot / fan_avg.
         for p in self.parameters():

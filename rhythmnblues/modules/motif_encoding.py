@@ -7,6 +7,8 @@ References
 ViT: Dosovitskiy et al. (2020) https://doi.org/10.48550/arXiv.2010.11929'''
 
 import torch
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 class MotifEncoding(torch.nn.Module):
@@ -24,25 +26,57 @@ class MotifEncoding(torch.nn.Module):
         '''
 
         super().__init__()
-        
-        self.layers = torch.nn.ModuleList() # TODO implementation as list here is for possible future expansion including codons/frame pooling
-        self.layers.append(torch.nn.Conv1d(
+        self.motif_layer = torch.nn.Conv1d(
             in_channels=4,
             out_channels=n_motifs,
             kernel_size=motif_size,
             stride=motif_size
-        ))
+        )
 
     def forward(self, x):
-        for layer in self.layers:
-            x = layer(x)
-        return x
+        return self.motif_layer(x)
+    
+    def visualize(self, motif_idx, filepath=None):
+        '''Visualizes a certain motif, indicated by `motif_idx`.'''
+
+        # Get motif tensor
+        motif_tensor = [p for p in self.motif_layer.parameters()][0].detach()
+        motif_tensor = motif_tensor[motif_idx].cpu().numpy()
+
+        labels = 'ACTG'
+        for i in range(4):
+            # Calculate bottom coordinates (based on cumulative sum)
+            pos_case = np.where( # Sum all smaller values (to use as bottombase)
+                [(motif_tensor[i] > motif_tensor) & (motif_tensor > 0)], 
+                motif_tensor, 0
+            ).squeeze().sum(axis=0)
+            neg_case = np.where( # Sum all larger values (when negative)
+                [(motif_tensor[i] < motif_tensor) & (motif_tensor < 0)], 
+                motif_tensor, 0
+            ).squeeze().sum(axis=0)
+            # Apply either the positive or negative case based on value
+            bottom = np.where(motif_tensor[i] >= 0, pos_case, neg_case)
+            # And do the actual plotting
+            fig = plt.bar(np.arange(1, motif_tensor.shape[-1]+1), 
+                          motif_tensor[i], bottom=bottom, label=labels[i])
+
+        # Making the plot nicer
+        plt.xticks(np.arange(1, motif_tensor.shape[-1]+1))
+        plt.axhline(c='black')
+        plt.xlabel('Position')
+        plt.ylabel('Kernel weight')
+        plt.legend()
+        plt.tight_layout()
+
+        if filepath is not None:
+            plt.savefig(filepath)
+        return fig
     
 
 class MotifEmbedding(torch.nn.Module):
     '''Projects motif encoding into space of pre-specified dimensionality.'''
 
-    def __init__(self, n_motifs, d_model, motif_size=12, relu=False):
+    def __init__(self, n_motifs, d_model, motif_size=12, relu=True):
         '''Initializes `MotifEncoding` class.
 
         Arguments
@@ -54,7 +88,7 @@ class MotifEmbedding(torch.nn.Module):
         `motif_size`: `int`
             Number of nucleotides that make up a single motif (default is 12).
         `relu`: `bool`
-            Whether or not motifs are relu-activated (default is False).'''
+            Whether or not motifs are relu-activated (default is True).'''
         
         super().__init__()
         self.motif_encoder = MotifEncoding(n_motifs, motif_size)

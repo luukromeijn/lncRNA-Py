@@ -173,3 +173,18 @@ def test_set_tensor_features(data):
         assert len(x) == 3
         assert len(y) == 3
         break
+
+def test_4d_dna(data):
+    data.set_tensor_features('4D-DNA')
+    assert data[0][0].size(0) == 4
+    assert data[0][0].size(1) == utils.LEN_4D_DNA
+    assert data[[0]][0].size(0) == 1 # Extra 'batch' dimension
+    assert data[[0]][0].size(1) == 4
+    assert data[[0]][0].size(2) == utils.LEN_4D_DNA
+    assert data[[0,1]][0].size(0) == 2
+    assert data[[0,1]][0].size(1) == 4
+    assert data[[0,1]][0].size(2) == utils.LEN_4D_DNA
+    for x, y in DataLoader(data, batch_size=3): # Works with DataLoader
+        assert len(x) == 3
+        assert len(y) == 3
+        break

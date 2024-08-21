@@ -1,4 +1,5 @@
-'''Masked Language Modelling pre-training task for nucleotide sequences.
+'''Masked Language Modeling pre-training task for tokenized nucleotide 
+sequences.
 
 References
 ----------
@@ -11,20 +12,22 @@ from rhythmnblues import utils
 from rhythmnblues.train.mixed_precision import get_gradient_scaler, get_amp_args
 from rhythmnblues.train.loggers import LoggerBase
 from rhythmnblues.train.lr_schedule import LrSchedule
-from rhythmnblues.train.metrics import mlm_metrics
+from rhythmnblues.train.metrics import mtm_metrics
 
-def train_mlm(
-        model, train_data, valid_data, epochs, batch_size=64, p_mlm=0.15, 
+
+def train_masked_token_modeling(
+        model, train_data, valid_data, epochs, batch_size=8, p_mlm=0.15, 
         p_mask=0.8, p_random=0.1, loss_function=None, warmup_steps=8000, 
         label_smoothing=0.1, n_samples_per_epoch=None, logger=None, 
-        metrics=mlm_metrics
+        metrics=mtm_metrics
     ):
-    '''Trains `model` for Masked Language Modelling task, using `train_data`, 
-    for specified amount of `epochs`.
+    '''Trains `model` for Masked Language Modeling task, using `train_data`, 
+    for specified amount of `epochs`. Assumes sequence data is tokenized (see
+    `rhythmnblues.features.tokenizers`).
     
     Arguments
     ---------
-    `model`: `torch.nn.Module` | `rhythmnblues.modules.MLM`
+    `model`: `torch.nn.Module` | `rhythmnblues.modules.MaskedTokenModel`
         Neural network that is to be trained.
     `train_data`: `rhythmnblues.data.Data`
         Data to use for training, must call `set_tensor_features` first. After 
@@ -73,19 +76,19 @@ def train_mlm(
         loss_function = torch.nn.CrossEntropyLoss(
               label_smoothing=label_smoothing, ignore_index=utils.TOKENS['PAD'])
     optimizer = torch.optim.Adam(model.parameters(), lr=1, betas=(0.9,0.98))
-    lr_scheduler = LrSchedule(optimizer, model.d_model, warmup_steps)
+    lr_scheduler = LrSchedule(optimizer, model.base_arch.d_model, warmup_steps)
     scaler = get_gradient_scaler(utils.DEVICE)
     logger = logger if logger else LoggerBase()
     logger.start(metrics)
 
     print("Training MLM...")
-    for epoch in utils.progress(range(epochs)):
-        model = epoch_mlm(model, train_dataloader, p_mlm, p_mask, p_random, 
-                          loss_function, optimizer, scaler, lr_scheduler)
-        train_results = evaluate_mlm(model, train_subset, p_mlm, p_mask, 
-                                     p_random, loss_function, metrics) 
-        valid_results = evaluate_mlm(model, valid_data, p_mlm, p_mask, p_random,
-                                     loss_function, metrics) 
+    for i in utils.progress(range(epochs)):
+        model = epoch(model, train_dataloader, p_mlm, p_mask, p_random, 
+                      loss_function, optimizer, scaler, lr_scheduler)
+        train_results = evaluate(model, train_subset, p_mlm, p_mask, p_random, 
+                                 loss_function, metrics) 
+        valid_results = evaluate(model, valid_data, p_mlm, p_mask, p_random,
+                                 loss_function, metrics) 
         logger.log(train_results+valid_results, model)
 
     # Finish
@@ -93,17 +96,17 @@ def train_mlm(
     return model, logger.history
 
 
-def epoch_mlm(model, dataloader, p_mlm, p_mask, p_random,
-              loss_function, optimizer, scaler, lr_scheduler):
+def epoch(model, dataloader, p_mlm, p_mask, p_random, loss_function, optimizer,
+          scaler, lr_scheduler):
     '''Trains `model` for a single epoch.'''
     model.train() # Set training mode
-    for X, _ in utils.progress(dataloader): # Loop through data
-        X, y = mask_batch(X, model.vocab_size, p_mlm, p_mask, p_random)
+    for X, _ in dataloader: # Loop through data
+        X, y = mask_batch(X,model.base_arch.vocab_size, p_mlm, p_mask, p_random)
         optimizer.zero_grad() # Zero out gradients
         with torch.autocast(**get_amp_args(utils.DEVICE)):
             y_pred = model(X) # Make prediction
             y = y.view(-1) # Flatten labels
-            y_pred = y_pred.view(-1, model.vocab_size) # Flatten 
+            y_pred = y_pred.view(-1, model.base_arch.vocab_size) # Flatten 
             loss = loss_function(y_pred, y) # Calculate loss
         scaler.scale(loss).backward() # Calculate gradients
         scaler.unscale_(optimizer) # Unscale before gradient clipping
@@ -142,7 +145,7 @@ def mask_batch(X, vocab_size, p_mlm, p_mask, p_random):
     return X, y
 
 
-def evaluate_mlm(model, data, p_mlm, p_mask, p_random, loss_function, metrics):
+def evaluate(model, data, p_mlm, p_mask, p_random, loss_function, metrics):
     '''Evaluation function to keep track of in-training progress for MLM.'''
     
     # Initialization
@@ -154,10 +157,11 @@ def evaluate_mlm(model, data, p_mlm, p_mask, p_random, loss_function, metrics):
     model.eval() # Set in evaluation mode and turn off gradient calculation
     with torch.no_grad():
         for X, _ in dataloader: # Loop through + mask data
-            X, y_true = mask_batch(X, model.vocab_size, p_mlm, p_mask, p_random)
+            X, y_true = mask_batch(X, model.base_arch.vocab_size, p_mlm, p_mask,
+                                   p_random)
             y_pred = model(X) # Make a prediction
             y_true = y_true.view(-1) # Flatten target
-            y_pred = y_pred.view(-1, model.vocab_size) # Flatten prediction
+            y_pred = y_pred.view(-1, model.base_arch.vocab_size) # Flatten pred.
             select = y_true != utils.TOKENS['PAD'] # Remove non-selected tokens
             y_true, y_pred = y_true[select], y_pred[select] 
             # NOTE: We verified that evaluating loss after selection is good

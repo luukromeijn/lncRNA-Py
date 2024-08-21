@@ -241,8 +241,7 @@ class EarlyStopping(LoggerBase):
             print(f"Model saved at epoch {self.epoch}.")
 
 
-# TODO add unittest
-class LoggerMLMCounts(LoggerBase):
+class LoggerTokenCounts(LoggerBase):
     '''Plots, at every epoch, the true token count vs the predicted token
     counts, based on the 'Counts' metric.'''
 

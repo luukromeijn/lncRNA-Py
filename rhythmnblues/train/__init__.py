@@ -1,3 +1,4 @@
 from rhythmnblues.train.classification import train_classifier
-from rhythmnblues.train.mlm import train_mlm
+from rhythmnblues.train.masked_token_modeling import train_masked_token_modeling
+from rhythmnblues.train.masked_motif_modeling import train_masked_motif_modeling
 from rhythmnblues.train.regression import train_regressor

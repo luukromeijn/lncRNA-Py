@@ -2,7 +2,6 @@
 PyTorch module) with additional requirements for various (pre-)training tasks 
 from `rhythmnblues`.'''
 
-import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 from rhythmnblues.modules.bert import BERT, MotifBERT
@@ -151,22 +150,22 @@ class Classifier(WrapperBase):
         return super().predict(data, inplace, return_logits=return_logits)
     
 
-class MLM(WrapperBase):
-    '''Wrapper class for model that performs Masked Language Modelling.'''
+class MaskedTokenModel(WrapperBase):
+    '''Wrapper class for model that performs Masked Language Modeling with 
+    tokenized sequences as input.'''
 
     def __init__(self, base_arch, dropout=0.0, pred_batch_size=64):
         super().__init__(base_arch, pred_batch_size)
         self.dropout = torch.nn.Dropout(p=dropout)
         self.mlm_layer = torch.nn.Linear(base_arch.d_model,base_arch.vocab_size)
-        self.vocab_size = base_arch.vocab_size
-        self.d_model = base_arch.d_model
 
     def forward(self, X):
         return self.mlm_layer(self.dropout(self.base_arch(X)))
 
 
-class MMM(WrapperBase):
-    '''Wrapper class for model that performs Masked Motif Modelling.'''
+class MaskedMotifModel(WrapperBase):
+    '''Wrapper class for model that performs Masked Language Modeling with 
+    motif-encoded sequences as input.'''
 
     def __init__(self, base_arch, dropout=0.0, relu=False, pred_batch_size=64):
         super().__init__(base_arch, pred_batch_size)

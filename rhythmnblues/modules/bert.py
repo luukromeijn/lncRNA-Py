@@ -239,7 +239,7 @@ class MotifBERT(torch.nn.Module):
     ViT: Dosovitskiy et al. (2020) https://doi.org/10.48550/arXiv.2010.11929'''
 
     def __init__(self, n_motifs, motif_size=12, d_model=256, d_ff=512, h=8, N=6, 
-                 dropout=0.1, relu=False):
+                 dropout=0.1, relu=True):
         '''Initializes `MotifBERT`.
         
         Parameters

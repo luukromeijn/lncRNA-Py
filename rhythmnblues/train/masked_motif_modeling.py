@@ -18,7 +18,8 @@ from rhythmnblues.train.metrics import mmm_metrics
 def train_masked_motif_modeling(
         model, train_data, valid_data, epochs, batch_size=8, p_mlm=0.15, 
         p_mask=0.8, p_random=0.1, loss_function=None, warmup_steps=8000, 
-        n_samples_per_epoch=None, logger=None, metrics=mmm_metrics
+        label_smoothing=0.1, n_samples_per_epoch=None, logger=None, 
+        metrics=mmm_metrics, predict_codons=False
     ):
     '''Trains `model` for Masked Language Modeling task, using `train_data`, 
     for specified amount of `epochs`. Assumes sequence data is inputted in 
@@ -70,7 +71,8 @@ def train_masked_motif_modeling(
     train_dataloader = DataLoader(train_data, batch_size, sampler=sampler)
     train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))
     if loss_function is None:
-        loss_function = torch.nn.KLDivLoss(reduction='batchmean')
+        loss_function = torch.nn.CrossEntropyLoss(ignore_index=-1, 
+                                                label_smoothing=label_smoothing)
     optimizer = torch.optim.Adam(model.parameters(), lr=1, betas=(0.9,0.98))
     lr_scheduler = LrSchedule(optimizer, model.base_arch.d_model, warmup_steps)
     scaler = get_gradient_scaler(utils.DEVICE)
@@ -79,12 +81,12 @@ def train_masked_motif_modeling(
 
     print("Training MLM...")
     for i in utils.progress(range(epochs)):
-        model = epoch(model, train_dataloader, p_mlm, p_mask, p_random, 
-                      loss_function, optimizer, scaler, lr_scheduler)
+        # model = epoch(model, train_dataloader, p_mlm, p_mask, p_random, 
+        #               loss_function, optimizer, scaler, lr_scheduler, predict_codons)
         train_results = evaluate(model, train_subset, p_mlm, p_mask, p_random, 
-                                 loss_function, metrics) 
+                                 loss_function, metrics, predict_codons) 
         valid_results = evaluate(model, valid_data, p_mlm, p_mask, p_random,
-                                 loss_function, metrics) 
+                                 loss_function, metrics, predict_codons) 
         logger.log(train_results+valid_results, model)
 
     # Finish
@@ -93,22 +95,22 @@ def train_masked_motif_modeling(
 
 
 def epoch(model, dataloader, p_mlm, p_mask, p_random, loss_function, optimizer,
-          scaler, lr_scheduler):
+          scaler, lr_scheduler, predict_codons):
     '''Trains `model` for a single epoch.'''
     model.train() # Set training mode
+    n_classes = 64 if predict_codons else 4
     for X, _ in dataloader: # Loop through data
         X, mask, y = mask_batch(X, model.base_arch.motif_size, p_mlm, p_mask, 
-                                p_random)
+                                p_random, predict_codons)
         optimizer.zero_grad() # Zero out gradients
         with torch.autocast(**get_amp_args(utils.DEVICE)):
             y_pred = model(X, mask) # Make prediction
-            y = y.view(-1, y.shape[-2]) # Combine batch/position axes
-            y_pred = y_pred.view(-1, y_pred.shape[-2])
-            selected = y.sum(dim=1) > 0 # Only select non-zero entries
-            y, y_pred = y[selected], y_pred[selected] 
-            if y.shape[0] > 0: # Check that at least one is selected
+            y = y.flatten()
+            y_pred = y_pred.transpose(1,2).reshape(-1,n_classes)
+            skip = y.sum() == -1 * y.shape[0] # Check if all -1 (ignore_index)
+            if not skip: 
                 loss = loss_function(y_pred, y) # Calculate loss
-        if y.shape[0] > 0:
+        if not skip:
             scaler.scale(loss).backward() # Calculate gradients
             scaler.unscale_(optimizer) # Unscale before gradient clipping
             torch.nn.utils.clip_grad_norm_(model.parameters(), utils.CLIP_NORM)
@@ -118,7 +120,7 @@ def epoch(model, dataloader, p_mlm, p_mask, p_random, loss_function, optimizer,
     return model # Return model
 
 
-def mask_batch(X, motif_size, p_mlm, p_mask, p_random):
+def mask_batch(X, motif_size, p_mlm, p_mask, p_random, predict_codons):
     '''Maks a batch of sequence data for MMM'''
 
     len_embedding = int(X.shape[2]/motif_size)+1 # int(len(seq)/motif_size)+CLS
@@ -132,11 +134,21 @@ def mask_batch(X, motif_size, p_mlm, p_mask, p_random):
     select = ((torch.rand(shape, device=utils.DEVICE) < p_mlm) & # Select masked
               (indices > 0) & # But no CLS patch
               (indices <= len_seqs)) # Or padding parts
-    
+
     # Creating the target before making any modifications to X
     y = X[:,:,:len_out].clone()
-    select_nucs_b = motifs_to_nucs_mask(select, y.shape, motif_size, len_out)
-    y = torch.where(select_nucs_b, y, 0)
+    y = torch.argmax(y, axis=1)
+    if predict_codons:
+        y = torch.conv1d(
+            y.to(torch.float32).unsqueeze(1), 
+            torch.tensor([[[16,4,1]]],dtype=torch.float32,device=utils.DEVICE),
+            stride=3
+        ).to(torch.long).squeeze()
+    n_repeats = int(motif_size/3) if predict_codons else motif_size
+    select_nucs_b = (select[:,1:].unsqueeze(-1) # Add dimension
+                     .repeat(1, 1, n_repeats) # Repeat in that dimension
+                     .view(select.size(0), -1)) # Then flatten that dimension
+    y = torch.where(select_nucs_b, y, -1)
                
     probs = torch.rand(shape, device=utils.DEVICE)
     masked = select & (probs < p_mask)
@@ -177,7 +189,7 @@ def get_random_nucs(X_shape):
     return random_nucs
 
 
-def evaluate(model, data, p_mlm, p_mask, p_random, loss_function, metrics):
+def evaluate(model, data, p_mlm, p_mask, p_random, loss_function, metrics, predict_codons):
     '''Evaluation function to keep track of in-training progress for MMM.'''
     
     # Initialization
@@ -185,20 +197,22 @@ def evaluate(model, data, p_mlm, p_mask, p_random, loss_function, metrics):
     y_true_all, y_pred_all = [], [] # All predictions/targets
     dataloader = DataLoader(data, model.pred_batch_size, shuffle=False) # Data
 
+    n_classes = 64 if predict_codons else 4
+
     # Prediction
     model.eval() # Set in evaluation mode and turn off gradient calculation
     with torch.no_grad():
         for X, _ in dataloader: # Loop through + mask data
             X, mask, y_true = mask_batch(X, model.base_arch.motif_size, p_mlm, 
-                                         p_mask, p_random)                                         
+                                         p_mask, p_random, predict_codons)                                         
             y_pred = model(X, mask) # Make a prediction
-            y_true = y_true.view(-1, y_true.shape[-2]) # Flatten target
-            y_pred = y_pred.view(-1, y_pred.shape[-2]) # Flatten prediction
-            select = y_true.sum(dim=1) > 0 # Remove non-selected bases
+            y_pred = y_pred.transpose(1,2).reshape(-1,n_classes)
+            y_true = y_true.flatten()
+            select = y_true != -1 # Remove non-selected bases
             y_true, y_pred = y_true[select], y_pred[select] 
             loss += len(y_true)*loss_function(y_pred, y_true).item()
             # Save predictions & targets
-            y_true_all.append(torch.argmax(y_true, axis=-1).cpu())
+            y_true_all.append(y_true.cpu())
             y_pred_all.append(torch.argmax(y_pred, axis=-1).cpu())
     y_true_all = torch.concat(y_true_all) # Concatenate predictions & targets
     y_pred_all = torch.concat(y_pred_all)

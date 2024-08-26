@@ -81,8 +81,8 @@ def train_masked_motif_modeling(
 
     print("Training MLM...")
     for i in utils.progress(range(epochs)):
-        # model = epoch(model, train_dataloader, p_mlm, p_mask, p_random, 
-        #               loss_function, optimizer, scaler, lr_scheduler, predict_codons)
+        model = epoch(model, train_dataloader, p_mlm, p_mask, p_random, 
+                      loss_function, optimizer, scaler, lr_scheduler, predict_codons)
         train_results = evaluate(model, train_subset, p_mlm, p_mask, p_random, 
                                  loss_function, metrics, predict_codons) 
         valid_results = evaluate(model, valid_data, p_mlm, p_mask, p_random,

@@ -54,7 +54,7 @@ class WrapperBase(torch.nn.Module):
         predictions = []
         self.eval()
         with torch.no_grad():
-            for X, _ in utils.progress(self._get_predict_dataloader(data)): # TODO undo progress thing
+            for X, _ in self._get_predict_dataloader(data):
                 predictions.append(self(X, **kwargs).cpu())
         predictions = torch.concatenate(predictions)
         if inplace:
@@ -79,28 +79,21 @@ class WrapperBase(torch.nn.Module):
             * 'mean': mean pooling over (non-padding) token embeddings.
             * None (default): no pooling, e.g. for CNN base architectures.'''
         
+        if pooling is not None and type(self.base_arch) not in [BERT,MotifBERT]:
+            raise TypeError("self.base_arch must be of type BERT or MotifBERT" + 
+                            f" for {pooling} pooling.")
+
         spaces = []
         self.eval()
         with torch.no_grad():
             for X, _ in self._get_predict_dataloader(data):
-                y = self.base_arch(X)
                 if pooling is None:
-                    pass
-                elif pooling == 'CLS':
-                    y = y[:,0,:] # CLS is assumed to be first input position
+                    y = self.base_arch(X)
                 else:
-                    not_padding = X != utils.TOKENS['PAD']
-                    y[~not_padding] = 0 # Set padding tokens to 0
-                    if pooling == 'max':
-                        y, _ = y.abs().max(dim=1)
-                    elif pooling == 'mean':
-                        y = (y.sum(axis=1) / 
-                             not_padding.sum(axis=1).unsqueeze(dim=1))
-                    else: 
-                        raise ValueError('Invalid `pooling` value.') 
-                    
+                    y = self.base_arch._forward_latent_space(X, pooling)
                 spaces.append(y.cpu())
         spaces = torch.concatenate(spaces)
+
         if inplace:
             self.latent_space_columns = [
                 f'L{dim}' for dim in range(spaces.shape[-1])

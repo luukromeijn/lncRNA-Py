@@ -55,6 +55,26 @@ class BERT(torch.nn.Module):
         src_embedding = self.embedder(src) * math.sqrt(self.d_model) # Get embedding
         src_embedding = self.pos_encoder(src_embedding)
         return self.encoder(src_embedding, src_mask)
+
+    def _forward_latent_space(self, src, pooling):
+        '''Given a source, retrieve the latent space and apply pooling.'''
+        
+        y = self.forward(src)
+
+        if pooling == 'CLS':
+            y = y[:,0,:] # CLS is assumed to be first input position
+        else:
+            not_padding = src != utils.TOKENS['PAD']
+            if pooling == 'max':
+                y[~not_padding] = -torch.inf # Set padding tokens to -inf
+                y, _ = y.max(dim=1)
+            elif pooling == 'mean':
+                y = (y.sum(axis=1) / 
+                     not_padding.sum(axis=1).unsqueeze(dim=1))
+            else: 
+                raise ValueError('Invalid `pooling` value.') 
+            
+        return y
     
 
 class Encoder(torch.nn.Module):
@@ -293,3 +313,28 @@ class MotifBERT(torch.nn.Module):
         ).unsqueeze(-2)
 
         return self.encoder(src_embedding, src_mask)
+    
+    def _forward_latent_space(self, src, pooling):
+        '''Given a source, retrieve the latent space and apply pooling.'''
+        
+        y = self.forward(src)
+
+        if pooling == 'CLS':
+            y = y[:,0,:] # CLS is first input position
+        else:
+            len_seqs = ( # Length of motif-encoded sequences
+                torch.count_nonzero(src.sum(axis=1), dim=1) / self.motif_size
+            ).to(torch.int32).unsqueeze(-1)
+            hide = ~( # Set True part of the zero-padding...
+                torch.arange(y.shape[1], device=utils.DEVICE) <= len_seqs)
+            hide[:,0] = False # ... or for the CLS token.
+            if pooling == 'max':
+                y[hide] = -torch.inf
+                y, _ = y.max(dim=1)
+            elif pooling == 'mean':
+                y[hide] = torch.nan
+                y = torch.nanmean(y, dim=1)
+            else: 
+                raise ValueError('Invalid `pooling` value.') 
+            
+        return y

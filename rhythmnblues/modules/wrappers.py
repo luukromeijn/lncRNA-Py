@@ -160,20 +160,42 @@ class MaskedMotifModel(WrapperBase):
     '''Wrapper class for model that performs Masked Language Modeling with 
     motif-encoded sequences as input.'''
 
-    def __init__(self, base_arch, dropout=0.0, relu=False, pred_batch_size=64, predict_codons=False):
+    def __init__(self, base_arch, dropout=0.0, output='nucleotides', relu=False, 
+                 pred_batch_size=64):
+        '''Initializes `MaskedMotifModel` object.
+        
+        Arguments
+        ---------
+        `base_arch`: `torch.nn.Module`
+            PyTorch module to be used as base architecture of the model.
+        `dropout`: `float`
+            Amount of dropout to apply to the pre-final layer (default is 0). 
+        `output`: 'nucleotides' | 'triplets'
+            Output prediction level (default is 'nucleotides').
+        `relu`: `bool`
+            Whether to apply ReLU activation to pre-final layer (default False).
+        `pred_batch_size`: `int`
+            Batch size used by the `predict` method (default is 64).'''
+        
         super().__init__(base_arch, pred_batch_size)
         self.dropout = torch.nn.Dropout(p=dropout)
         if type(base_arch) != MotifBERT:
             raise TypeError("Base architecture should be of type MotifBERT.")
         self.linear = torch.nn.Linear(base_arch.d_model, base_arch.n_motifs)
         self.relu = torch.nn.ReLU() if relu else None
-        out_channels = 64 if predict_codons else 4
-        motif_size = int(base_arch.motif_size / 3) if predict_codons else base_arch.motif_size
+        if output == 'nucleotides':
+            out_channels = 4
+            motif_size = base_arch.motif_size
+        elif output == 'triplets':
+            out_channels = 64
+            motif_size = int(base_arch.motif_size / 3)
+        else:
+            raise ValueError("Output should be 'nucleotides' or 'triplets'.")
+        self.output = output
         self.transpose_conv = torch.nn.ConvTranspose1d(
             in_channels=base_arch.n_motifs, out_channels=out_channels, 
             kernel_size=motif_size, stride=motif_size
         )
-        # self.log_softmax = torch.nn.LogSoftmax(dim=1)
 
     def forward(self, X, mask):
         X = self.base_arch(X, mask)[:,1:,:] # Forward pass base arch, remove CLS
@@ -182,7 +204,7 @@ class MaskedMotifModel(WrapperBase):
             X = self.relu(X)
         X = X.transpose(1,2) # Swap axes
         X = self.transpose_conv(self.dropout(X)) # Apply deconvolution
-        return X # self.log_softmax(X)
+        return X
 
 class Regressor(WrapperBase):
     '''Wrapper class for model that performs linear regression on the base 

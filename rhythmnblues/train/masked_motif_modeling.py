@@ -19,7 +19,7 @@ def train_masked_motif_modeling(
         model, train_data, valid_data, epochs, batch_size=8, p_mlm=0.15, 
         p_mask=0.8, p_random=0.1, loss_function=None, warmup_steps=8000, 
         label_smoothing=0.1, n_samples_per_epoch=None, logger=None, 
-        metrics=mmm_metrics, predict_codons=False
+        metrics=mmm_metrics
     ):
     '''Trains `model` for Masked Language Modeling task, using `train_data`, 
     for specified amount of `epochs`. Assumes sequence data is inputted in 
@@ -50,7 +50,7 @@ def train_masked_motif_modeling(
         (default is 0.1).
     `loss_function`: `torch.nn.Module`
         Loss function that is to be optimized. If None, falls back to 
-        `torch.nn.KLDivLoss`) (default is None).
+        `torch.nn.CrossEntropyLoss`) (default is None).
     `warmup_steps`: `int`
         Number of training steps in which learning rate linearly increases. 
         After this amount of steps, the learning rate decreases proportional to
@@ -82,11 +82,11 @@ def train_masked_motif_modeling(
     print("Training MLM...")
     for i in utils.progress(range(epochs)):
         model = epoch(model, train_dataloader, p_mlm, p_mask, p_random, 
-                      loss_function, optimizer, scaler, lr_scheduler, predict_codons)
+                      loss_function, optimizer, scaler, lr_scheduler)
         train_results = evaluate(model, train_subset, p_mlm, p_mask, p_random, 
-                                 loss_function, metrics, predict_codons) 
+                                 loss_function, metrics) 
         valid_results = evaluate(model, valid_data, p_mlm, p_mask, p_random,
-                                 loss_function, metrics, predict_codons) 
+                                 loss_function, metrics) 
         logger.log(train_results+valid_results, model)
 
     # Finish
@@ -95,13 +95,13 @@ def train_masked_motif_modeling(
 
 
 def epoch(model, dataloader, p_mlm, p_mask, p_random, loss_function, optimizer,
-          scaler, lr_scheduler, predict_codons):
+          scaler, lr_scheduler):
     '''Trains `model` for a single epoch.'''
     model.train() # Set training mode
-    n_classes = 64 if predict_codons else 4
+    n_classes = 64 if model.output == 'triplets' else 4
     for X, _ in dataloader: # Loop through data
         X, mask, y = mask_batch(X, model.base_arch.motif_size, p_mlm, p_mask, 
-                                p_random, predict_codons)
+                                p_random, model.output)
         optimizer.zero_grad() # Zero out gradients
         with torch.autocast(**get_amp_args(utils.DEVICE)):
             y_pred = model(X, mask) # Make prediction
@@ -120,7 +120,7 @@ def epoch(model, dataloader, p_mlm, p_mask, p_random, loss_function, optimizer,
     return model # Return model
 
 
-def mask_batch(X, motif_size, p_mlm, p_mask, p_random, predict_codons):
+def mask_batch(X, motif_size, p_mlm, p_mask, p_random, output_lvl):
     '''Maks a batch of sequence data for MMM'''
 
     len_embedding = int(X.shape[2]/motif_size)+1 # int(len(seq)/motif_size)+CLS
@@ -138,13 +138,13 @@ def mask_batch(X, motif_size, p_mlm, p_mask, p_random, predict_codons):
     # Creating the target before making any modifications to X
     y = X[:,:,:len_out].clone()
     y = torch.argmax(y, axis=1)
-    if predict_codons:
+    if output_lvl == 'triplets':
         y = torch.conv1d(
             y.to(torch.float32).unsqueeze(1), 
             torch.tensor([[[16,4,1]]],dtype=torch.float32,device=utils.DEVICE),
             stride=3
         ).to(torch.long).squeeze()
-    n_repeats = int(motif_size/3) if predict_codons else motif_size
+    n_repeats = int(motif_size/3) if output_lvl == 'triplets' else motif_size
     select_nucs_b = (select[:,1:].unsqueeze(-1) # Add dimension
                      .repeat(1, 1, n_repeats) # Repeat in that dimension
                      .view(select.size(0), -1)) # Then flatten that dimension
@@ -189,7 +189,7 @@ def get_random_nucs(X_shape):
     return random_nucs
 
 
-def evaluate(model, data, p_mlm, p_mask, p_random, loss_function, metrics, predict_codons):
+def evaluate(model, data, p_mlm, p_mask, p_random, loss_function, metrics):
     '''Evaluation function to keep track of in-training progress for MMM.'''
     
     # Initialization
@@ -197,14 +197,14 @@ def evaluate(model, data, p_mlm, p_mask, p_random, loss_function, metrics, predi
     y_true_all, y_pred_all = [], [] # All predictions/targets
     dataloader = DataLoader(data, model.pred_batch_size, shuffle=False) # Data
 
-    n_classes = 64 if predict_codons else 4
+    n_classes = 64 if model.output == 'triplets' else 4
 
     # Prediction
     model.eval() # Set in evaluation mode and turn off gradient calculation
     with torch.no_grad():
         for X, _ in dataloader: # Loop through + mask data
             X, mask, y_true = mask_batch(X, model.base_arch.motif_size, p_mlm, 
-                                         p_mask, p_random, predict_codons)                                         
+                                         p_mask, p_random, model.output)                                         
             y_pred = model(X, mask) # Make a prediction
             y_pred = y_pred.transpose(1,2).reshape(-1,n_classes)
             y_true = y_true.flatten()

@@ -5,7 +5,6 @@ from `rhythmnblues`.'''
 import torch
 from torch.utils.data import DataLoader
 from rhythmnblues.modules.bert import BERT, MotifBERT
-from rhythmnblues import utils
 
 
 class WrapperBase(torch.nn.Module):
@@ -160,20 +159,25 @@ class MaskedMotifModel(WrapperBase):
     '''Wrapper class for model that performs Masked Language Modeling with 
     motif-encoded sequences as input.'''
 
-    def __init__(self, base_arch, dropout=0.0, output='nucleotides', relu=False, 
+    def __init__(self, base_arch, dropout=0.0, n_hidden_motifs=0, relu=False, 
                  pred_batch_size=64):
         '''Initializes `MaskedMotifModel` object.
         
         Arguments
         ---------
-        `base_arch`: `torch.nn.Module`
+        `base_arch`: `rhythmnblues.modules.MotifBERT`
             PyTorch module to be used as base architecture of the model.
         `dropout`: `float`
             Amount of dropout to apply to the pre-final layer (default is 0). 
         `output`: 'nucleotides' | 'triplets'
             Output prediction level (default is 'nucleotides').
+        `n_hidden_motifs`: `int` 
+            If > 0, adds an extra hidden convolutional layer with a kernel size
+            and stride of 3 with the specified amount of output channels. This
+            layer is added before the final output layer (default is 0).
         `relu`: `bool`
-            Whether to apply ReLU activation to pre-final layer (default False).
+            Whether to apply ReLU activation before transposed convolution(s) 
+            (default is False).
         `pred_batch_size`: `int`
             Batch size used by the `predict` method (default is 64).'''
         
@@ -182,29 +186,45 @@ class MaskedMotifModel(WrapperBase):
         if type(base_arch) != MotifBERT:
             raise TypeError("Base architecture should be of type MotifBERT.")
         self.linear = torch.nn.Linear(base_arch.d_model, base_arch.n_motifs)
-        self.relu = torch.nn.ReLU() if relu else None
-        if output == 'nucleotides':
-            out_channels = 4
-            motif_size = base_arch.motif_size
-        elif output == 'triplets':
-            out_channels = 64
-            motif_size = int(base_arch.motif_size / 3)
-        else:
-            raise ValueError("Output should be 'nucleotides' or 'triplets'.")
-        self.output = output
-        self.transpose_conv = torch.nn.ConvTranspose1d(
-            in_channels=base_arch.n_motifs, out_channels=out_channels, 
-            kernel_size=motif_size, stride=motif_size
+        motif_size = base_arch.motif_size
+        in_channels = base_arch.n_motifs
+        self.transposed_conv_layers = torch.nn.ModuleList()
+        
+        # Defining the hidden motif layer (if specified by user)
+        if n_hidden_motifs > 0:
+            if motif_size % 3 != 0:
+                raise AttributeError('base_arch.motif_size should be multiple' +
+                                     ' of 3 when n_hidden_motifs > 0.')
+            if relu:
+                self.transposed_conv_layers.append(torch.nn.ReLU())
+            self.transposed_conv_layers.append(
+                torch.nn.ConvTranspose1d(
+                    in_channels=in_channels, out_channels=n_hidden_motifs,
+                    kernel_size=3, stride=3
+                )
+            )
+            motif_size = int(motif_size/3)
+            in_channels = n_hidden_motifs
+        
+        # Defining the final output motif layer
+        if relu:
+            self.transposed_conv_layers.append(torch.nn.ReLU())
+        self.transposed_conv_layers.append(
+            torch.nn.ConvTranspose1d( # 4 output channels (A,C,G,T)
+                in_channels=in_channels, out_channels=4, kernel_size=motif_size,
+                stride=motif_size
+            )
         )
 
-    def forward(self, X, mask):
-        X = self.base_arch(X, mask)[:,1:,:] # Forward pass base arch, remove CLS
+    def forward(self, X):
+        X = self.base_arch(X)[:,1:,:] # Forward pass base arch, remove CLS
+        X = self.dropout(X)
         X = self.linear(X) # Transform to motif 'space' 
-        if self.relu: # Activate 
-            X = self.relu(X)
-        X = X.transpose(1,2) # Swap axes
-        X = self.transpose_conv(self.dropout(X)) # Apply deconvolution
+        X = X.transpose(1,2)
+        for layer in self.transposed_conv_layers:
+            X = layer(X) # Apply deconvolution
         return X
+    
 
 class Regressor(WrapperBase):
     '''Wrapper class for model that performs linear regression on the base 

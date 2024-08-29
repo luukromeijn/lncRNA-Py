@@ -258,8 +258,8 @@ class MotifBERT(torch.nn.Module):
     ----------
     ViT: Dosovitskiy et al. (2020) https://doi.org/10.48550/arXiv.2010.11929'''
 
-    def __init__(self, n_motifs, motif_size=12, d_model=256, d_ff=512, h=8, N=6, 
-                 dropout=0.1, relu=True):
+    def __init__(self, n_motifs, motif_size=12, n_hidden_motifs=0, 
+                 d_model=256, d_ff=512, h=8, N=6, dropout=0.1, relu=True):
         '''Initializes `MotifBERT`.
         
         Parameters
@@ -268,6 +268,10 @@ class MotifBERT(torch.nn.Module):
             Number of motifs to learn from the data.
         motif_size: int
             Number of nucleotides that make up a single motif (default is 12).
+        n_hidden_motifs: int
+            If > 0, adds an extra hidden convolutional layer with a kernel size
+            and stride of 3 with the specified amount of output channels. This
+            layer precedes the normal motif encoding layer (default is 0).
         d_model: int
             Dimension of sequence repr. (embedding) in model (default is 256)
         d_ff: int
@@ -282,7 +286,8 @@ class MotifBERT(torch.nn.Module):
             Whether or not motifs are relu-activated (default is False)'''
 
         super().__init__()
-        self.motif_embedder = MotifEmbedding(n_motifs, d_model, motif_size,relu)
+        self.motif_embedder = MotifEmbedding(n_motifs, d_model, motif_size, 
+                                             n_hidden_motifs, relu)
         self.positional_encoder = PositionalEncoding(d_model, dropout)
         self.encoder = Encoder(d_model, d_ff, h, N, dropout)
         self.motif_size = motif_size
@@ -294,7 +299,7 @@ class MotifBERT(torch.nn.Module):
             if p.dim() > 1:
                 torch.nn.init.xavier_uniform_(p)
 
-    def forward(self, src, mmm_mask=None):
+    def forward(self, src):
         '''Given a source, retrieve encoded representation'''
 
         src_lengths = ( # Calculate start of zero-padding in convolved output...
@@ -302,7 +307,7 @@ class MotifBERT(torch.nn.Module):
         ).to(torch.int32).unsqueeze(-1) # ... and round down to nearest int
         
         # Embed using motif encoding and add positional encoding
-        src_embedding = self.motif_embedder(src, mmm_mask)
+        src_embedding = self.motif_embedder(src)
         src_embedding = src_embedding*math.sqrt(self.d_model)
         src_embedding = self.positional_encoder(src_embedding)
 

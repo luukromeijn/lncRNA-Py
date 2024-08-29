@@ -14,7 +14,7 @@ import numpy as np
 class MotifEncoding(torch.nn.Module):
     '''Implementation for motif encoding using a small 1D CNN.'''
 
-    def __init__(self, n_motifs, motif_size=12):
+    def __init__(self, n_motifs, motif_size=9, n_hidden_motifs=0, relu=True):
         '''Initializes `MotifEncoding` object.
         
         Arguments
@@ -22,20 +22,51 @@ class MotifEncoding(torch.nn.Module):
         `n_motifs`: `int`
             Number of motifs to learn from the data.
         `motif_size`: `int`
-            Number of nucleotides that make up a single motif (default is 12).
-        '''
+            Number of nucleotides that make up a single motif (default is 9).
+        `n_hidden_motifs`: `int`
+            If > 0, adds an extra hidden convolutional layer with a kernel size
+            and stride of 3 with the specified amount of output channels. This
+            layer precedes the normal motif encoding layer (default is 0).
+        `relu`: `bool`
+            Whether or not motifs are relu-activated (default is True).'''
 
         super().__init__()
-        self.motif_layer = torch.nn.Conv1d(
-            in_channels=4,
-            out_channels=n_motifs,
-            kernel_size=motif_size,
-            stride=motif_size
+        self.motif_layers = torch.nn.ModuleList()
+        in_channels = 4
+        kernel_size = motif_size
+
+        # Defining the hidden motif layer if specified by user
+        if n_hidden_motifs > 0:
+            if motif_size % 3 != 0:
+                raise ValueError('motif_size should be multiple of 3 when ' + 
+                                 'n_hidden_motifs > 0.')
+            self.motif_layers.append(
+                torch.nn.Conv1d(
+                    in_channels=4, out_channels=n_hidden_motifs, kernel_size=3, 
+                    stride=3
+                )
+            )
+            if relu:
+                self.motif_layers.append(torch.nn.ReLU())
+            in_channels = n_hidden_motifs
+            kernel_size = int(motif_size/3)
+
+        # Defining the main motif layer
+        self.motif_layers.append(
+            torch.nn.Conv1d(
+                in_channels=in_channels, out_channels=n_motifs,
+                kernel_size=kernel_size, stride=kernel_size
+            )
         )
+        if relu:
+            self.motif_layers.append(torch.nn.ReLU())
 
     def forward(self, x):
-        return self.motif_layer(x)
+        for motif_layer in self.motif_layers:
+            x = motif_layer(x)
+        return x
     
+    # NOTE: not sure if this still works
     def visualize(self, motif_idx, filepath=None):
         '''Visualizes a certain motif, indicated by `motif_idx`.'''
 
@@ -76,7 +107,8 @@ class MotifEncoding(torch.nn.Module):
 class MotifEmbedding(torch.nn.Module):
     '''Projects motif encoding into space of pre-specified dimensionality.'''
 
-    def __init__(self, n_motifs, d_model, motif_size=12, relu=True):
+    def __init__(self, n_motifs, d_model, motif_size=9, n_hidden_motifs=0, 
+                 relu=True):
         '''Initializes `MotifEncoding` class.
 
         Arguments
@@ -86,25 +118,22 @@ class MotifEmbedding(torch.nn.Module):
         d_model: int
             Dimension of sequence repr. (embedding) in BERT model.
         `motif_size`: `int`
-            Number of nucleotides that make up a single motif (default is 12).
+            Number of nucleotides that make up a single motif (default is 9).
+        `n_hidden_motifs`: `int`
+            If > 0, adds an extra hidden convolutional layer with a kernel size
+            and stride of 3 with the specified amount of output channels. This
+            layer precedes the normal motif encoding layer (default is 0).
         `relu`: `bool`
             Whether or not motifs are relu-activated (default is True).'''
         
         super().__init__()
-        self.motif_encoder = MotifEncoding(n_motifs, motif_size)
+        self.motif_encoder = MotifEncoding(n_motifs, motif_size, n_hidden_motifs, relu)
         self.cls_token = torch.nn.Parameter(torch.zeros(1, 1, d_model))
-        self.mask_token = torch.nn.Parameter(torch.zeros(1, 1, d_model))
         self.linear = torch.nn.Linear(n_motifs, d_model)
-        self.relu = torch.nn.ReLU() if relu else None
 
-    def forward(self, x, mask=None):
+    def forward(self, x):
         x = self.motif_encoder(x).transpose(1,2) # Run through motif layer
-        if self.relu:
-            x = self.relu(x)
         x = self.linear(x) # Project to model's dimensionality
         cls_tokens = self.cls_token.expand(x.size(0), -1, -1) # Add CLS tokens
         x = torch.cat((cls_tokens, x), dim=1)
-        if mask is not None: # If mask, add mask token embedding at these indexs
-            mask = mask.unsqueeze(-1)
-            x = torch.where(mask, self.mask_token, x)
         return x

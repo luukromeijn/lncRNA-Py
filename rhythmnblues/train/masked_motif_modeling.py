@@ -15,11 +15,13 @@ from rhythmnblues.train.lr_schedule import LrSchedule
 from rhythmnblues.train.metrics import mmm_metrics
 
 
+# NOTE: I can see max_mask_length being a hyperparameter in the future, 
+# ... as longer mask lengths may push the model further in its modeling.
 def train_masked_motif_modeling(
         model, train_data, valid_data, epochs, batch_size=8, p_mlm=0.15, 
-        p_mask=0.8, p_random=0.1, loss_function=None, warmup_steps=8000, 
-        label_smoothing=0.1, n_samples_per_epoch=None, logger=None, 
-        metrics=mmm_metrics
+        p_mask=0.8, p_random=0.1, mixed_mask_sizes=True, loss_function=None, 
+        warmup_steps=8000, label_smoothing=0.1, n_samples_per_epoch=None, 
+        logger=None, metrics=mmm_metrics
     ):
     '''Trains `model` for Masked Language Modeling task, using `train_data`, 
     for specified amount of `epochs`. Assumes sequence data is inputted in 
@@ -32,8 +34,8 @@ def train_masked_motif_modeling(
         Neural network that is to be trained.
     `train_data`: `rhythmnblues.data.Data`
         Data to use for training, must call `set_tensor_features(4D-DNA)` first.
-        After every training epoch, the performance of the model on a subset of 
-        the training set is determined. The length of this subset is 
+        After every training epoch, the performance of the model on a random 
+        subset of the training set is determined. The length of this subset is 
         `min(len(train_data), len(valid_data))`. 
     `valid_data`: `rhythmnblues.data.Data`
         Data to use for validation, must call `set_tensor_features` first.
@@ -42,12 +44,15 @@ def train_masked_motif_modeling(
     `batch_size`: `int`
         Number of examples per batch (default is 64).
     `p_mlm`: `float`
-        Probability for a motif window to be selected for MLM (default is 0.15).
+        Probability for a nucleotide to be selected for MLM (default is 0.15).
     `p_mask`: `float`
-        Probability for a motif window to be masked when selected (default 0.8).
+        Probability for a nucleotide to be masked when selected (default 0.8).
     `p_random`: `float`
-        Probability for a motif window to be randomly replaced when selected 
+        Probability for a nucleotide to be randomly replaced when selected 
         (default is 0.1).
+    `mixed_mask_sizes`: `bool`:
+        If True (default), generates masks of random lengths between 1 and 
+        `motif_size`. If False, always generates masks of length `motif_size`.
     `loss_function`: `torch.nn.Module`
         Loss function that is to be optimized. If None, falls back to 
         `torch.nn.CrossEntropyLoss`) (default is None).
@@ -82,11 +87,12 @@ def train_masked_motif_modeling(
     print("Training MLM...")
     for i in utils.progress(range(epochs)):
         model = epoch(model, train_dataloader, p_mlm, p_mask, p_random, 
-                      loss_function, optimizer, scaler, lr_scheduler)
+                      mixed_mask_sizes, loss_function, optimizer, scaler, 
+                      lr_scheduler)
         train_results = evaluate(model, train_subset, p_mlm, p_mask, p_random, 
-                                 loss_function, metrics) 
+                                 mixed_mask_sizes, loss_function, metrics) 
         valid_results = evaluate(model, valid_data, p_mlm, p_mask, p_random,
-                                 loss_function, metrics) 
+                                 mixed_mask_sizes, loss_function, metrics) 
         logger.log(train_results+valid_results, model)
 
     # Finish
@@ -94,22 +100,22 @@ def train_masked_motif_modeling(
     return model, logger.history
 
 
-def epoch(model, dataloader, p_mlm, p_mask, p_random, loss_function, optimizer,
-          scaler, lr_scheduler):
+def epoch(model, dataloader, p_mlm, p_mask, p_random, mixed_mask_sizes, 
+          loss_function, optimizer, scaler, lr_scheduler):
     '''Trains `model` for a single epoch.'''
     model.train() # Set training mode
-    n_classes = 64 if model.output == 'triplets' else 4
     for X, _ in dataloader: # Loop through data
-        X, mask, y = mask_batch(X, model.base_arch.motif_size, p_mlm, p_mask, 
-                                p_random, model.output)
+        X, y = mask_batch(X, model.base_arch.motif_size, p_mlm, p_mask, 
+                          p_random, mixed_mask_sizes)
         optimizer.zero_grad() # Zero out gradients
         with torch.autocast(**get_amp_args(utils.DEVICE)):
-            y_pred = model(X, mask) # Make prediction
+            y_pred = model(X) # Make prediction
             y = y.flatten()
-            y_pred = y_pred.transpose(1,2).reshape(-1,n_classes)
+            y_pred = y_pred.transpose(1,2).reshape(-1,4)
             skip = y.sum() == -1 * y.shape[0] # Check if all -1 (ignore_index)
             if not skip: 
                 loss = loss_function(y_pred, y) # Calculate loss
+                print(loss)
         if not skip:
             scaler.scale(loss).backward() # Calculate gradients
             scaler.unscale_(optimizer) # Unscale before gradient clipping
@@ -120,63 +126,79 @@ def epoch(model, dataloader, p_mlm, p_mask, p_random, loss_function, optimizer,
     return model # Return model
 
 
-def mask_batch(X, motif_size, p_mlm, p_mask, p_random, output_lvl):
+def mask_batch(X, motif_size, p_mlm, p_mask, p_random, mixed_mask_sizes):
     '''Maks a batch of sequence data for MMM'''
 
-    len_embedding = int(X.shape[2]/motif_size)+1 # int(len(seq)/motif_size)+CLS
-    len_out = (len_embedding-1)*motif_size # length output tensor 
-    len_seqs = (torch.count_nonzero(X.sum(axis=1), dim=1) / motif_size
-               ).to(torch.int32).unsqueeze(-1) # round down to nearest int
-    
-    # Calculate boolean tensors using selection probabilities
-    shape = (X.shape[0], len_embedding)
-    indices = torch.arange(len_embedding, device=utils.DEVICE)
-    select = ((torch.rand(shape, device=utils.DEVICE) < p_mlm) & # Select masked
-              (indices > 0) & # But no CLS patch
-              (indices <= len_seqs)) # Or padding parts
+    # Correct p_mlm by expectation of mask_lengths
+    if mixed_mask_sizes:
+        mask_lengths = torch.arange(0, motif_size, device=utils.DEVICE) + 1
+    else:
+        mask_lengths = torch.tensor([motif_size], device=utils.DEVICE)
+    p_mlm = p_mlm / mask_lengths.mean(dtype=torch.float)
 
-    # Creating the target before making any modifications to X
-    y = X[:,:,:len_out].clone()
+    # Select bases with corrected p_mlm probability
+    len_emb = int(X.shape[2] / motif_size)
+    len_out = len_emb * motif_size
+    X = X[:,:,:len_out]
+    mask_shape = (X.shape[0], len_out)
+    num_selected = int(p_mlm*len_out)
+    if mixed_mask_sizes:
+        selected = torch.multinomial(torch.ones(mask_shape,device=utils.DEVICE),
+                                     num_selected)
+    else:
+        selected = motif_size * torch.multinomial(
+            torch.ones((X.shape[0],len_emb), device=utils.DEVICE), num_selected)
+
+    # Expand selected with up to motif_size consecutive indices
+    selected = get_consecutive_indices(selected, motif_size, len_out, 
+                                       mixed_mask_sizes)
+
+    # Divide selected over masked and random
+    num_i_masked = int(p_mask*num_selected)*(motif_size) # Calculate number of...
+    num_i_random = int(p_random*num_selected)*(motif_size) # ...indices to select 
+    masked = selected[:,:num_i_masked] # Divide by slicing
+    random = selected[:,num_i_masked:num_i_masked+num_i_random]
+
+    # Convert selected, masked, and random from indices to boolean arrays...
+    not_padding = X.sum(axis=1) > 0 # ... and unselect padding idx
+    selected = index_to_bool(selected, mask_shape) & not_padding
+    masked = index_to_bool(masked, mask_shape) & not_padding
+    random = index_to_bool(random, mask_shape) & not_padding
+
+    # Use selected to define y
+    y = X.clone()
     y = torch.argmax(y, axis=1)
-    if output_lvl == 'triplets':
-        y = torch.conv1d(
-            y.to(torch.float32).unsqueeze(1), 
-            torch.tensor([[[16,4,1]]],dtype=torch.float32,device=utils.DEVICE),
-            stride=3
-        ).to(torch.long).squeeze()
-    n_repeats = int(motif_size/3) if output_lvl == 'triplets' else motif_size
-    select_nucs_b = (select[:,1:].unsqueeze(-1) # Add dimension
-                     .repeat(1, 1, n_repeats) # Repeat in that dimension
-                     .view(select.size(0), -1)) # Then flatten that dimension
-    y = torch.where(select_nucs_b, y, -1)
-               
-    probs = torch.rand(shape, device=utils.DEVICE)
-    masked = select & (probs < p_mask)
-    random = select & (probs >= p_mask) & (probs < p_mask + p_random)
+    y = torch.where(selected, y, -1)
 
-    # Convert random mask to sequence-level, replace with random nucl. if True
-    random_nucs_b = motifs_to_nucs_mask(random, X.shape, motif_size, len_out)
-    random_nucs = get_random_nucs(X.shape)
-    X = torch.where(random_nucs_b, random_nucs, X)
+    # Use masked and random to mask/mutate X
+    random = random.unsqueeze(1).repeat(1,4,1) # Repeat along DNA channels
+    masked = masked.unsqueeze(1).repeat(1,4,1)
+    X = torch.where(random, get_random_nucs(X.shape), X)
+    X[masked] = 0.25 # We accept that this might overwrite some random nucs
 
-    return X, masked, y
+    return X, y
 
 
-def motifs_to_nucs_mask(motif_boolean_tensor, X_shape, motif_size, len_out):
-    '''Converts a motif-level Boolean tensor to sequence-level, by repeating its
-    elements a motif_size amount of times.'''
+def get_consecutive_indices(indices,max_consecutive, max_len, mixed_mask_sizes):
+    '''Expands `indices` with up to `max_consecutive` follow-up indices. Stays 
+    within the maximum bound as specified by `max_len`.'''
+    indices = indices.unsqueeze(-1)
+    to_add = torch.arange(0, max_consecutive, device=utils.DEVICE)
+    if mixed_mask_sizes:
+        to_add = to_add - torch.randint(0, max_consecutive, indices.shape,
+                                        device=utils.DEVICE)
+    to_add[to_add < 0] = 0
+    indices = indices + to_add
+    indices = indices.flatten(1,2)
+    indices[indices >= max_len] = max_len-1    
+    return indices
 
-    # Initialize at full length
-    nucs_boolean_tensor = torch.zeros((X_shape[0], X_shape[2]),
-                                      dtype=torch.bool, device=utils.DEVICE)
-    
-    nucs_boolean_tensor[:,:len_out] = ( # Replace until len_out
-        motif_boolean_tensor[:,1:].unsqueeze(-1) # Add dimension
-        .repeat(1, 1, motif_size) # Repeat in that dimension
-        .view(motif_boolean_tensor.size(0), -1) # Then flatten that dimension
-    )
-    
-    return nucs_boolean_tensor.unsqueeze(-2).repeat(1,4,1) # Repeat 4 channels
+
+def index_to_bool(indices, shape):
+    '''Creates a boolean Tensor of specified shape, where `indices` are True.'''
+    boolean_tensor = torch.zeros(shape, dtype=torch.bool, device=utils.DEVICE)
+    boolean_tensor.scatter_(1, indices, True)
+    return boolean_tensor
 
 
 def get_random_nucs(X_shape):
@@ -189,7 +211,8 @@ def get_random_nucs(X_shape):
     return random_nucs
 
 
-def evaluate(model, data, p_mlm, p_mask, p_random, loss_function, metrics):
+def evaluate(model, data, p_mlm, p_mask, p_random, mixed_mask_sizes,
+             loss_function, metrics):
     '''Evaluation function to keep track of in-training progress for MMM.'''
     
     # Initialization
@@ -197,16 +220,14 @@ def evaluate(model, data, p_mlm, p_mask, p_random, loss_function, metrics):
     y_true_all, y_pred_all = [], [] # All predictions/targets
     dataloader = DataLoader(data, model.pred_batch_size, shuffle=False) # Data
 
-    n_classes = 64 if model.output == 'triplets' else 4
-
     # Prediction
     model.eval() # Set in evaluation mode and turn off gradient calculation
     with torch.no_grad():
         for X, _ in dataloader: # Loop through + mask data
-            X, mask, y_true = mask_batch(X, model.base_arch.motif_size, p_mlm, 
-                                         p_mask, p_random, model.output)                                         
-            y_pred = model(X, mask) # Make a prediction
-            y_pred = y_pred.transpose(1,2).reshape(-1,n_classes)
+            X, y_true = mask_batch(X, model.base_arch.motif_size, p_mlm, 
+                                   p_mask, p_random, mixed_mask_sizes)                                         
+            y_pred = model(X) # Make a prediction
+            y_pred = y_pred.transpose(1,2).reshape(-1,4)
             y_true = y_true.flatten()
             select = y_true != -1 # Remove non-selected bases
             y_true, y_pred = y_true[select], y_pred[select] 

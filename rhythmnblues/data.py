@@ -2,6 +2,7 @@
 sequence data.'''
 
 import copy
+import random 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import pandas as pd
@@ -68,6 +69,8 @@ class Data(Dataset):
             message += f'{len(self.df)} '
         message +=f'RNA transcripts with {len(self.all_features())} feature(s).'
         print(message)
+
+        self.random_reading_frame = False
     
     def __str__(self):
         return self.df.__str__()
@@ -115,7 +118,9 @@ class Data(Dataset):
     
     def _get_4d_seq(self, sequence):
         '''Encodes sequence in 4D-DNA encoding, returns a list.'''
-        encoding = [utils.NUC_TO_4D[base] for base in sequence] # Encode
+        print(2*self.random_reading_frame)
+        encoding = [utils.NUC_TO_4D[base] for base in # Encode
+                    sequence[random.randint(0,2*self.random_reading_frame):]] 
         encoding = encoding[:utils.LEN_4D_DNA] # Truncate
         return encoding + (utils.LEN_4D_DNA - len(encoding))*[[0,0,0,0]] # Pad
 
@@ -204,7 +209,16 @@ class Data(Dataset):
             self.check_columns(y_name)
         self.y_name = y_name
         self.y_dtype = y_dtype
-    
+
+    def set_random_reading_frame(self, on=True):
+        '''Sample data in a random reading frame by deleting 0, 1, or 2
+        nucleotides from the start of a sequence. Only works with 4D-DNA
+        encoding.'''
+        if self.X_name[0] != '4D-DNA' and on:
+            raise AttributeError("Can only set random reading frame when " + 
+                                 "self.X_name=='4D-DNA'.")
+        self.random_reading_frame = on
+        
     def num_coding_noncoding(self):
         '''Returns a tuple of which the elements are the number of coding and 
         non-coding sequences in the `Data` object, respectively.'''

@@ -118,7 +118,6 @@ class Data(Dataset):
     
     def _get_4d_seq(self, sequence):
         '''Encodes sequence in 4D-DNA encoding, returns a list.'''
-        print(2*self.random_reading_frame)
         encoding = [utils.NUC_TO_4D[base] for base in # Encode
                     sequence[random.randint(0,2*self.random_reading_frame):]] 
         encoding = encoding[:utils.LEN_4D_DNA] # Truncate

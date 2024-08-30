@@ -46,8 +46,6 @@ class MotifEncoding(torch.nn.Module):
                     stride=3
                 )
             )
-            if relu:
-                self.motif_layers.append(torch.nn.ReLU())
             in_channels = n_hidden_motifs
             kernel_size = int(motif_size/3)
 

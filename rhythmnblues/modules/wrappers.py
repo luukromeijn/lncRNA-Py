@@ -195,8 +195,6 @@ class MaskedMotifModel(WrapperBase):
             if motif_size % 3 != 0:
                 raise AttributeError('base_arch.motif_size should be multiple' +
                                      ' of 3 when n_hidden_motifs > 0.')
-            if relu:
-                self.transposed_conv_layers.append(torch.nn.ReLU())
             self.transposed_conv_layers.append(
                 torch.nn.ConvTranspose1d(
                     in_channels=in_channels, out_channels=n_hidden_motifs,

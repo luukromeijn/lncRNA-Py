@@ -115,7 +115,6 @@ def epoch(model, dataloader, p_mlm, p_mask, p_random, mixed_mask_sizes,
             skip = y.sum() == -1 * y.shape[0] # Check if all -1 (ignore_index)
             if not skip: 
                 loss = loss_function(y_pred, y) # Calculate loss
-                print(loss)
         if not skip:
             scaler.scale(loss).backward() # Calculate gradients
             scaler.unscale_(optimizer) # Unscale before gradient clipping

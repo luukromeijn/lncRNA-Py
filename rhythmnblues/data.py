@@ -111,17 +111,21 @@ class Data(Dataset):
         '''Retrieves 4D-DNA encoded batch of data (rows specified by `idx`.)'''
         if type(idx) == int:
             X = self._get_4d_seq(self.df.iloc[idx]['sequence'])
+            return X
         else:
             X = [self._get_4d_seq(seq) for seq in self.df.iloc[idx]['sequence']]
-        return (torch.tensor(X, dtype=self.X_dtype, device=utils.DEVICE)
-                .transpose(-2,-1))
+            return torch.stack(X, dim=0)
     
     def _get_4d_seq(self, sequence):
         '''Encodes sequence in 4D-DNA encoding, returns a list.'''
-        encoding = [utils.NUC_TO_4D[base] for base in # Encode
-                    sequence[random.randint(0,2*self.random_reading_frame):]] 
-        encoding = encoding[:utils.LEN_4D_DNA] # Truncate
-        return encoding + (utils.LEN_4D_DNA - len(encoding))*[[0,0,0,0]] # Pad
+        encoding = torch.zeros((4, utils.LEN_4D_DNA), device=utils.DEVICE, 
+                               dtype=self.X_dtype)
+        rrf = random.randint(0,2*self.random_reading_frame)
+        encoding[:,:min(utils.LEN_4D_DNA, len(sequence)-rrf)] = torch.stack(
+            [utils.NUC_TO_4D[base] for base in # Encode
+             sequence[rrf:utils.LEN_4D_DNA + rrf]], dim=1
+        )
+        return encoding
 
     def _read_hdf(self, hdf_filepath, fasta_filepath):
         '''Loads features from `hdf_filepath`, retrieving sequences from 

@@ -26,21 +26,21 @@ TOKENS = {'MASK': 0, 'CLS': 1, 'SEP': 2, 'PAD': 3, 'UNK': 4}
 BPE to assume that MASK=0, hence this value should not be changed.'''
 
 NUC_TO_4D = {
-    'A': [1,    0,    0,    0   ],
-    'C': [0,    1,    0,    0   ],
-    'G': [0,    0,    1,    0   ],
-    'T': [0,    0,    0,    1   ],
-    'R': [0.5,  0,    0.5,  0   ],
-    'Y': [0,    0.5,  0,    0.5 ],
-    'S': [0,    0.5,  0.5,  0   ],
-    'W': [0.5,  0,    0,    0.5 ],
-    'K': [0,    0,    0.5,  0.5 ],
-    'M': [0.5,  0.5,  0,    0   ],
-    'B': [0,    1/3,  1/3,  1/3 ],
-    'D': [1/3,  0,    1/3,  1/3 ],
-    'H': [1/3,  1/3,  0,    1/3 ],
-    'V': [1/3,  1/3,  1/3,  0   ],
-    'N': [0.25, 0.25, 0.25, 0.25],
+    'A': torch.tensor([1,    0,    0,    0   ], device=DEVICE),
+    'C': torch.tensor([0,    1,    0,    0   ], device=DEVICE),
+    'G': torch.tensor([0,    0,    1,    0   ], device=DEVICE),
+    'T': torch.tensor([0,    0,    0,    1   ], device=DEVICE),
+    'R': torch.tensor([0.5,  0,    0.5,  0   ], device=DEVICE),
+    'Y': torch.tensor([0,    0.5,  0,    0.5 ], device=DEVICE),
+    'S': torch.tensor([0,    0.5,  0.5,  0   ], device=DEVICE),
+    'W': torch.tensor([0.5,  0,    0,    0.5 ], device=DEVICE),
+    'K': torch.tensor([0,    0,    0.5,  0.5 ], device=DEVICE),
+    'M': torch.tensor([0.5,  0.5,  0,    0   ], device=DEVICE),
+    'B': torch.tensor([0,    1/3,  1/3,  1/3 ], device=DEVICE),
+    'D': torch.tensor([1/3,  0,    1/3,  1/3 ], device=DEVICE),
+    'H': torch.tensor([1/3,  1/3,  0,    1/3 ], device=DEVICE),
+    'V': torch.tensor([1/3,  1/3,  1/3,  0   ], device=DEVICE),
+    'N': torch.tensor([0.25, 0.25, 0.25, 0.25], device=DEVICE),
 }
 '''Mapping from nucleotide indicator to 4D_DNA representation, which is the 
 format suitable for convolutional neural network layers.'''

@@ -111,7 +111,7 @@ names = [
     'CPAT (test)',
 ]
 
-# data[2].df = data[2].df[data[2].df['label'] != 'pcrna'] # For NONCODE
+# data[2].df = data[2].df[data[2].df['label'] != 'pcRNA'] # For NONCODE
 
 cross_dataset_plot = lambda name, fname: plot_cross_dataset_violins(
     data, names, name, showmeans=True, showextrema=False, 

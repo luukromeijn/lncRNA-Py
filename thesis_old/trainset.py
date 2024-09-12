@@ -19,7 +19,7 @@ seq_dir = f'{data_dir}/sequences'
 gencode = Data([f'{seq_dir}/gencode.v45.pc_transcripts.fa', 
                 f'{seq_dir}/gencode.v45.lncRNA_transcripts.fa'])
 noncode = Data(f'{seq_dir}/NONCODE.lncRNA.fa')
-noncode.df['label'] = 'ncrna'
+noncode.df['label'] = 'ncRNA'
 refseq = Data([f'{seq_dir}/refseq223_pcrna.fasta', 
                f'{seq_dir}/refseq223_ncrna.fasta'])
 

@@ -100,7 +100,7 @@ class Data(Dataset):
         elif self.y_name[0] == 'label':
             target = self.df.iloc[idx][self.y_name].values
             y = np.zeros_like(target, dtype=np.float32)
-            y[target == 'pcrna'] = 1.0
+            y[target == 'pcRNA'] = 1.0
         else:
             y = self.df.iloc[idx][self.y_name].values.astype(np.float32)
         y = torch.tensor(y, dtype=self.y_dtype, device=utils.DEVICE)
@@ -120,7 +120,7 @@ class Data(Dataset):
         '''Encodes sequence in 4D-DNA encoding, returns a list.'''
         encoding = torch.zeros((4, utils.LEN_4D_DNA), device=utils.DEVICE, 
                                dtype=self.X_dtype)
-        rrf = random.randint(0,2*self.random_reading_frame)
+        rrf = 0 # random.randint(0,8*self.random_reading_frame)                 # NOTE this is turned off now...
         encoding[:,:min(utils.LEN_4D_DNA, len(sequence)-rrf)] = torch.stack(
             [utils.NUC_TO_4D[base] for base in # Encode
              sequence[rrf:utils.LEN_4D_DNA + rrf]], dim=1
@@ -156,7 +156,7 @@ class Data(Dataset):
 
         data = {'id':[], 'sequence':[]}
         if labelled: 
-            files = {'pcrna': fasta_filepath[0], 'ncrna': fasta_filepath[1]}
+            files = {'pcRNA': fasta_filepath[0], 'ncRNA': fasta_filepath[1]}
             data['label'] = []
         else:
             files = {'any': fasta_filepath}
@@ -227,8 +227,8 @@ class Data(Dataset):
         non-coding sequences in the `Data` object, respectively.'''
         self.check_columns(['label'])
         return (
-            len(self.df[self.df["label"]=='pcrna']),
-            len(self.df[self.df["label"]=='ncrna'])
+            len(self.df[self.df["label"]=='pcRNA']),
+            len(self.df[self.df["label"]=='ncRNA'])
         )
     
     def pos_weight(self):
@@ -260,7 +260,7 @@ class Data(Dataset):
         filepaths for for coding and non-coding transcripts, respectively.'''
 
         if type(fasta_filepath) != str:
-            paths = {'pcrna': fasta_filepath[0], 'ncrna': fasta_filepath[1]}
+            paths = {'pcRNA': fasta_filepath[0], 'ncRNA': fasta_filepath[1]}
             for label in paths:
                 data = self.df[self.df['label']==label]
                 self._write_fasta(data, paths[label])
@@ -329,20 +329,20 @@ class Data(Dataset):
         second containing all ncRNA'''
         self.check_columns(['label'])
         pc = copy.deepcopy(self)
-        pc.df = pc.df[pc.df['label']=='pcrna']
+        pc.df = pc.df[pc.df['label']=='pcRNA']
         nc = copy.deepcopy(self)
-        nc.df = nc.df[nc.df['label']=='ncrna']
+        nc.df = nc.df[nc.df['label']=='ncRNA']
         return pc, nc
     
     def test_features(self, feature_names):
         '''Evaluates statistical significance of features specified in 
         `feature_names` using a t-test.'''
         self.check_columns(['label'] + feature_names)
-        coding = self.df[self.df['label']=='pcrna'][feature_names]
-        non_coding = self.df[self.df['label']=='ncrna'][feature_names]
+        coding = self.df[self.df['label']=='pcRNA'][feature_names]
+        non_coding = self.df[self.df['label']=='ncRNA'][feature_names]
         means = self.df.groupby('label')[feature_names].mean()
-        pcrna_means = means.loc['pcrna']
-        ncrna_means = means.loc['ncrna']
+        pcrna_means = means.loc['pcRNA']
+        ncrna_means = means.loc['ncRNA']
         ttest = ttest_ind(coding, non_coding, nan_policy='omit')
         statistics = ttest.statistic
         p_values = ttest.pvalue
@@ -370,11 +370,11 @@ class Data(Dataset):
         fig, ax = plt.subplots(figsize=figsize)
         if self.labelled:
             data = [self.df[self.df['label']==label][feature_name] 
-                    for label in ['pcrna', 'ncrna']]
+                    for label in ['pcRNA', 'ncRNA']]
         else:
             data = self.df[feature_name]
         ax.violinplot(data, widths=0.8, **kwargs)
-        ax.set_xticks(np.arange(1,3), ['pcrna', 'ncrna'])
+        ax.set_xticks(np.arange(1,3), ['pcRNA', 'ncRNA'])
         ax.set_ylabel(feature_name)
         if filepath is not None:
             fig.savefig(filepath)
@@ -406,7 +406,7 @@ class Data(Dataset):
         lower = self.df[feature_name].quantile(lower)
         upper = self.df[feature_name].quantile(upper)
         if self.labelled:
-            for label in ['pcrna', 'ncrna']:
+            for label in ['pcRNA', 'ncRNA']:
                 data = self.df[self.df['label']==label][feature_name]
                 data.plot.density(ind=np.arange(lower,upper,(upper-lower)/1000), 
                                 label=label, **kwargs)
@@ -430,7 +430,7 @@ class Data(Dataset):
         self.check_columns([x_feature_name, y_feature_name])
         fig, ax = plt.subplots(figsize=figsize)
         if self.labelled:
-            for label in ['pcrna', 'ncrna']:
+            for label in ['pcRNA', 'ncRNA']:
                 ax.scatter(x_feature_name, y_feature_name, s=1, alpha=0.5,
                             data=self.df[self.df['label']==label], label=label)
             fig.legend(markerscale=5)
@@ -468,7 +468,7 @@ class Data(Dataset):
         df["Dim 1"] = feature_space[:,0]
         df["Dim 2"] = feature_space[:,1]
         if self.labelled: 
-            for label in ["pcrna", "ncrna"]:
+            for label in ['pcRNA', 'ncRNA']:
                 ax.scatter("Dim 1", "Dim 2", label=label, s=1, alpha=0.5,
                         data=df[df["label"]==label])
             fig.legend(markerscale=5)
@@ -560,8 +560,8 @@ class Data(Dataset):
             if not self.labelled: # Data must be labelled
                 raise ValueError("Can't use pc and nc for unlabelled data. " +
                                  "Please use N.")
-            pcrna = self.df[self.df['label']=='pcrna']
-            ncrna = self.df[self.df['label']=='ncrna']
+            pcrna = self.df[self.df['label']=='pcRNA']
+            ncrna = self.df[self.df['label']=='ncRNA']
             if N is not None: # N is also specified? -> use nc and pc as ratio
                 _pc = (pc/(pc+nc))*N
                 nc = (nc/(pc+nc))*N
@@ -652,7 +652,7 @@ def plot_cross_dataset_violins(data_objects, data_names, feature_name,
     labels = []
     stats = []
     fig, ax = plt.subplots(figsize=figsize)
-    for i, label in enumerate(['pcrna', 'ncrna']): # Loop through labels
+    for i, label in enumerate(['pcRNA', 'ncRNA']): # Loop through labels
 
         # Filter for given label
         data = [data.df[data.df['label']==label][feature_name] 
@@ -666,6 +666,7 @@ def plot_cross_dataset_violins(data_objects, data_names, feature_name,
 
         # Calculate mean and std
         stats.append([label, 'avg']  +[df.mean() for df in data])
+        stats.append([label, 'med']  +[df.median() for df in data])
         stats.append([label, 'std'] + [df.std() for df in data])
 
         # Plot only non-emtpy datasets

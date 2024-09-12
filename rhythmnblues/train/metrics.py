@@ -11,10 +11,10 @@ from sklearn.metrics import (
 
 classification_metrics = {
     'Accuracy': accuracy_score,
-    'Precision (pcrna)': lambda y_t, y_p: precision_score(y_t,y_p,pos_label=1),
-    'Recall (pcrna)': lambda y_t, y_p: recall_score(y_t,y_p,pos_label=1),
-    'Precision (ncrna)': lambda y_t, y_p: precision_score(y_t,y_p,pos_label=0),
-    'Recall (ncrna)': lambda y_t, y_p: recall_score(y_t,y_p,pos_label=0),
+    'Precision (pcRNA)': lambda y_t, y_p: precision_score(y_t,y_p,pos_label=1),
+    'Recall (pcRNA)': lambda y_t, y_p: recall_score(y_t,y_p,pos_label=1),
+    'Precision (ncRNA)': lambda y_t, y_p: precision_score(y_t,y_p,pos_label=0),
+    'Recall (ncRNA)': lambda y_t, y_p: recall_score(y_t,y_p,pos_label=0),
     'F1 (macro)': lambda y_t, y_p: f1_score(y_t, y_p, average='macro')
 }
 '''Default lncRNA classification metrics: accuracy, precision and recall (for 

@@ -71,7 +71,7 @@ class Algorithm:
         This method is disabled when the `model` attribute is a 
         `torch.nn.Module` instance.'''
         data = self.feature_extraction(data)
-        y = data.df['label'].replace({'pcrna':1, 'ncrna':0})
+        y = data.df['label'].replace({'pcRNA':1, 'ncRNA':0})
         y = y.infer_objects(copy=False) # Downcasting from str to int
         self.model.fit(data.df[self.used_features], y)
 
@@ -87,7 +87,7 @@ class Algorithm:
         only use features as specified in the `used_features` attribute.'''
         self.feature_extraction(data)
         y = self.model.predict(data.df[self.used_features])
-        y = np.vectorize({1:'pcrna', 0:'ncrna'}.get)(y)
+        y = np.vectorize({1:'pcRNA', 0:'ncRNA'}.get)(y)
         return y
 
     def _predict_torch(self, data):
@@ -95,7 +95,7 @@ class Algorithm:
         self.feature_extraction(data)
         data.set_tensor_features(self.used_features)
         y = self.model.predict(data).round().squeeze().numpy()
-        y = np.vectorize({1:'pcrna', 0:'ncrna'}.get)(y)
+        y = np.vectorize({1:'pcRNA', 0:'ncRNA'}.get)(y)
         return y
 
     def feature_extraction(self, data):

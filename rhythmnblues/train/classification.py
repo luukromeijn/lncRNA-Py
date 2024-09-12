@@ -96,7 +96,7 @@ def evaluate_classifier(model, data, loss_function,
     y_pred = model.predict(data, return_logits=True) # Return as logits
     target = data.df[data.y_name].values
     y_true = torch.zeros(len(target),1)
-    y_true[target == 'pcrna'] = 1.0
+    y_true[target == 'pcRNA'] = 1.0
     scores.append(loss_function(y_pred, y_true).item()) # Calculate loss
     y_pred = torch.sigmoid(y_pred).round() # Then convert to classes
     for metric in metrics: # (these metrics assume classes, not logits)

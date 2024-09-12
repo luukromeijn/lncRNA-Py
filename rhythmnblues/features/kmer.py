@@ -241,7 +241,7 @@ class KmerScore(KmerBase, SequenceBase):
             # Count occurrences
             all_seqs = data.df.groupby('label')['sequence']
             all_seqs = all_seqs.apply(lambda x: "!".join(x.tolist()))
-            for j, label in enumerate(['pcrna', 'ncrna']):
+            for j, label in enumerate(['pcRNA', 'ncRNA']):
                 kmer_freqs[:,j] = self.count_kmers(all_seqs[label])
 
             # Convert to log ratio
@@ -394,16 +394,16 @@ class KmerDistance(KmerBase, SequenceBase):
         else: # Calculate k-mer profiles from data   
             print(f"Initializing {self.k}-mer distance...")
             kmer_freqs = {label: np.zeros(len(self.kmers)) for label in 
-                          ['pcrna', 'ncrna']}
+                          ['pcRNA', 'ncRNA']}
 
             for _, row in utils.progress(data.df.iterrows()):
                 sequence = self.get_sequence(row)
                 kmer_freqs[row['label']] += self.calculate_kmer_freqs(sequence)
 
-            for label in ['pcrna', 'ncrna']:
+            for label in ['pcRNA', 'ncRNA']:
                 kmer_freqs[label] = (kmer_freqs[label] / # Average over total
                                      (kmer_freqs[label].sum() + 1e-7))
-            kmer_freqs = np.stack((kmer_freqs['pcrna'], kmer_freqs['ncrna']))
+            kmer_freqs = np.stack((kmer_freqs['pcRNA'], kmer_freqs['ncRNA']))
 
             if export_path is not None: # Export k-mer profiles
                 np.savetxt(

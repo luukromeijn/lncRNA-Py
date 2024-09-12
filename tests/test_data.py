@@ -15,16 +15,16 @@ def test_init_fasta(data):
         data.df[data.df['id']=='test']['sequence'].iloc[0] == 
         'GTTAACTTGCCGTCAGCCTTTTCNTTGACCTCTTCTTTCTGTTCATGTGTATTTGCTGTC'
     )
-    assert len(data.df[data.df['label']=='pcrna']) == 10
-    assert len(data.df[data.df['label']=='ncrna']) == 9
+    assert len(data.df[data.df['label']=='pcRNA']) == 10
+    assert len(data.df[data.df['label']=='ncRNA']) == 9
 
 def test_init_hdf(data_hdf):
     assert (
         data_hdf.df[data_hdf.df['id']=='test']['sequence'].iloc[0] == 
         'GTTAACTTGCCGTCAGCCTTTTCNTTGACCTCTTCTTTCTGTTCATGTGTATTTGCTGTC'
     )
-    assert len(data_hdf.df[data_hdf.df['label']=='pcrna']) == 10
-    assert len(data_hdf.df[data_hdf.df['label']=='ncrna']) == 9
+    assert len(data_hdf.df[data_hdf.df['label']=='pcRNA']) == 10
+    assert len(data_hdf.df[data_hdf.df['label']=='ncRNA']) == 9
     assert 'length' in data_hdf.df.columns
 
 def test_init_unlabelled(data_unlabelled):
@@ -76,11 +76,11 @@ def test_train_test_split(data):
 def test_coding_noncoding_split(data):
     pc, nc = data.coding_noncoding_split()
     assert type(pc) == Data
-    assert len(pc.df[pc.df['label']=='pcrna']) == 10 
-    assert len(pc.df[pc.df['label']=='ncrna']) == 0 
+    assert len(pc.df[pc.df['label']=='pcRNA']) == 10 
+    assert len(pc.df[pc.df['label']=='ncRNA']) == 0 
     assert type(nc) == Data
-    assert len(nc.df[nc.df['label']=='pcrna']) == 0 
-    assert len(nc.df[nc.df['label']=='ncrna']) == 9 
+    assert len(nc.df[nc.df['label']=='pcRNA']) == 0 
+    assert len(nc.df[nc.df['label']=='ncRNA']) == 9 
 
 def test_test_features(data_hdf):
     result = data_hdf.test_features(['length'])

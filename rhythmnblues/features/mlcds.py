@@ -59,7 +59,7 @@ class MLCDS:
         # Loop through coding and non-coding
         all_seqs = data.df.groupby('label')['sequence']
         all_seqs = all_seqs.apply(lambda x: "!".join(x.tolist()))
-        for i, label in enumerate(['pcrna', 'ncrna']):
+        for i, label in enumerate(['pcRNA', 'ncRNA']):
             for p in utils.progress(range(6, len(all_seqs[label])+1)):
                 try:
                     i_left_kmer = self.kmers[all_seqs[label][p-6:p-3]]

@@ -62,4 +62,4 @@ def test_algorithm_base_deep(data):
         alg.fit(data)
     pred = alg.predict(data)
     assert len(pred) == len(data)
-    assert pred[0] in ['pcrna', 'ncrna']
+    assert pred[0] in ['pcRNA', 'ncRNA']

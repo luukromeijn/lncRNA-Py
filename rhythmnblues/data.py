@@ -70,7 +70,7 @@ class Data(Dataset):
         message +=f'RNA transcripts with {len(self.all_features())} feature(s).'
         print(message)
 
-        self.random_reading_frame = False
+        self.rrf = 0 # (= no random reading frame by default)
     
     def __str__(self):
         return self.df.__str__()
@@ -120,7 +120,7 @@ class Data(Dataset):
         '''Encodes sequence in 4D-DNA encoding, returns a list.'''
         encoding = torch.zeros((4, utils.LEN_4D_DNA), device=utils.DEVICE, 
                                dtype=self.X_dtype)
-        rrf = 0 # random.randint(0,8*self.random_reading_frame)                 # NOTE this is turned off now...
+        rrf = random.randint(0,self.rrf)
         encoding[:,:min(utils.LEN_4D_DNA, len(sequence)-rrf)] = torch.stack(
             [utils.NUC_TO_4D[base] for base in # Encode
              sequence[rrf:utils.LEN_4D_DNA + rrf]], dim=1
@@ -213,14 +213,14 @@ class Data(Dataset):
         self.y_name = y_name
         self.y_dtype = y_dtype
 
-    def set_random_reading_frame(self, on=True):
-        '''Sample data in a random reading frame by deleting 0, 1, or 2
-        nucleotides from the start of a sequence. Only works with 4D-DNA
-        encoding.'''
-        if self.X_name[0] != '4D-DNA' and on:
+    def set_random_reading_frame(self, rrf):
+        '''Sample data in a random reading frame by deleting a random number (
+        within the range [0,`rrf`]) of nucleotides from the start of a sequence.
+        Only works with 4D-DNA encoding.'''
+        if self.X_name[0] != '4D-DNA' and rrf > 0:
             raise AttributeError("Can only set random reading frame when " + 
                                  "self.X_name=='4D-DNA'.")
-        self.random_reading_frame = on
+        self.rrf = rrf
         
     def num_coding_noncoding(self):
         '''Returns a tuple of which the elements are the number of coding and 

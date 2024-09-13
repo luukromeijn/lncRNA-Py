@@ -10,7 +10,7 @@ from rhythmnblues.train.metrics import classification_metrics
 
 
 def train_classifier(
-        model, train_data, valid_data, epochs, batch_size=64, 
+        model, train_data, valid_data, epochs, batch_size=8, 
         loss_function=None, optimizer=None, n_samples_per_epoch=None, 
         logger=None, metrics=classification_metrics
     ):

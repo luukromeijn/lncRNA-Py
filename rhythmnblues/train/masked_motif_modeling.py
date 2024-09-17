@@ -19,9 +19,10 @@ from rhythmnblues.train.metrics import mmm_metrics
 # ... as longer mask lengths may push the model further in its modeling.
 def train_masked_motif_modeling(
         model, train_data, valid_data, epochs, batch_size=8, p_mlm=0.15, 
-        p_mask=0.8, p_random=0.1, mixed_mask_sizes=True, loss_function=None, 
-        warmup_steps=8000, label_smoothing=0.1, n_samples_per_epoch=None, 
-        logger=None, metrics=mmm_metrics
+        p_mask=0.8, p_random=0.1, mixed_mask_sizes=True, 
+        random_reading_frame=True, loss_function=None, warmup_steps=8000, 
+        label_smoothing=0.1, n_samples_per_epoch=None, logger=None, 
+        metrics=mmm_metrics
     ):
     '''Trains `model` for Masked Language Modeling task, using `train_data`, 
     for specified amount of `epochs`. Assumes sequence data is inputted in 
@@ -53,6 +54,9 @@ def train_masked_motif_modeling(
     `mixed_mask_sizes`: `bool`:
         If True (default), generates masks of random lengths between 1 and 
         `motif_size`. If False, always generates masks of length `motif_size`.
+    `random_reading_frame`: `bool`:
+        If True (default), trains the model with sequences that have been
+        frameshifted by a random number (between [0,motif_size]).
     `loss_function`: `torch.nn.Module`
         Loss function that is to be optimized. If None, falls back to 
         `torch.nn.CrossEntropyLoss`) (default is None).
@@ -72,6 +76,8 @@ def train_masked_motif_modeling(
     # Initializing required objects
     if n_samples_per_epoch is None:
         n_samples_per_epoch = len(train_data)
+    if random_reading_frame:
+        train_data.set_random_reading_frame(model.base_arch.motif_size-1)
     sampler = RandomSampler(train_data, num_samples=n_samples_per_epoch)
     train_dataloader = DataLoader(train_data, batch_size, sampler=sampler)
     train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))
@@ -97,6 +103,7 @@ def train_masked_motif_modeling(
 
     # Finish
     logger.finish()
+    train_data.set_random_reading_frame(1)
     return model, logger.history
 
 

@@ -195,10 +195,10 @@ class MDSSelection(FeatureSelectionBase):
         upper = data.df[feature_name].quantile(self.upper)
 
         hist_pcrna, bins = np.histogram(
-            data.df[data.df['label']=='pcrna'][feature_name], 
+            data.df[data.df['label']=='pcRNA'][feature_name], 
             range=(lower,upper), bins=self.n_bins, density=True)
         hist_ncrna, _ = np.histogram(
-            data.df[data.df['label']=='ncrna'][feature_name], 
+            data.df[data.df['label']=='ncRNA'][feature_name], 
             bins=bins, density=True)
 
         hist_pcrna = gaussian_filter1d(hist_pcrna, self.smoothing) 

@@ -32,7 +32,7 @@ class ZhangScore:
             Path to save nucleotide bias to for later use (default is None).'''
         
         self._bases = {'A':0, 'C':1, 'G':2, 'T':3}
-        labels = {'pcrna': 0, 'ncrna':1}
+        labels = {'pcRNA': 0, 'ncRNA':1}
         self.name = 'Zhang score'
 
         if type(data) == str:

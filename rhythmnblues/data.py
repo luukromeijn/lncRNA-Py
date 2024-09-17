@@ -461,9 +461,7 @@ class Data(Dataset):
         feature_space = feature_space.fillna(0) # Removing rows with NaN values
 
         # Calculate and plot dimensionality reduced space
-        if type(dim_red) == TSNE and len(feature_names) > 50:
-            feature_space = PCA().fit_transform(feature_space)[:,:50]
-        feature_space = dim_red.fit_transform(feature_space)
+        feature_space = reduce_dimensionality(feature_space, dim_red)
         df = self.df[["label"]].copy() if self.labelled else pd.DataFrame()
         df["Dim 1"] = feature_space[:,0]
         df["Dim 2"] = feature_space[:,1]
@@ -643,6 +641,7 @@ def split_refseq(in_filepath, pc_filepath, nc_filepath, pc_types=['mRNA'],
     SeqIO.write(pcrna, pc_filepath, 'fasta')
     SeqIO.write(ncrna, nc_filepath, 'fasta')
 
+
 def plot_cross_dataset_violins(data_objects, data_names, feature_name, 
                                filepath=None, upper=0.975, lower=0.025, 
                                figsize=None, **kwargs):
@@ -693,3 +692,13 @@ def plot_cross_dataset_violins(data_objects, data_names, feature_name,
     if filepath is not None:
         fig.savefig(filepath)
     return fig
+
+
+def reduce_dimensionality(data, dim_red=TSNE()):
+    '''Reduces the dimensionality of `data` using `dim_red`.'''
+    if len(data.shape) != 2:
+        raise ValueError("Input `data` should have 2 dimensions.")
+    if type(dim_red) == TSNE and data.shape[1] > 50:
+        data = PCA().fit_transform(data)[:,:50]
+    data = dim_red.fit_transform(data)
+    return data

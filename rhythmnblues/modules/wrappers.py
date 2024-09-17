@@ -4,7 +4,9 @@ from `rhythmnblues`.'''
 
 import torch
 from torch.utils.data import DataLoader
+from sklearn.manifold import TSNE
 from rhythmnblues.modules.bert import BERT, MotifBERT
+from rhythmnblues.data import reduce_dimensionality
 
 
 class WrapperBase(torch.nn.Module):
@@ -62,7 +64,7 @@ class WrapperBase(torch.nn.Module):
         else:
             return predictions
     
-    def latent_space(self, data, inplace=False, pooling=None):
+    def latent_space(self, data, inplace=False, pooling=None, dim_red=TSNE()):
         '''Calculates latent representation for all rows in `data`.
         
         Arguments
@@ -76,7 +78,9 @@ class WrapperBase(torch.nn.Module):
             * 'CLS': use only CLS token.
             * 'max': max pooling over (non-padding) token embeddings.
             * 'mean': mean pooling over (non-padding) token embeddings.
-            * None (default): no pooling, e.g. for CNN base architectures.'''
+            * None (default): no pooling, e.g. for CNN base architectures.
+        `dim_red`: `sklearn` | `NoneType`
+            Dimensionality reduction algorithm from `sklearn` to use.'''
         
         if pooling is not None and type(self.base_arch) not in [BERT,MotifBERT]:
             raise TypeError("self.base_arch must be of type BERT or MotifBERT" + 
@@ -92,6 +96,9 @@ class WrapperBase(torch.nn.Module):
                     y = self.base_arch._forward_latent_space(X, pooling)
                 spaces.append(y.cpu())
         spaces = torch.concatenate(spaces)
+
+        if dim_red is not None:
+            spaces = reduce_dimensionality(spaces, dim_red)
 
         if inplace:
             self.latent_space_columns = [

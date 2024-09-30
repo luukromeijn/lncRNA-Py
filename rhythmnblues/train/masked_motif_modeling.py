@@ -103,7 +103,7 @@ def train_masked_motif_modeling(
 
     # Finish
     logger.finish()
-    train_data.set_random_reading_frame(1)
+    train_data.set_random_reading_frame(0)
     return model, logger.history
 
 

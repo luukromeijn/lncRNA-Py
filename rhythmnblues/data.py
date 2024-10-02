@@ -120,7 +120,10 @@ class Data(Dataset):
         '''Encodes sequence in 4D-DNA encoding, returns a list.'''
         encoding = torch.zeros((4, utils.LEN_4D_DNA), device=utils.DEVICE, 
                                dtype=self.X_dtype)
-        rrf = random.randint(0,self.rrf)
+        if len(sequence) > utils.LEN_4D_DNA + self.rrf:
+            rrf = len(sequence)-utils.LEN_4D_DNA
+        else:
+            rrf = random.randint(0,self.rrf)
         encoding[:,:min(utils.LEN_4D_DNA, len(sequence)-rrf)] = torch.stack(
             [utils.NUC_TO_4D[base] for base in # Encode
              sequence[rrf:utils.LEN_4D_DNA + rrf]], dim=1
@@ -429,10 +432,29 @@ class Data(Dataset):
 
         self.check_columns([x_feature_name, y_feature_name])
         fig, ax = plt.subplots(figsize=figsize)
+        # colors = {
+        #     0: '#1f77b4',
+        #     1: '#ff7f0e',
+        #     2: '#2ca02c',
+        #     3: '#d62728',
+        #     4: '#9467bd',
+        #     5: '#8c564b',
+        #     6: '#e377c2',
+        #     7: '#7f7f7f',
+        #     8: '#bcbd22',
+        #     9: '#17becf',
+        # }
+        # ax.scatter(x_feature_name, y_feature_name, s=1, data=self.df[self.df['label'] == 0])
+        # data = self.df[self.df['label'] != 0]
+        # ax.scatter(x_feature_name, y_feature_name, color=data['label'].map(colors), data=data)
         if self.labelled:
             for label in ['pcRNA', 'ncRNA']:
-                ax.scatter(x_feature_name, y_feature_name, s=1, alpha=0.5,
-                            data=self.df[self.df['label']==label], label=label)
+                if label == 'pcRNA':
+                    ax.scatter(x_feature_name, y_feature_name, s=1, alpha=0.5,
+                                data=self.df[self.df['label']==label], label='pcRNA')
+                if label == 'ncRNA':
+                    ax.scatter(x_feature_name, y_feature_name, s=1, alpha=0.5,
+                                data=self.df[self.df['label']==label], label='ncRNA')
             fig.legend(markerscale=5)
         else:
             ax.scatter(x_feature_name, y_feature_name, s=1, data=self.df)

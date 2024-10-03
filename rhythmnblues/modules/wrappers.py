@@ -167,7 +167,7 @@ class MaskedMotifModel(WrapperBase):
     motif-encoded sequences as input.'''
 
     def __init__(self, base_arch, dropout=0.0, n_hidden_motifs=0, relu=False, 
-                 pred_batch_size=64):
+                 linear=False, pred_batch_size=64):
         '''Initializes `MaskedMotifModel` object.
         
         Arguments
@@ -192,9 +192,13 @@ class MaskedMotifModel(WrapperBase):
         self.dropout = torch.nn.Dropout(p=dropout)
         if type(base_arch) != MotifBERT:
             raise TypeError("Base architecture should be of type MotifBERT.")
-        self.linear = torch.nn.Linear(base_arch.d_model, base_arch.n_motifs)
+        if linear:
+            self.linear = torch.nn.Linear(base_arch.d_model, base_arch.n_motifs)
+            in_channels = base_arch.n_motifs
+        else:
+            self.linear = lambda x: x
+            in_channels = base_arch.d_model
         motif_size = base_arch.motif_size
-        in_channels = base_arch.n_motifs
         self.transposed_conv_layers = torch.nn.ModuleList()
         
         # Defining the hidden motif layer (if specified by user)

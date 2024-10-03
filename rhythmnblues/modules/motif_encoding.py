@@ -106,7 +106,7 @@ class MotifEmbedding(torch.nn.Module):
     '''Projects motif encoding into space of pre-specified dimensionality.'''
 
     def __init__(self, n_motifs, d_model, motif_size=9, n_hidden_motifs=0, 
-                 relu=True):
+                 relu=True, linear=False):
         '''Initializes `MotifEncoding` class.
 
         Arguments
@@ -127,7 +127,10 @@ class MotifEmbedding(torch.nn.Module):
         super().__init__()
         self.motif_encoder = MotifEncoding(n_motifs, motif_size, n_hidden_motifs, relu)
         self.cls_token = torch.nn.Parameter(torch.zeros(1, 1, d_model))
-        self.linear = torch.nn.Linear(n_motifs, d_model)
+        if linear:
+            self.linear = torch.nn.Linear(n_motifs, d_model)
+        else:
+            self.linear = lambda x: x
 
     def forward(self, x):
         x = self.motif_encoder(x).transpose(1,2) # Run through motif layer

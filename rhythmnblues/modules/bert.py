@@ -259,7 +259,8 @@ class MotifBERT(torch.nn.Module):
     ViT: Dosovitskiy et al. (2020) https://doi.org/10.48550/arXiv.2010.11929'''
 
     def __init__(self, n_motifs, motif_size=12, n_hidden_motifs=0, 
-                 d_model=256, d_ff=512, h=8, N=6, dropout=0.1, relu=True):
+                 d_model=256, d_ff=512, h=8, N=6, dropout=0.1, relu=True, 
+                 linear=False):
         '''Initializes `MotifBERT`.
         
         Parameters
@@ -287,7 +288,7 @@ class MotifBERT(torch.nn.Module):
 
         super().__init__()
         self.motif_embedder = MotifEmbedding(n_motifs, d_model, motif_size, 
-                                             n_hidden_motifs, relu)
+                                             n_hidden_motifs, relu, linear)
         self.positional_encoder = PositionalEncoding(d_model, dropout)
         self.encoder = Encoder(d_model, d_ff, h, N, dropout)
         self.motif_size = motif_size

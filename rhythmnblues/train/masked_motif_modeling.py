@@ -88,10 +88,16 @@ def train_masked_motif_modeling(
     logger = logger if logger else LoggerBase()
     logger.start(metrics)
 
+    len_4d_dna_memory = utils.LEN_4D_DNA
+
     print("Training MLM...")
     for i in utils.progress(range(epochs)):
+        if i % 2 != 0:
+            utils.LEN_4D_DNA = 100
+        print(utils.LEN_4D_DNA)
         model = epoch(model, train_dataloader, p_mlm, p_mask, p_random, 
                       mask_size, loss_function, optimizer, scaler, lr_scheduler)
+        utils.LEN_4D_DNA = len_4d_dna_memory
         train_results = evaluate(model, train_subset, p_mlm, p_mask, p_random, 
                                  mask_size, loss_function, metrics) 
         valid_results = evaluate(model, valid_data, p_mlm, p_mask, p_random,

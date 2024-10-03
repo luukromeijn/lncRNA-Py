@@ -332,7 +332,7 @@ class MotifBERT(torch.nn.Module):
             ).to(torch.int32).unsqueeze(-1)
             hide = ~( # Set True part of the zero-padding...
                 torch.arange(y.shape[1], device=utils.DEVICE) <= len_seqs)
-            hide[:,0] = False # ... or for the CLS token.
+            hide[:,0] = True # ... or for the CLS token.
             if pooling == 'max':
                 y[hide] = -torch.inf
                 y, _ = y.max(dim=1)

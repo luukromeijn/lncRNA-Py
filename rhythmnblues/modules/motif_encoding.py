@@ -134,7 +134,7 @@ class MotifEmbedding(torch.nn.Module):
 
     def forward(self, x):
         x = self.motif_encoder(x).transpose(1,2) # Run through motif layer
-        if self.linear(x):
+        if self.linear:
             x = self.linear(x) # Project to model's dimensionality
         cls_tokens = self.cls_token.expand(x.size(0), -1, -1) # Add CLS tokens
         x = torch.cat((cls_tokens, x), dim=1)

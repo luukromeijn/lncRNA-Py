@@ -260,7 +260,7 @@ class MotifBERT(torch.nn.Module):
 
     def __init__(self, n_motifs, motif_size=12, n_hidden_motifs=0, 
                  d_model=256, d_ff=512, h=8, N=6, dropout=0.1, relu=True, 
-                 linear=False):
+                 linear=True):
         '''Initializes `MotifBERT`.
         
         Parameters

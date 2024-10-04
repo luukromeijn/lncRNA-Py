@@ -196,7 +196,7 @@ class MaskedMotifModel(WrapperBase):
             self.linear = torch.nn.Linear(base_arch.d_model, base_arch.n_motifs)
             in_channels = base_arch.n_motifs
         else:
-            self.linear = lambda x: x
+            self.linear = False
             in_channels = base_arch.d_model
         motif_size = base_arch.motif_size
         self.transposed_conv_layers = torch.nn.ModuleList()
@@ -228,7 +228,8 @@ class MaskedMotifModel(WrapperBase):
     def forward(self, X):
         X = self.base_arch(X)[:,1:,:] # Forward pass base arch, remove CLS
         X = self.dropout(X)
-        X = self.linear(X) # Transform to motif 'space' 
+        if self.linear:
+            X = self.linear(X) # Transform to motif 'space' 
         X = X.transpose(1,2)
         for layer in self.transposed_conv_layers:
             X = layer(X) # Apply deconvolution

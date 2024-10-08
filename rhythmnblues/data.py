@@ -71,6 +71,7 @@ class Data(Dataset):
         print(message)
 
         self.rrf = 0 # (= no random reading frame by default)
+        self.len_4d_dna = 7670
     
     def __str__(self):
         return self.df.__str__()
@@ -118,15 +119,15 @@ class Data(Dataset):
     
     def _get_4d_seq(self, sequence):
         '''Encodes sequence in 4D-DNA encoding, returns a list.'''
-        encoding = torch.zeros((4, utils.LEN_4D_DNA), device=utils.DEVICE, 
+        encoding = torch.zeros((4, self.len_4d_dna), device=utils.DEVICE, 
                                dtype=self.X_dtype)
-        if len(sequence) > utils.LEN_4D_DNA + self.rrf:
-            rrf = len(sequence)-utils.LEN_4D_DNA
+        if len(sequence) > self.len_4d_dna + self.rrf:
+            rrf = len(sequence)-self.len_4d_dna
         else:
             rrf = random.randint(0,self.rrf)
-        encoding[:,:min(utils.LEN_4D_DNA, len(sequence)-rrf)] = torch.stack(
+        encoding[:,:min(self.len_4d_dna, len(sequence)-rrf)] = torch.stack(
             [utils.NUC_TO_4D[base] for base in # Encode
-             sequence[rrf:utils.LEN_4D_DNA + rrf]], dim=1
+             sequence[rrf:self.len_4d_dna + rrf]], dim=1
         )
         return encoding
 
@@ -184,7 +185,7 @@ class Data(Dataset):
         return self.check_columns(['label'], behaviour='bool')
 
     def set_tensor_features(self, X_name, X_dtype=torch.float32, y_name=None, 
-                            y_dtype=torch.float32):
+                            y_dtype=torch.float32, len_4d_dna=7670):
         '''Configures `Data` object to return a tuple of tensors (X,y) whenever 
         `__getitem__` is called.
         
@@ -201,7 +202,10 @@ class Data(Dataset):
             will set 'label' as target feature, with 1 indicating pcRNA and 0 
             lncRNA. 
         `y_dtype`: type
-            Data type for y (default is `torch.float32`)'''
+            Data type for y (default is `torch.float32`)
+        `len_4d_dna`: `int`
+            Max length of returned seq. when `X_name=='4D-DNA'` (default 7670)
+        '''
         
         X_name = [X_name] if type(X_name) == str else X_name
         y_name = [y_name] if type(y_name) == str else y_name
@@ -215,6 +219,7 @@ class Data(Dataset):
             self.check_columns(y_name)
         self.y_name = y_name
         self.y_dtype = y_dtype
+        self.len_4d_dna = len_4d_dna
 
     def set_random_reading_frame(self, rrf):
         '''Sample data in a random reading frame by deleting a random number (

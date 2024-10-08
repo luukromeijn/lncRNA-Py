@@ -15,9 +15,9 @@ class BERT(torch.nn.Module):
     Transformer: Vaswani et al. (2017) https://doi.org/10.48550/arXiv.1706.03762
     Code: Huang et al. (2022) https://nlp.seas.harvard.edu/annotated-transformer
     BERT: Devlin et al. (2019) https://doi.org/10.48550/arXiv.1810.04805
-    MycoAI: Romeijn et al. (2024) https://github.com/MycoAI/MycoAI/'''
+    MycoAI: Romeijn et al. (2024) https://doi.org/10.1111/1755-0998.14006'''
 
-    def __init__(self, vocab_size, d_model=256, d_ff=512, h=8, N=6, 
+    def __init__(self, vocab_size, d_model=768, N=12, d_ff=None, h=None, 
                  dropout=0.1):
         '''Initializes the transformer given the source/target vocabulary.
         
@@ -27,17 +27,19 @@ class BERT(torch.nn.Module):
             Number of unique tokens in vocabulary. Determine using the
             `vocab_size` method of `TokenizerBase` children.
         d_model: int
-            Dimension of sequence repr. (embedding) in model (default is 256)
-        d_ff: int
-            Dimension of hidden layer FFN sublayers (default is 512)
-        h: int
-            Number of heads used for multi-head self-attention (default is 8)
+            Dimension of sequence repr. (embedding) in model (default is 768)
         N: int
-            How many encoder/decoder layers the transformer has (default is 6)
+            How many encoder/decoder layers the transformer has (default is 12)
+        d_ff: int
+            Number of nodes in FFN sublayers (default is None, `4*d_model`)
+        h: int
+            Number of self-attention heads (default is None, `int(d_model/64)`)
         dropout: float
             Dropout probability to use throughout network (default is 0.1)'''
 
         super().__init__()
+        d_ff = 4*d_model if d_ff is None else d_ff
+        h = int(d_model/64) if h is None else h
         self.embedder = torch.nn.Embedding(vocab_size, d_model)
         self.pos_encoder = PositionalEncoding(d_model, dropout)
         self.encoder = Encoder(d_model, d_ff, h, N, dropout)
@@ -258,9 +260,9 @@ class MotifBERT(torch.nn.Module):
     ----------
     ViT: Dosovitskiy et al. (2020) https://doi.org/10.48550/arXiv.2010.11929'''
 
-    def __init__(self, n_motifs, motif_size=12, n_hidden_motifs=0, 
-                 d_model=256, d_ff=512, h=8, N=6, dropout=0.1, relu=True, 
-                 linear=True):
+    def __init__(self, n_motifs, motif_size=10, d_model=768, N=12, d_ff=None, 
+                 h=None, dropout=0.1, project_motifs=None, activate_motifs=True, 
+                 n_hidden_motifs=0):
         '''Initializes `MotifBERT`.
         
         Parameters
@@ -268,27 +270,35 @@ class MotifBERT(torch.nn.Module):
         n_motifs: int
             Number of motifs to learn from the data.
         motif_size: int
-            Number of nucleotides that make up a single motif (default is 12).
+            Number of nucleotides that make up a single motif (default is 10).
+        d_model: int
+            Dimension of sequence repr. (embedding) in model (default is 768)
+        N: int
+            How many encoder/decoder layers the transformer has (default is 12)
+        d_ff: int
+            Number of nodes in FFN sublayers (default is None, `4*d_model`)
+        h: int
+            Number of self-attention heads (default is None, `int(d_model/64)`)
+        dropout: float
+            Dropout probability to use throughout network (default is 0.1)
+        project_motifs: bool
+            Whether or not motifs are projected with a linear layer onto 
+            `d_model` dimensions. Must be True when `d_model != n_motifs` 
+            (default is None, which results in `d_model != n_motifs`)
+        activate_motifs: bool
+            Whether or not motifs are relu-activated (default is True)
         n_hidden_motifs: int
             If > 0, adds an extra hidden convolutional layer with a kernel size
             and stride of 3 with the specified amount of output channels. This
-            layer precedes the normal motif encoding layer (default is 0).
-        d_model: int
-            Dimension of sequence repr. (embedding) in model (default is 256)
-        d_ff: int
-            Dimension of hidden layer FFN sublayers (default is 512)
-        h: int
-            Number of heads used for multi-head self-attention (default is 8)
-        N: int
-            How many encoder/decoder layers the transformer has (default is 6)
-        dropout: float
-            Dropout probability to use throughout network (default is 0.1)
-        relu: bool
-            Whether or not motifs are relu-activated (default is False)'''
+            layer precedes the normal motif encoding layer (default is 0).'''
 
         super().__init__()
+        d_ff = 4*d_model if d_ff is None else d_ff
+        h = int(d_model/64) if h is None else h
+        if project_motifs is None:
+            project_motifs = d_model != n_motifs
         self.motif_embedder = MotifEmbedding(n_motifs, d_model, motif_size, 
-                                             n_hidden_motifs, relu, linear)
+                               project_motifs, activate_motifs, n_hidden_motifs)
         self.positional_encoder = PositionalEncoding(d_model, dropout)
         self.encoder = Encoder(d_model, d_ff, h, N, dropout)
         self.motif_size = motif_size

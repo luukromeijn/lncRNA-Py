@@ -3,7 +3,7 @@ encoded using Motif Encoding.
 
 References
 ----------
-MycoAI: Romeijn et al. (2024) https://github.com/MycoAI/MycoAI/
+MycoAI: Romeijn et al. (2024) https://doi.org/10.1111/1755-0998.14006
 Huang et al. (2022) https://nlp.seas.harvard.edu/annotated-transformer'''
 
 import torch
@@ -16,15 +16,15 @@ from rhythmnblues.train.metrics import mmm_metrics
 
 
 def train_masked_motif_modeling(
-        model, train_data, valid_data, epochs, batch_size=8, p_mlm=0.15, 
-        p_mask=0.8, p_random=0.1, mask_size=None, random_reading_frame=True, 
-        loss_function=None, warmup_steps=8000, label_smoothing=0.1, 
-        n_samples_per_epoch=None, logger=None, metrics=mmm_metrics
+        model, train_data, valid_data, epochs, n_samples_per_epoch=None,
+        batch_size=8, p_mlm=0.15, p_mask=0.8, p_random=0.1, warmup_steps=32000,
+        loss_function=None, mask_size=None, random_reading_frame=True, 
+        logger=None, metrics=mmm_metrics
     ):
     '''Trains `model` for Masked Language Modeling task, using `train_data`, 
     for specified amount of `epochs`. Assumes sequence data is inputted in 
-    four channels (using `Data.set_tensor_features('4D-DNA')`), then encoded
-    using Motif Encoding (using `MotifBERT`).
+    four channels (using `Data.set_tensor_features('4D-DNA')`), and a model of 
+    type `MaskedMotifModel`.
     
     Arguments
     ---------
@@ -39,6 +39,9 @@ def train_masked_motif_modeling(
         Data to use for validation, must call `set_tensor_features` first.
     `epochs`: `int`
         How many epochs (data run-throughs) to train for.
+    `n_samples_per_epoch`: `int`
+        If specified, indicates the number of samples per training epoch. If 
+        None, will sample the full training set.
     `batch_size`: `int`
         Number of examples per batch (default is 64).
     `p_mlm`: `float`
@@ -48,22 +51,19 @@ def train_masked_motif_modeling(
     `p_random`: `float`
         Probability for a nucleotide to be randomly replaced when selected 
         (default is 0.1).
+    `warmup_steps`: `int`
+        Number of training steps in which learning rate linearly increases. 
+        After this amount of steps, the learning rate decreases proportional to
+        the invserse square root of the step number (default is 32000).
+    `loss_function`: `torch.nn.Module`
+        Loss function that is to be optimized, assuming logits (so no Softmax) 
+        and ignore_index=-1. Uses `torch.nn.CrossEntropyLoss` if None (default).
     `mask_size`: `int`:
         Number of contiguous nucleotides that make up a mask. If None (default)
         generates masks of length `motif_size`.
     `random_reading_frame`: `bool`:
         If True (default), trains the model with sequences that have been
         frameshifted by a random number (between [0,motif_size]).
-    `loss_function`: `torch.nn.Module`
-        Loss function that is to be optimized. If None, falls back to 
-        `torch.nn.CrossEntropyLoss`) (default is None).
-    `warmup_steps`: `int`
-        Number of training steps in which learning rate linearly increases. 
-        After this amount of steps, the learning rate decreases proportional to
-        the invserse square root of the step number (default is 8000).
-    `n_samples_per_epoch`: `int`
-        If specified, indicates the number of samples per training epoch. If 
-        None, will sample the full training set.
     `logger`: `rhythmnblues.train.loggers`
     	Logger object whose `log` method will be called at every epoch. If None
         (default), will use LoggerBase, which only keeps track of the history.
@@ -80,24 +80,17 @@ def train_masked_motif_modeling(
     train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))
     mask_size = model.base_arch.motif_size if mask_size is None else mask_size
     if loss_function is None:
-        loss_function = torch.nn.CrossEntropyLoss(ignore_index=-1, 
-                                                label_smoothing=label_smoothing)
+        loss_function = torch.nn.CrossEntropyLoss(ignore_index=-1)
     optimizer = torch.optim.Adam(model.parameters(), lr=1, betas=(0.9,0.98))
     lr_scheduler = LrSchedule(optimizer, model.base_arch.d_model, warmup_steps)
     scaler = get_gradient_scaler(utils.DEVICE)
     logger = logger if logger else LoggerBase()
     logger.start(metrics)
 
-    len_4d_dna_memory = utils.LEN_4D_DNA
-
     print("Training MLM...")
     for i in utils.progress(range(epochs)):
-        if i % 2 != 0:
-            utils.LEN_4D_DNA = 100
-        print(utils.LEN_4D_DNA)
         model = epoch(model, train_dataloader, p_mlm, p_mask, p_random, 
                       mask_size, loss_function, optimizer, scaler, lr_scheduler)
-        utils.LEN_4D_DNA = len_4d_dna_memory
         train_results = evaluate(model, train_subset, p_mlm, p_mask, p_random, 
                                  mask_size, loss_function, metrics) 
         valid_results = evaluate(model, valid_data, p_mlm, p_mask, p_random,
@@ -139,7 +132,7 @@ def mask_batch(X, motif_size, p_mlm, p_mask, p_random, mask_size):
     '''Maks a batch of sequence data for MMM'''
 
     # Correct p_mlm by mask size
-    p_mlm = p_mlm / mask_size # NOTE: maybe this correction is too strict...?
+    p_mlm = p_mlm / mask_size
 
     # Select bases with corrected p_mlm probability
     len_emb = int(X.shape[2] / motif_size)
@@ -150,8 +143,9 @@ def mask_batch(X, motif_size, p_mlm, p_mask, p_random, mask_size):
     selected = torch.multinomial(torch.ones(mask_shape,device=utils.DEVICE),
                                  num_selected)
 
-    # Expand selected with mask_size consecutive indices
-    selected = get_consecutive_indices(selected, mask_size, len_out)
+    # If necessary, expand selected with mask_size consecutive indices
+    if mask_size > 1:
+        selected = get_consecutive_indices(selected, mask_size, len_out)
 
     # Divide selected over masked and random
     num_i_masked = int(p_mask*num_selected)*(mask_size) # Calculate number of...

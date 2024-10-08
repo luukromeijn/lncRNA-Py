@@ -3,7 +3,7 @@ sequences.
 
 References
 ----------
-MycoAI: Romeijn et al. (2024) https://github.com/MycoAI/MycoAI/
+MycoAI: Romeijn et al. (2024) https://doi.org/10.1111/1755-0998.14006
 Huang et al. (2022) https://nlp.seas.harvard.edu/annotated-transformer'''
 
 import torch
@@ -16,14 +16,13 @@ from rhythmnblues.train.metrics import mtm_metrics
 
 
 def train_masked_token_modeling(
-        model, train_data, valid_data, epochs, batch_size=8, p_mlm=0.15, 
-        p_mask=0.8, p_random=0.1, loss_function=None, warmup_steps=8000, 
-        label_smoothing=0.1, n_samples_per_epoch=None, logger=None, 
-        metrics=mtm_metrics
+        model, train_data, valid_data, epochs, n_samples_per_epoch=None, 
+        batch_size=8, p_mlm=0.15, p_mask=0.8, p_random=0.1, warmup_steps=32000, 
+        loss_function=None, logger=None, metrics=mtm_metrics
     ):
     '''Trains `model` for Masked Language Modeling task, using `train_data`, 
     for specified amount of `epochs`. Assumes sequence data is tokenized (see
-    `rhythmnblues.features.tokenizers`).
+    `rhythmnblues.features.tokenizers`) and model of type `MaskedTokenModel`.
     
     Arguments
     ---------
@@ -38,6 +37,9 @@ def train_masked_token_modeling(
         Data to use for validation, must call `set_tensor_features` first.
     `epochs`: `int`
         How many epochs (data run-throughs) to train for.
+    `n_samples_per_epoch`: `int`
+        If specified, indicates the number of samples per training epoch. If 
+        None, will sample the full training set.
     `batch_size`: `int`
         Number of examples per batch (default is 64).
     `p_mlm`: `float`
@@ -47,19 +49,17 @@ def train_masked_token_modeling(
     `p_random`: `float`
         Probability for a token to be randomly replaced when selected (default
         is 0.1).
-    `loss_function`: `torch.nn.Module`
-        Loss function that is to be optimized. If None, falls back to 
-        `torch.nn.CrossEntropyLoss`) (default is None).
     `warmup_steps`: `int`
         Number of training steps in which learning rate linearly increases. 
         After this amount of steps, the learning rate decreases proportional to
-        the invserse square root of the step number (default is 8000).
+        the invserse square root of the step number (default is 32000).
+    `loss_function`: `torch.nn.Module`
+        Loss function that is to be optimized, assuming logits (so no Softmax) 
+        and `ignore_index=utils.TOKENS['PAD']`. Uses `torch.nn.CrossEntropyLoss` 
+        if None (default).
     `label_smoothing`: `float`
         How much weight should be subtracted from the target token and divided
         over the remaining tokens, for regularization (default is 0.1).
-    `n_samples_per_epoch`: `int`
-        If specified, indicates the number of samples per training epoch. If 
-        None, will sample the full training set.
     `logger`: `rhythmnblues.train.loggers`
     	Logger object whose `log` method will be called at every epoch. If None
         (default), will use LoggerBase, which only keeps track of the history.
@@ -74,7 +74,7 @@ def train_masked_token_modeling(
     train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))
     if loss_function is None:
         loss_function = torch.nn.CrossEntropyLoss(
-              label_smoothing=label_smoothing, ignore_index=utils.TOKENS['PAD'])
+                          label_smoothing=0.1, ignore_index=utils.TOKENS['PAD'])
     optimizer = torch.optim.Adam(model.parameters(), lr=1, betas=(0.9,0.98))
     lr_scheduler = LrSchedule(optimizer, model.base_arch.d_model, warmup_steps)
     scaler = get_gradient_scaler(utils.DEVICE)

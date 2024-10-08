@@ -45,9 +45,6 @@ NUC_TO_4D = {
 '''Mapping from nucleotide indicator to 4D_DNA representation, which is the 
 format suitable for convolutional neural network layers.'''
 
-LEN_4D_DNA = 8000
-'''Length of the 4D-DNA representation. Longer sequences are truncated, shorter
-sequences are zero-padded.'''
 
 ##### HELPER FUNCTIONS #####
 def change_device(device): # NOTE: not sure if this is neccessary

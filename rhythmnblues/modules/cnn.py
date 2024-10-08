@@ -11,7 +11,7 @@ class MycoAICNN(torch.nn.Module):
     
     References
     ----------
-    MycoAI: Romeijn et al. (2024) https://github.com/MycoAI/MycoAI/'''
+    MycoAI: Romeijn et al. (2024) https://doi.org/10.1111/1755-0998.14006'''
     
     def __init__(self, kernel=5, conv_layers=[5,10], in_channels=1, pool_size=2,
                  batch_normalization=True):

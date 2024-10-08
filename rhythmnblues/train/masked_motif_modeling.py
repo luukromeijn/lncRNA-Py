@@ -18,8 +18,8 @@ from rhythmnblues.train.metrics import mmm_metrics
 def train_masked_motif_modeling(
         model, train_data, valid_data, epochs, n_samples_per_epoch=None,
         batch_size=8, p_mlm=0.15, p_mask=0.8, p_random=0.1, warmup_steps=32000,
-        loss_function=None, mask_size=None, random_reading_frame=True, 
-        logger=None, metrics=mmm_metrics
+        loss_function=None, mask_size=1, random_reading_frame=True, logger=None,
+        metrics=mmm_metrics
     ):
     '''Trains `model` for Masked Language Modeling task, using `train_data`, 
     for specified amount of `epochs`. Assumes sequence data is inputted in 
@@ -59,8 +59,7 @@ def train_masked_motif_modeling(
         Loss function that is to be optimized, assuming logits (so no Softmax) 
         and ignore_index=-1. Uses `torch.nn.CrossEntropyLoss` if None (default).
     `mask_size`: `int`:
-        Number of contiguous nucleotides that make up a mask. If None (default)
-        generates masks of length `motif_size`.
+        Number of contiguous nucleotides that make up a mask (default is 1).
     `random_reading_frame`: `bool`:
         If True (default), trains the model with sequences that have been
         frameshifted by a random number (between [0,motif_size]).

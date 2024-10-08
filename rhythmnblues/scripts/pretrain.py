@@ -5,7 +5,6 @@ Please call `python -m rhythmnblues.scripts.pretrain --help` for more info.'''
 
 import argparse
 import torch
-from pathlib import Path
 from functools import partial
 from rhythmnblues import utils
 from rhythmnblues.data import Data

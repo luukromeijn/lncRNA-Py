@@ -273,7 +273,7 @@ if __name__ == '__main__':
         raise ValueError(
             "Please use --bpe_file/-bf flag to specify BPE model file."
         )
-    p.model_dir = f'{p.data_dir}/models' if p.model_dir=='' else p.model_dir
+    p.model_dir = f'{p.data_dir}/models' if p.model_dir=='.' else p.model_dir
     
     pretrain( # Call
         fasta_train=p.fasta_train, fasta_valid=p.fasta_valid, 

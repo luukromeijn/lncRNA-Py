@@ -21,7 +21,7 @@ from rhythmnblues.train import train_masked_motif_modeling
 def pretrain(
         fasta_train, fasta_valid, exp_prefix, encoding_method, epochs, 
         n_samples_per_epoch, batch_size, warmup_steps, d_model, N, d_ff, h, 
-        n_motifs, motif_size, bpe_file, k, p_mlm, p_mask, p_random, 
+        dropout, n_motifs, motif_size, bpe_file, k, p_mlm, p_mask, p_random, 
         context_length, data_dir, results_dir, model_dir, mask_size, 
         random_reading_frame, project_motifs, activate_motifs, 
         project_embeddings, activate_embeddings, 
@@ -33,7 +33,8 @@ def pretrain(
 
     # Import data, subsample valid dataset to save time and resources
     train_data = Data(f'{data_dir}/{fasta_train}') 
-    valid_data = Data(f'{data_dir}/{fasta_valid}').sample(N=2500,random_state=42)
+    valid_data = Data(f'{data_dir}/{fasta_valid}').sample(N=2500,
+                                                          random_state=42)
 
     # Encoding the data
     if encoding_method in ['nuc', 'kmer', 'bpe']:
@@ -58,12 +59,12 @@ def pretrain(
     # Initializing the model
     if encoding_method in ['nuc', 'kmer', 'bpe']:
         base_arch = BERT(tokenizer.vocab_size, d_model, N, d_ff, h)
-        model = MaskedTokenModel(base_arch, pred_batch_size=batch_size)
+        model = MaskedTokenModel(base_arch, dropout, batch_size)
         pretrain_function = train_masked_token_modeling
     elif encoding_method == 'motif':
         base_arch = MotifBERT(n_motifs, motif_size, d_model, N, d_ff, h,
                  project_motifs=project_motifs, activate_motifs=activate_motifs)
-        model = MaskedMotifModel(base_arch, pred_batch_size=batch_size,
+        model = MaskedMotifModel(base_arch, dropout, pred_batch_size=batch_size,
                                  project_embeddings=project_embeddings, 
                                  activate_embeddings=activate_embeddings)
         pretrain_function = partial(train_masked_motif_modeling, 
@@ -74,7 +75,7 @@ def pretrain(
     exp_name += f'_dm{d_model}_N{N}'
     exp_name = f'{exp_name}_dff{d_ff}' if d_ff is not None else exp_name
     exp_name = f'{exp_name}_h{h}' if h is not None else exp_name
-    exp_name += f'_bs{batch_size}_ws{warmup_steps}_cl{context_length}'
+    exp_name += f'bs{batch_size}_ws{warmup_steps}_cl{context_length}_d{dropout}'
     exp_name = f'{exp_name}_ms{mask_size}' if mask_size != 1 else exp_name
     exp_name = f'{exp_name}--no_rrf' if not random_reading_frame else exp_name
     exp_name = f'{exp_name}--motif_lin' if project_motifs else exp_name
@@ -159,6 +160,11 @@ args = {
         'type': int,
         'default': None,
         'help': 'Number of BERT self-attention heads (int=int(d_model/12))'
+    },
+    '--dropout': {                                                              # TODO if this works (or has limited influence, also use this dropout argument in the BERT and MotifBERT's inits)
+        'type': float,
+        'default': 0,
+        'help': 'Dropout probability in BERT model (float=0)'
     },
     '--n_motifs': {
         'type': int,

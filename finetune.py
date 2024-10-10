@@ -38,6 +38,11 @@ def finetune(model_file, learning_rate, dropout, weight_decay, freeze_motifs,
 
     model = Classifier(model.base_arch, dropout, batch_size).to(utils.DEVICE)
 
+    if freeze_motifs:
+        for child in model.base_arch.motif_embedder.motif_encoder.children():
+            for param in child.parameters():
+                param.requires_grad = False
+
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, 
                                  weight_decay=weight_decay)
     model, history = train_classifier(

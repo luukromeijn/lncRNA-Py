@@ -43,10 +43,11 @@ def train(
         # N = base_arch.N
         # d_ff = base_arch.d_ff
         # h = base_arch.h
-        n_motifs = base_arch.n_motifs
-        motif_size = base_arch.motif_size
-        # project_motifs = base_arch.project_motifs
-        # activate_motifs = base_arch.activate_motifs
+        if type(base_arch) == MotifBERT:
+            n_motifs = base_arch.n_motifs
+            motif_size = base_arch.motif_size
+            # project_motifs = base_arch.project_motifs
+            # activate_motifs = base_arch.activate_motifs
     
     # Encoding the data
     if encoding_method in ['nuc', 'kmer', 'bpe']:

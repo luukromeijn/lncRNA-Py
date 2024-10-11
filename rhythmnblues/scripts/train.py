@@ -25,7 +25,7 @@ def train(
     '''lncRNA classification function as called by training script. Run
     `rhythmnblues.scripts.train --help` for usage info.'''
 
-    exp_name = f'{exp_prefix}'
+    exp_name = f'{exp_prefix}_{encoding_method}'
 
     # Import data
     train_data = Data([f'{data_dir}/{fasta_pcrna_train}',

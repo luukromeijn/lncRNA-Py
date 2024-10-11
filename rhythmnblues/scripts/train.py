@@ -75,11 +75,13 @@ def train(
         elif encoding_method == 'motif':
             base_arch = MotifBERT(n_motifs, motif_size, d_model, N, d_ff, h,
                  project_motifs=project_motifs, activate_motifs=activate_motifs)
+    pooling = 'CLS'
     if freeze_motifs:
         base_arch.freeze_motifs()
     if freeze_network:
         base_arch.freeze()
-    model = Classifier(base_arch, dropout, batch_size)
+        pooling = 'mean'
+    model = Classifier(base_arch, dropout, batch_size, pooling)
 
     # Model/experiment name processing
     exp_name += f'_dm{d_model}_N{N}'
@@ -104,7 +106,7 @@ def train(
             LoggerPlot(f'{results_dir}/{exp_name}'),
             LoggerWrite(f'{results_dir}/{exp_name}/history.csv'),
             EarlyStopping('F1 (macro)|valid', 
-                          filepath=f'{data_dir}/models/{exp_name}.pt')
+                          filepath=f'{model_dir}/{exp_name}.pt')
         )
     )
 

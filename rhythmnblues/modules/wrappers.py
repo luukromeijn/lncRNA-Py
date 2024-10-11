@@ -123,13 +123,14 @@ class Classifier(WrapperBase):
     '''Wrapper class that uses a base architecture to perform binary
     classification.'''
 
-    def __init__(self, base_arch, dropout=0.0, pred_batch_size=8):
+    def __init__(self, base_arch, dropout=0.0, pred_batch_size=8,pooling='CLS'):
         super().__init__(base_arch, pred_batch_size)
         self.dropout = torch.nn.Dropout(p=dropout)
         self.output = torch.nn.LazyLinear(1) 
         self.sigmoid = torch.nn.Sigmoid()
         if type(base_arch) == BERT or type(base_arch) == MotifBERT:
             self._forward_base_arch = self._forward_base_arch_bert
+            self.pooling = pooling
         else:
             self._forward_base_arch = self.base_arch
         self.data_columns = 'P(pcrna)'
@@ -142,8 +143,9 @@ class Classifier(WrapperBase):
             return self.sigmoid(X)
 
     def _forward_base_arch_bert(self, X):
-        '''Forward function that extracts the CLS token embedding from BERT.'''
-        return self.base_arch(X)[:,0,:] # # CLS assumed at first input position
+        '''Forward function that extracts the CLS token embedding from BERT.
+        (or applies the preset pooling procedure)'''
+        return self.base_arch._forward_latent_space(X, self.pooling)
 
     def predict(self, data, inplace=False, return_logits=False):
         return super().predict(data, inplace, return_logits=return_logits)
@@ -246,7 +248,7 @@ class Regressor(WrapperBase):
     architecture embedding.'''
 
     def __init__(self, base_arch, n_features=1, fcn_layers=[], dropout=0.0, 
-                 pred_batch_size=8):
+                 pred_batch_size=8, pooling='CLS'):
         super().__init__(base_arch, pred_batch_size)
         self.dropout = torch.nn.Dropout(p=dropout)
         self.output = torch.nn.LazyLinear(n_features)
@@ -256,6 +258,7 @@ class Regressor(WrapperBase):
         self.data_columns = [f'F{i}' for i in range(n_features)]
         if type(base_arch) == BERT or type(base_arch) == MotifBERT: # TODO come up with a nicer solution here
             self._forward_base_arch = self._forward_base_arch_bert
+            self.pooling = pooling
         else:
             self._forward_base_arch = self.base_arch
 
@@ -266,5 +269,6 @@ class Regressor(WrapperBase):
         return self.output(X)
     
     def _forward_base_arch_bert(self, X):
-        '''Forward function that extracts the CLS token embedding from BERT.'''
-        return self.base_arch(X)[:,0,:] # # CLS assumed at first input position
+        '''Forward function that extracts the CLS token embedding from BERT.
+        (or applies the preset pooling procedure)'''
+        return self.base_arch._forward_latent_space(X, self.pooling)

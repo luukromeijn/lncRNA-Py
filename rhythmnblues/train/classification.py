@@ -4,6 +4,7 @@ transcripts as either protein-coding or long non-coding.'''
 import torch
 from torch.utils.data import DataLoader, RandomSampler
 from rhythmnblues import utils
+from rhythmnblues.modules import MotifBERT
 from rhythmnblues.train.loggers import LoggerBase
 from rhythmnblues.train.mixed_precision import get_gradient_scaler, get_amp_args
 from rhythmnblues.train.metrics import classification_metrics
@@ -54,7 +55,7 @@ def train_classifier(
     # Initializing required objects
     if n_samples_per_epoch is None:
         n_samples_per_epoch = len(train_data)
-    if random_reading_frame:
+    if random_reading_frame and type(model) == MotifBERT:
         train_data.set_random_reading_frame(model.base_arch.motif_size-1)
     sampler = RandomSampler(train_data, num_samples=n_samples_per_epoch)
     train_dataloader = DataLoader(train_data, batch_size, sampler=sampler)

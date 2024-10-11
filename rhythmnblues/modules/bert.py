@@ -45,6 +45,9 @@ class BERT(torch.nn.Module):
         self.encoder = Encoder(d_model, d_ff, h, N, dropout)
         self.vocab_size = vocab_size
         self.d_model = d_model
+        self.N = N
+        self.d_ff = d_ff
+        self.h = h
 
         # Initialize parameters with Glorot / fan_avg.
         for p in self.parameters():
@@ -77,6 +80,14 @@ class BERT(torch.nn.Module):
                 raise ValueError('Invalid `pooling` value.') 
             
         return y
+    
+    def freeze(self):
+        '''Freezes all weights of BERT model.'''
+        utils.freeze(self)
+    
+    def unfreeze(self):
+        '''Unfreezes all weights of BERT model.'''
+        utils.freeze(self, unfreeze=True)
     
 
 class Encoder(torch.nn.Module):
@@ -304,6 +315,11 @@ class MotifBERT(torch.nn.Module):
         self.motif_size = motif_size
         self.n_motifs = n_motifs
         self.d_model = d_model
+        self.N = N
+        self.d_ff = d_ff
+        self.h = h
+        self.project_motifs = project_motifs
+        self.activate_motifs = activate_motifs
 
         # Initialize parameters with Glorot / fan_avg.
         for p in self.parameters():
@@ -354,3 +370,15 @@ class MotifBERT(torch.nn.Module):
                 raise ValueError('Invalid `pooling` value.') 
             
         return y
+    
+    def freeze(self):
+        '''Freezes all weights of MotifBERT model.'''
+        utils.freeze(self)
+
+    def freeze_motifs(self):
+        '''Freezes all motif encoder weights of MotifBERT model.'''
+        utils.freeze(self.motif_embedder.motif_encoder)
+    
+    def unfreeze(self):
+        '''Unfreezes all weights of MotifBERT model.'''
+        utils.freeze(self, unfreeze=True)

@@ -63,3 +63,9 @@ def watch_progress(on=True):
         progress = tqdm
     else:
         progress = dummy
+
+def freeze(model, unfreeze=False):
+    '''(Un-)Freezes all weights in specified model.'''
+    for child in model.children():
+        for param in child.parameters():
+            param.requires_grad = unfreeze

@@ -1,7 +1,7 @@
 '''Pre-training script for a Nucleotide Language Model. Several encoding methods
 and hyperparameter settings are supported.
 
-Please call `python -m rhythmnblues.scripts.pretrain --help` for more info.'''
+Please call `python -m rhythmnblues.scripts.pretrain --help` for usage info.'''
 
 import argparse
 import torch
@@ -27,7 +27,7 @@ def pretrain(
         project_embeddings, activate_embeddings, 
     ):
     '''Pre-training function as used in pre-training script. Run 
-    `rhythmnblues.scripts.pretrain --help` for more info.'''
+    `rhythmnblues.scripts.pretrain --help` for usage info.'''
 
     exp_name = f'{exp_prefix}_{encoding_method}'
 
@@ -51,8 +51,8 @@ def pretrain(
             dataset.calculate_feature(tokenizer)
             dataset.set_tensor_features(tokenizer.name, torch.long)
     elif encoding_method == 'motif':
+        len_4d_dna = (context_length-1)*motif_size
         for dataset in [train_data, valid_data]:
-            len_4d_dna = (context_length-1)*motif_size
             dataset.set_tensor_features('4D-DNA', len_4d_dna=len_4d_dna)
         exp_name += f'_nm{n_motifs}_sm{motif_size}'
 
@@ -75,7 +75,8 @@ def pretrain(
     exp_name += f'_dm{d_model}_N{N}'
     exp_name = f'{exp_name}_dff{d_ff}' if d_ff is not None else exp_name
     exp_name = f'{exp_name}_h{h}' if h is not None else exp_name
-    exp_name += f'bs{batch_size}_ws{warmup_steps}_cl{context_length}_d{dropout}'
+    exp_name += f'_bs{batch_size}_ws{warmup_steps}'
+    exp_name += f'_cl{context_length}_d{dropout}'
     exp_name = f'{exp_name}_ms{mask_size}' if mask_size != 1 else exp_name
     exp_name = f'{exp_name}--no_rrf' if not random_reading_frame else exp_name
     exp_name = f'{exp_name}--motif_lin' if project_motifs else exp_name
@@ -226,8 +227,9 @@ args = {
     '--model_dir': {
         'type': str,
         'default': '.',
-        'help': 'Directory where to save pre-trained model to. '
-        '(str=f"{data_dir}/models")'
+        'help': 'Directory where to save pre-trained model to. Model with the '
+                'highest accuracy on the validation dataset is saved. '
+                '(str=f"{data_dir}/models")'
     }, 
     '--mask_size': {
         'type': int,
@@ -277,7 +279,7 @@ if __name__ == '__main__':
     # Argument checks and preprocessing
     if p.encoding_method == 'bpe' and len(p.bpe_file) == 0:
         raise ValueError(
-            "Please use --bpe_file/-bf flag to specify BPE model file."
+            "Please use --bpe_file flag to specify BPE model file."
         )
     p.model_dir = f'{p.data_dir}/models' if p.model_dir=='.' else p.model_dir
     

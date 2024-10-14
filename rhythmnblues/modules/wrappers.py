@@ -123,9 +123,14 @@ class Classifier(WrapperBase):
     '''Wrapper class that uses a base architecture to perform binary
     classification.'''
 
-    def __init__(self, base_arch, dropout=0.0, pred_batch_size=8,pooling='CLS'):
+    def __init__(self, base_arch, dropout=0.0, pooling='CLS', hidden_layers=[],
+                 pred_batch_size=8):
         super().__init__(base_arch, pred_batch_size)
         self.dropout = torch.nn.Dropout(p=dropout)
+        self.hidden_layers = torch.nn.ModuleList([
+            torch.nn.ModuleList([torch.nn.LazyLinear(nodes), torch.nn.ReLU()])
+            for nodes in hidden_layers
+        ])
         self.output = torch.nn.LazyLinear(1) 
         self.sigmoid = torch.nn.Sigmoid()
         if type(base_arch) == BERT or type(base_arch) == MotifBERT:
@@ -136,7 +141,11 @@ class Classifier(WrapperBase):
         self.data_columns = 'P(pcrna)'
 
     def forward(self, X, return_logits=True):
-        X = self.output(self.dropout(self._forward_base_arch(X)))
+        X = self.dropout(self._forward_base_arch(X))
+        for hidden_layer, relu in self.hidden_layers:
+            X = hidden_layer(X)
+            X = relu(X)
+        X = self.output(X)
         if return_logits:
             return X
         else:

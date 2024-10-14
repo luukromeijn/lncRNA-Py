@@ -18,9 +18,10 @@ def train(
         fasta_pcrna_train, fasta_ncrna_train, fasta_pcrna_valid, 
         fasta_ncrna_valid, exp_prefix, pretrained_model, encoding_method, 
         epochs, n_samples_per_epoch, batch_size, learning_rate, weight_decay, 
-        d_model, N, d_ff, h, dropout, n_motifs, motif_size, bpe_file, k, 
-        context_length, data_dir, results_dir, model_dir, random_reading_frame,
-        freeze_network, freeze_motifs, project_motifs, activate_motifs,
+        d_model, N, d_ff, h, dropout, hidden_cls_layers, n_motifs, motif_size, 
+        bpe_file, k, context_length, data_dir, results_dir, model_dir, 
+        random_reading_frame, freeze_network, freeze_motifs, project_motifs, 
+        activate_motifs,
     ):
     '''lncRNA classification function as called by training script. Run
     `rhythmnblues.scripts.train --help` for usage info.'''
@@ -82,7 +83,8 @@ def train(
     if freeze_network:
         base_arch.freeze()
         pooling = 'mean'
-    model = Classifier(base_arch, dropout, batch_size, pooling)
+    model = Classifier(base_arch, dropout, pooling, hidden_cls_layers, 
+                       batch_size)
 
     # Model/experiment name processing
     exp_name += f'_dm{d_model}_N{N}'
@@ -199,6 +201,13 @@ args = {
         'type': float,
         'default': 0,
         'help': 'Dropout probability in BERT model (float=0)'
+    },
+    '--hidden_cls_layers': {
+        'type': int,
+        'nargs': '+',
+        'default': [],
+        'help': 'Space-separated list with number of hidden nodes in ReLU-'
+                'activated classification head layers. (int=[])'
     },
     '--n_motifs': {
         'type': int,

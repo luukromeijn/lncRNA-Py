@@ -32,3 +32,4 @@ from rhythmnblues.features.tokenizers import KmerTokenizer, BytePairEncoding
 from rhythmnblues.features.zhang import ZhangScore
 from rhythmnblues.features.eiip import EIIPPhysicoChemical
 from rhythmnblues.features.standardizer import Standardizer
+from rhythmnblues.features.mlm_accuracy import MLMAccuracy

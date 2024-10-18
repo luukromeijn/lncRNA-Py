@@ -89,13 +89,8 @@ class MotifEncoding(torch.nn.Module):
         hidden motifs, will visualize the first motif layer (= hidden).'''
 
         # Get motif tensor
-<<<<<<< HEAD
-        motif_tensor = [p for p in self.motif_layers[0].parameters()][0].detach()
-        motif_tensor = motif_tensor[motif_idx].cpu().numpy()
-=======
         motif_tensor = [p for p in self.motif_layers[0].parameters()][0]
         motif_tensor = motif_tensor[motif_idx].detach().cpu().numpy()
->>>>>>> 49efca83e1ecc5db4c4cfb4492b3f5846debb5ea
 
         labels = 'ACGT'
         for i in range(4):

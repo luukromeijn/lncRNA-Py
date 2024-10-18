@@ -431,13 +431,14 @@ class Data(Dataset):
         return fig
     
     def plot_feature_scatter(self, x_feature_name, y_feature_name, 
-                             filepath=None, figsize=None):
+                                   c_feature_name=None, c_lower=0.025,
+                             c_upper=0.975, filepath=None, figsize=None):
         '''Returns a scatter plot with `x_feature_name` on the x-axis plotted
         against `y_feature_name` on the y-axis.'''
 
         self.check_columns([x_feature_name, y_feature_name])
         fig, ax = plt.subplots(figsize=figsize)
-        # colors = {
+        # colors = {                                                            # TODO delete this when no longer necessary
         #     0: '#1f77b4',
         #     1: '#ff7f0e',
         #     2: '#2ca02c',
@@ -452,17 +453,27 @@ class Data(Dataset):
         # ax.scatter(x_feature_name, y_feature_name, s=1, data=self.df[self.df['label'] == 0])
         # data = self.df[self.df['label'] != 0]
         # ax.scatter(x_feature_name, y_feature_name, color=data['label'].map(colors), data=data)
-        if self.labelled:
+        if self.labelled and c_feature_name is None:
             for label in ['pcRNA', 'ncRNA']:
                 if label == 'pcRNA':
-                    ax.scatter(x_feature_name, y_feature_name, s=1, alpha=0.5,
-                                data=self.df[self.df['label']==label], label='pcRNA')
+                    ax.scatter(
+                        x_feature_name, y_feature_name, s=1, alpha=0.5,
+                        data=self.df[self.df['label']==label], label='pcRNA'
+                    )
                 if label == 'ncRNA':
-                    ax.scatter(x_feature_name, y_feature_name, s=1, alpha=0.5,
-                                data=self.df[self.df['label']==label], label='ncRNA')
+                    ax.scatter(
+                        x_feature_name, y_feature_name, s=1, alpha=0.5,
+                        data=self.df[self.df['label']==label], label='ncRNA'
+                    )
             fig.legend(markerscale=5)
         else:
-            ax.scatter(x_feature_name, y_feature_name, s=1, data=self.df)
+            map = ax.scatter(x_feature_name, y_feature_name, s=1, data=self.df,
+                             c=c_feature_name)
+            if c_feature_name is not None:
+                map.set_clim(self.df[c_feature_name].quantile(c_lower), 
+                             self.df[c_feature_name].quantile(c_upper))
+                cb = fig.colorbar(map)
+                cb.ax.set_ylabel(c_feature_name)
         ax.set_xlabel(x_feature_name)
         ax.set_ylabel(y_feature_name)
         fig.tight_layout()
@@ -729,3 +740,9 @@ def reduce_dimensionality(data, dim_red=TSNE()):
         data = PCA().fit_transform(data)[:,:50]
     data = dim_red.fit_transform(data)
     return data
+
+
+def get_gencode_gene_names(data):
+    '''Returns list of GENCODE gene names extracted from "id" column.'''
+    get_gene_id = lambda id: id.split('|')[1].split('.')[0]
+    return data.df['id'].apply(get_gene_id).tolist()

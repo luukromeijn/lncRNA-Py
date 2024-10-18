@@ -7,7 +7,7 @@ MycoAI: Romeijn et al. (2024) https://doi.org/10.1111/1755-0998.14006
 Huang et al. (2022) https://nlp.seas.harvard.edu/annotated-transformer'''
 
 import torch
-from torch.utils.data import DataLoader, RandomSampler
+from torch.utils.data import DataLoader, RandomSampler, WeightedRandomSampler
 from rhythmnblues import utils
 from rhythmnblues.train.mixed_precision import get_gradient_scaler, get_amp_args
 from rhythmnblues.train.loggers import LoggerBase
@@ -74,7 +74,8 @@ def train_masked_motif_modeling(
         n_samples_per_epoch = len(train_data)
     if random_reading_frame:
         train_data.set_random_reading_frame(model.base_arch.motif_size-1)
-    sampler = RandomSampler(train_data, num_samples=n_samples_per_epoch)
+    # sampler = RandomSampler(train_data, num_samples=n_samples_per_epoch)
+    sampler = WeightedRandomSampler(train_data.get_sampler_weights(), num_samples=n_samples_per_epoch)
     train_dataloader = DataLoader(train_data, batch_size, sampler=sampler)
     train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))
     mask_size = model.base_arch.motif_size if mask_size is None else mask_size

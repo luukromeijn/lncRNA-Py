@@ -358,6 +358,11 @@ class Data(Dataset):
                              'mean (ncrna)': ncrna_means,
                              'test statistic': statistics,
                              'P value': p_values})
+
+    def get_sampler_weights(self):
+        n_pcrna, n_ncrna = self.num_coding_noncoding()
+        weights = np.where(self.df['label'] == 'pcRNA', 1/n_pcrna, 1/n_ncrna)
+        return torch.tensor(weights, device=utils.DEVICE)
     
     def plot_feature_boxplot(self, feature_name, filepath=None, figsize=None, 
                              **kwargs):

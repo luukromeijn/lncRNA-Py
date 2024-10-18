@@ -19,7 +19,7 @@ from rhythmnblues.train import train_masked_motif_modeling
 
 # TODO: unittests for this function
 def pretrain(
-        fasta_train, fasta_valid, exp_prefix, encoding_method, epochs, 
+        fasta_train_1, fasta_train_2, fasta_valid, exp_prefix, encoding_method, epochs, 
         n_samples_per_epoch, batch_size, warmup_steps, d_model, N, d_ff, h, 
         dropout, n_motifs, motif_size, bpe_file, k, p_mlm, p_mask, p_random, 
         context_length, data_dir, results_dir, model_dir, mask_size, 
@@ -32,7 +32,7 @@ def pretrain(
     exp_name = f'{exp_prefix}_{encoding_method}'
 
     # Import data, subsample valid dataset to save time and resources
-    train_data = Data(f'{data_dir}/{fasta_train}') 
+    train_data = Data([f'{data_dir}/{fasta_train_1}', f'{data_dir}/{fasta_train_2}']) 
     valid_data = Data(f'{data_dir}/{fasta_valid}').sample(N=2500,
                                                           random_state=42)
 
@@ -121,7 +121,11 @@ def pretrain(
 
 # Arguments
 args = {
-    'fasta_train': {
+    'fasta_train_1': {
+        'type': str, 
+        'help': 'Path to FASTA file with pre-training sequences. (str)',
+    },
+    'fasta_train_2': {
         'type': str, 
         'help': 'Path to FASTA file with pre-training sequences. (str)',
     },
@@ -317,7 +321,7 @@ if __name__ == '__main__':
     p.model_dir = f'{p.data_dir}/models' if p.model_dir=='.' else p.model_dir
     
     pretrain( # Call
-        fasta_train=p.fasta_train, fasta_valid=p.fasta_valid, 
+        fasta_train_1=p.fasta_train_1, fasta_train_2=p.fasta_train_2, fasta_valid=p.fasta_valid, 
         exp_prefix=p.exp_prefix, encoding_method=p.encoding_method, 
         epochs=p.epochs, n_samples_per_epoch=p.n_samples_per_epoch, 
         batch_size=p.batch_size, warmup_steps=p.warmup_steps, d_model=p.d_model,

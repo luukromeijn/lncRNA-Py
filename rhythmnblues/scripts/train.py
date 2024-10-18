@@ -20,8 +20,8 @@ def train(
         epochs, n_samples_per_epoch, batch_size, learning_rate, weight_decay, 
         d_model, N, d_ff, h, dropout, hidden_cls_layers, n_motifs, motif_size, 
         bpe_file, k, context_length, data_dir, results_dir, model_dir, 
-        random_reading_frame, freeze_network, freeze_motifs, project_motifs, 
-        activate_motifs,
+        weighted_loss, random_reading_frame, freeze_network, freeze_motifs, 
+        project_motifs, activate_motifs,
     ):
     '''lncRNA classification function as called by training script. Run
     `rhythmnblues.scripts.train --help` for usage info.'''
@@ -104,8 +104,7 @@ def train(
                                  weight_decay=weight_decay)
     model, history = train_classifier(
         model, train_data, valid_data, epochs, n_samples_per_epoch, batch_size,
-        optimizer=optimizer, random_reading_frame=random_reading_frame, 
-        logger=LoggerList(
+        optimizer, weighted_loss, random_reading_frame, logger=LoggerList(
             LoggerPlot(f'{results_dir}/{exp_name}'),
             LoggerWrite(f'{results_dir}/{exp_name}/history.csv'),
             EarlyStopping('F1 (macro)|valid', 
@@ -257,6 +256,11 @@ args = {
                 'pre-trained model from). Model with highest macro F1-score on '
                 'the validation dataset is saved.  (str=f"{data_dir}/models")'
     }, 
+    '--weighted_loss': {                                                        # TODO: change default value if this works out well.
+        'action': 'store_true',
+        'default': False,
+        'help': 'Applies correction to pcRNA/ncRNA class imbalance. (bool)'
+    }, 
     '--no_random_reading_frame': {
         'action': 'store_true',
         'default': False,
@@ -320,6 +324,7 @@ if __name__ == '__main__':
         motif_size=p.motif_size, bpe_file=p.bpe_file, k=p.k, 
         context_length=p.context_length, data_dir=p.data_dir, 
         results_dir=p.results_dir, model_dir=p.model_dir, 
+        weighted_loss=p.weighted_loss,
         random_reading_frame=(not p.no_random_reading_frame),
         freeze_network=p.freeze_network, freeze_motifs=p.freeze_motifs, 
         project_motifs=p.project_motifs, 

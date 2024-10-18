@@ -12,7 +12,7 @@ from rhythmnblues.train.metrics import classification_metrics
 
 def train_classifier(
         model, train_data, valid_data, epochs, n_samples_per_epoch=None, 
-        batch_size=8, loss_function=None, optimizer=None, 
+        batch_size=8, optimizer=None, weighted_loss=False,                      # TODO update weighted_loss default value if necessary.
         random_reading_frame=True, logger=None, metrics=classification_metrics
     ):
     '''Trains `model` for classification task, using `train_data`, for specified
@@ -36,12 +36,12 @@ def train_classifier(
         None, will sample the full training set.
     `batch_size`: `int`
         Number of examples per batch (default is 64).
-    `loss_function`: `torch.nn.Module`
-        Loss function that is to be optimized. If None, falls back to weighted 
-        Binary Cross Entropy (`torch.nn.BCEWithLogitsLoss`) (default is None). 
     `optimizer`: `torch.optim`
         Optimizer to update the network's weights during training. If None 
         (default), will use Adam with learning rate 0.0001.
+    `weighted_loss`: `bool`
+        Whether to apply weighted loss to correct for class imbalance (default
+        is False)
     `random_reading_frame`: `bool`:
         If True (default) and `model.base_arch==MotifBERT`, trains the model 
         with sequences that have been frameshifted by a random number (between 
@@ -60,8 +60,8 @@ def train_classifier(
     sampler = RandomSampler(train_data, num_samples=n_samples_per_epoch)
     train_dataloader = DataLoader(train_data, batch_size, sampler=sampler)
     train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))
-    if loss_function is None:
-        loss_function = torch.nn.BCEWithLogitsLoss()
+    pos_weight = train_data.pos_weight() if weighted_loss else None
+    loss_function = torch.nn.BCEWithLogitsLoss(pos_weight=pos_weight)
     optimizer = optimizer if optimizer else torch.optim.Adam(model.parameters(), 
                                                              lr=0.0001)
     scaler = get_gradient_scaler(utils.DEVICE)

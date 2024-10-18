@@ -84,15 +84,20 @@ class MotifEncoding(torch.nn.Module):
             x = motif_layer(x)
         return x
     
-    # NOTE: not sure if this still works
     def visualize(self, motif_idx, filepath=None):
-        '''Visualizes a certain motif, indicated by `motif_idx`.'''
+        '''Visualizes a certain motif, indicated by `motif_idx`. In case of 
+        hidden motifs, will visualize the first motif layer (= hidden).'''
 
         # Get motif tensor
+<<<<<<< HEAD
         motif_tensor = [p for p in self.motif_layers[0].parameters()][0].detach()
         motif_tensor = motif_tensor[motif_idx].cpu().numpy()
+=======
+        motif_tensor = [p for p in self.motif_layers[0].parameters()][0]
+        motif_tensor = motif_tensor[motif_idx].detach().cpu().numpy()
+>>>>>>> 49efca83e1ecc5db4c4cfb4492b3f5846debb5ea
 
-        labels = 'ACTG'
+        labels = 'ACGT'
         for i in range(4):
             # Calculate bottom coordinates (based on cumulative sum)
             pos_case = np.where( # Sum all smaller values (to use as bottombase)

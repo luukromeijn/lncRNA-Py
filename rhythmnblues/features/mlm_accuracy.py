@@ -15,7 +15,6 @@ class MLMAccuracy:
 
     def __init__(self, model, p_mlm=0.15, p_mask=0.8, p_random=0.1, 
                  mask_size=1):
-        '''TODO'''
         self.model = model
         self.type = 'motif' if type(model.base_arch)==MotifBERT else 'token'
         self.p_mlm = p_mlm

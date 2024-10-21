@@ -17,7 +17,6 @@ from rhythmnblues.train import train_masked_token_modeling
 from rhythmnblues.train import train_masked_motif_modeling
 
 
-# TODO: unittests for this function
 def pretrain(
         fasta_train, fasta_valid, exp_prefix, encoding_method, epochs, 
         n_samples_per_epoch, batch_size, warmup_steps, d_model, N, d_ff, h, 
@@ -304,7 +303,10 @@ args = {
 if __name__ == '__main__':
 
     # Parsing arguments
-    p = argparse.ArgumentParser()
+    p = argparse.ArgumentParser(description=
+        'Pre-training script for a Nucleotide Language Model. '
+        'Several encoding methods and hyperparameter settings are supported.'
+    )
     for arg in args:
         p.add_argument(arg, **args[arg])
     p = p.parse_args()

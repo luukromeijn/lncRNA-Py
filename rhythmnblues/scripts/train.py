@@ -14,6 +14,7 @@ from rhythmnblues.modules import BERT, MotifBERT
 from rhythmnblues.modules import Classifier
 from rhythmnblues.train import train_classifier
 
+
 def train(
         fasta_pcrna_train, fasta_ncrna_train, fasta_pcrna_valid, 
         fasta_ncrna_valid, exp_prefix, pretrained_model, encoding_method, 
@@ -297,7 +298,8 @@ args = {
 if __name__ == '__main__':
 
     # Parsing arguments
-    p = argparse.ArgumentParser()
+    p = argparse.ArgumentParser(description='Trains (or fine-tunes) ' 
+        'a model (optionally pre-trained) for lncRNA classification.')
     for arg in args:
         p.add_argument(arg, **args[arg])
     p = p.parse_args()

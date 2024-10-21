@@ -154,7 +154,9 @@ args = {
 if __name__ == '__main__':
 
     # Parsing arguments
-    p = argparse.ArgumentParser()
+    p = argparse.ArgumentParser(description=
+        'Retrieves sequence embeddings by specified model for input dataset.'
+    )
     for arg in args:
         p.add_argument(arg, **args[arg])
     p = p.parse_args()

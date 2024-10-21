@@ -40,16 +40,15 @@ def train(
         exp_name += '_finetuned'
         base_arch = torch.load(f'{model_dir}/{pretrained_model}', 
                             utils.DEVICE).base_arch
-        # TODO: Uncomment all lines below with new gen. of pre-trained models
         d_model = base_arch.d_model
-        # N = base_arch.N
-        # d_ff = base_arch.d_ff
-        # h = base_arch.h
+        N = base_arch.N
+        d_ff = base_arch.d_ff
+        h = base_arch.h
         if type(base_arch) == MotifBERT:
             n_motifs = base_arch.n_motifs
             motif_size = base_arch.motif_size
-            # project_motifs = base_arch.project_motifs
-            # activate_motifs = base_arch.activate_motifs
+            project_motifs = base_arch.project_motifs
+            activate_motifs = base_arch.activate_motifs
     
     # Encoding the data
     if encoding_method in ['nuc', 'kmer', 'bpe']:
@@ -93,6 +92,7 @@ def train(
     exp_name = f'{exp_name}_h{h}' if h is not None else exp_name
     exp_name += f'_bs{batch_size}_lr{learning_rate}_wd{weight_decay}' 
     exp_name += f'_cl{context_length}_d{dropout}'
+    exp_name =f'{exp_name}--no_weighted_loss' if not weighted_loss else exp_name
     exp_name = f'{exp_name}--no_rrf' if not random_reading_frame else exp_name
     exp_name = f'{exp_name}--freeze_network' if freeze_network else exp_name
     exp_name = f'{exp_name}--freeze_motifs' if freeze_motifs else exp_name
@@ -197,10 +197,10 @@ args = {
         'default': None,
         'help': 'Number of BERT self-attention heads (int=int(d_model/12))'
     },
-    '--dropout': {                                                              # TODO if this works (or has limited influence, also use this dropout argument in the BERT and MotifBERT's inits)
+    '--dropout': {
         'type': float,
         'default': 0,
-        'help': 'Dropout probability in BERT model (float=0)'
+        'help': 'Dropout probability in CLS output head. (float=0)'
     },
     '--hidden_cls_layers': {
         'type': int,
@@ -223,8 +223,8 @@ args = {
     '--bpe_file': {
         'type': str,
         'default': "",
-        'help': 'Filepath to BPE model generated with bpe script. Required when'# TODO: update script reference when bpe script is completed.
-                ' BPE encoding is used. (str="")'
+        'help': 'Filepath to BPE model generated with BPE script. Required when'
+                ' Byte Pair Encoding is used. (str="")'
     },
     '--k': {
         'type': int,
@@ -257,7 +257,7 @@ args = {
                 'pre-trained model from). Model with highest macro F1-score on '
                 'the validation dataset is saved.  (str=f"{data_dir}/models")'
     }, 
-    '--weighted_loss': {                                                        # TODO: change default value if this works out well.
+    '--no_weighted_loss': {
         'action': 'store_true',
         'default': False,
         'help': 'Applies correction to pcRNA/ncRNA class imbalance. (bool)'
@@ -326,7 +326,7 @@ if __name__ == '__main__':
         motif_size=p.motif_size, bpe_file=p.bpe_file, k=p.k, 
         context_length=p.context_length, data_dir=p.data_dir, 
         results_dir=p.results_dir, model_dir=p.model_dir, 
-        weighted_loss=p.weighted_loss,
+        weighted_loss=(not p.no_weighted_loss),
         random_reading_frame=(not p.no_random_reading_frame),
         freeze_network=p.freeze_network, freeze_motifs=p.freeze_motifs, 
         project_motifs=p.project_motifs, 

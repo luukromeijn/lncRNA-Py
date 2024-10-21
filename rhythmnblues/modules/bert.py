@@ -273,7 +273,7 @@ class MotifBERT(torch.nn.Module):
 
     def __init__(self, n_motifs, motif_size=10, d_model=768, N=12, d_ff=None, 
                  h=None, dropout=0.1, project_motifs=None, activate_motifs=True, 
-                 n_hidden_motifs=0, fixed_motifs=False):
+                 n_hidden_motifs=0):
         '''Initializes `MotifBERT`.
         
         Parameters
@@ -309,7 +309,7 @@ class MotifBERT(torch.nn.Module):
         if project_motifs is None:
             project_motifs = d_model != n_motifs
         self.motif_embedder = MotifEmbedding(n_motifs, d_model, motif_size, 
-                 project_motifs, activate_motifs, n_hidden_motifs, fixed_motifs)
+                               project_motifs, activate_motifs, n_hidden_motifs)
         self.positional_encoder = PositionalEncoding(d_model, dropout)
         self.encoder = Encoder(d_model, d_ff, h, N, dropout)
         self.motif_size = motif_size

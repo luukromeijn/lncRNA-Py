@@ -11,25 +11,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-# TODO change name / remove if not working well
-class KmerEncoding(torch.nn.Module):
-    '''Efficient k-mer encoding using a small 1D CNN'''
-
-    def __init__(self, motif_size=10, activate_motifs=True):
-        '''Initializes `KmerEncoding` object.''' # TODO expand docs
-        super().__init__()
-        kernels = torch.zeros((motif_size*4, 4, motif_size))
-        for i in range(40):
-            kernels[i, int(i/10), i % 10] = 1
-        self.kernels = torch.nn.Parameter(kernels, requires_grad=False)         # NOTE: now that this is an official parameter, we can't unfreeze() the model anymore without danger!
-        self.relu = torch.nn.ReLU() if activate_motifs else False
-        self.motif_size = motif_size
-
-    def forward(self, x):
-        x = torch.conv1d(x, self.kernels, stride=self.motif_size)
-        return self.relu(x) if self.relu else x
-
-
 class MotifEncoding(torch.nn.Module):
     '''Implementation for motif encoding using a small 1D CNN.'''
 
@@ -126,7 +107,7 @@ class MotifEmbedding(torch.nn.Module):
     '''Projects motif encoding into space of pre-specified dimensionality.'''
 
     def __init__(self, n_motifs, d_model, motif_size=10, project_motifs=True,
-                 activate_motifs=True, n_hidden_motifs=0, fixed_motifs=False):
+                 activate_motifs=True, n_hidden_motifs=0):
         '''Initializes `MotifEncoding` class.
 
         Arguments
@@ -152,11 +133,8 @@ class MotifEmbedding(torch.nn.Module):
         if not project_motifs and d_model != n_motifs:
             raise ValueError("project_motifs must be True when " + 
                              "d_model != n_motifs")
-        if fixed_motifs: 
-            self.motif_encoder = KmerEncoding(motif_size, activate_motifs)
-        else:
-            self.motif_encoder = MotifEncoding(n_motifs, motif_size, 
-                                               activate_motifs, n_hidden_motifs)
+        self.motif_encoder = MotifEncoding(n_motifs, motif_size, 
+                                           activate_motifs, n_hidden_motifs)
         self.cls_token = torch.nn.Parameter(torch.zeros(1, 1, d_model))
         if project_motifs:
             self.linear = torch.nn.Linear(n_motifs, d_model)

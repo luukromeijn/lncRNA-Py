@@ -22,8 +22,8 @@ def pretrain(
         n_samples_per_epoch, batch_size, warmup_steps, d_model, N, d_ff, h, 
         dropout, n_motifs, motif_size, bpe_file, k, p_mlm, p_mask, p_random, 
         context_length, data_dir, results_dir, model_dir, mask_size, 
-        random_reading_frame, freeze_motifs, fixed_motifs, project_motifs, 
-        activate_motifs, project_embeddings, activate_embeddings, 
+        random_reading_frame, project_motifs, activate_motifs, 
+        project_embeddings, activate_embeddings, 
     ):
     '''Pre-training function as used in pre-training script. Run 
     `rhythmnblues.scripts.pretrain --help` for usage info.'''
@@ -63,26 +63,8 @@ def pretrain(
     elif encoding_method == 'motif':
         base_arch = MotifBERT(
             n_motifs, motif_size, d_model, N, d_ff, h, 
-            project_motifs=project_motifs, activate_motifs=activate_motifs, 
-            fixed_motifs=fixed_motifs
+            project_motifs=project_motifs, activate_motifs=activate_motifs
         )
-        # If freeze_motifs: learn the identity function, then freeze weights
-        if freeze_motifs: 
-            # Initialize model without transformer blocks (N=0)
-            model = MotifBERT(n_motifs, motif_size, d_model, N=0, 
-                 project_motifs=project_motifs, activate_motifs=activate_motifs)
-            model = MaskedMotifModel(
-                model, dropout, activate_embeddings=activate_embeddings,
-                project_embeddings=False, pred_batch_size=batch_size,
-            ).to(utils.DEVICE)
-            # Train for 1 epoch on identity function (p_mask=p_random=0)
-            print("Initializing motifs by learning the identity function...")
-            model, history = train_masked_motif_modeling(
-                model, train_data, valid_data, 1, n_samples_per_epoch, 
-                batch_size, p_mask=0, p_random=0, warmup_steps=8000
-            )
-            base_arch.motif_embedder = model.base_arch.motif_embedder
-            base_arch.freeze_motifs()
         model = MaskedMotifModel(base_arch, dropout, pred_batch_size=batch_size,
                                  project_embeddings=project_embeddings, 
                                  activate_embeddings=activate_embeddings)
@@ -98,8 +80,6 @@ def pretrain(
     exp_name += f'_cl{context_length}_d{dropout}'
     exp_name = f'{exp_name}_ms{mask_size}' if mask_size != 1 else exp_name
     exp_name = f'{exp_name}--no_rrf' if not random_reading_frame else exp_name
-    exp_name = f'{exp_name}--freeze_motifs' if freeze_motifs else exp_name
-    exp_name = f'{exp_name}--fixed_motifs' if fixed_motifs else exp_name
     exp_name = f'{exp_name}--motif_lin' if project_motifs else exp_name
     exp_name = f'{exp_name}--no_motif_relu' if not activate_motifs else exp_name
     exp_name = f'{exp_name}--no_emb_lin' if not project_embeddings else exp_name
@@ -183,10 +163,10 @@ args = {
         'default': None,
         'help': 'Number of BERT self-attention heads (int=int(d_model/12))'
     },
-    '--dropout': {                                                              # TODO if this works (or has limited influence, also use this dropout argument in the BERT and MotifBERT's inits)
+    '--dropout': {
         'type': float,
         'default': 0,
-        'help': 'Dropout probability in BERT model (float=0)'
+        'help': 'Dropout probability in MLM output head. (float=0)'
     },
     '--n_motifs': {
         'type': int,
@@ -202,8 +182,8 @@ args = {
     '--bpe_file': {
         'type': str,
         'default': "",
-        'help': 'Filepath to BPE model generated with bpe script. Required when'# TODO: update script reference when bpe script is completed.
-                ' BPE encoding is used. (str="")'
+        'help': 'Filepath to BPE model generated with BPE script. Required when'
+                ' Byte Pair Encoding is used. (str="")'
     },
     '--k': {
         'type': int,
@@ -263,17 +243,6 @@ args = {
         'help': 'Turns off sampling in random reading frame for motif encoding '
                 ' (bool)'
     }, 
-    '--freeze_motifs': {
-        'action': 'store_true',
-        'default': False,
-        'help': 'Runs a single epoch of modeling the identity function, then '
-                'freezes the motif encoding parameters. (bool)'
-    }, 
-    '--fixed_motifs': {
-        'action': 'store_true',
-        'default': False,
-        'help': 'Uses a set of predefined kernels. (bool)'                      # TODO improve this documentation
-    }, 
     '--project_motifs': {
         'action': 'store_true',
         'default': None,
@@ -328,9 +297,9 @@ if __name__ == '__main__':
         p_mask=p.p_mask, p_random=p.p_random, context_length=p.context_length, 
         data_dir=p.data_dir, results_dir=p.results_dir, model_dir=p.model_dir,
         mask_size=p.mask_size, 
-        random_reading_frame=(not p.no_random_reading_frame),  
-        freeze_motifs=p.freeze_motifs, fixed_motifs=p.fixed_motifs, 
-        project_motifs=p.project_motifs, activate_motifs=(not p.no_activate_motifs), 
+        random_reading_frame=(not p.no_random_reading_frame),
+        project_motifs=p.project_motifs, 
+        activate_motifs=(not p.no_activate_motifs), 
         project_embeddings=(not p.no_project_embeddings), 
         activate_embeddings=p.activate_embeddings, 
     )

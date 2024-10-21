@@ -111,7 +111,7 @@ class BytePairEncoding(TokenizerBase):
     DNABERT-2: Zhou et al. (2023) https://doi.org/10.48550/arXiv.2306.15006'''
 
     def __init__(self, data, context_length=768, vocab_size=4096, 
-                 user_defined_symbols=None, max_sentence_length=8000, 
+                 user_defined_symbols=None, max_sentence_length=10000, 
                  export_path=None):
         '''Initializes `BytePairEncoding` object.
         

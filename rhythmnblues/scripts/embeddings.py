@@ -55,8 +55,8 @@ def embeddings(
         len_4d_dna = (context_length-1)*motif_size
         data.set_tensor_features('4D-DNA', len_4d_dna=len_4d_dna)
 
-    # Pooling!
-    dim_red = dim_red_functions[dim_red] if dim_red is not None else dim_red
+    # Retrieving and saving the embeddings (+ dimensionality reduction)
+    dim_red = dim_red_functions[dim_red] if dim_red != 'None' else None
     model.latent_space(data, inplace=True, pooling=pooling, dim_red=dim_red)
     data.to_hdf(f'{results_dir}/{output_file}')
     if output_plot_file is not None:
@@ -109,12 +109,12 @@ args = {
         'default': 'mean',
         'choices': ['CLS', 'mean', 'max'],
         'help': 'Type of pooling to apply. If "CLS", will extract embeddings '
-                'from CLS token. (str)'
+                'from CLS token. (str="mean")'
     },
     '--dim_red': {
         'type': str,
-        'default': None,
-        'choices': ['tsne', 'pca', 'umap'],
+        'default': 'tsne',
+        'choices': ['tsne', 'pca', 'umap', 'None'],
         'help': 'Type of dimensionality reduction to apply to retrieved '
                 'embeddings. If None, will not reduce dimensions. (str=None)'
     },

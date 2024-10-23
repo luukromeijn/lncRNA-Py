@@ -1,8 +1,8 @@
 import pytest
 import torch
-from rhythmnblues.data import Data
-from rhythmnblues.features import Length
-from rhythmnblues import utils
+from lncrnapy.data import Data
+from lncrnapy.features import Length
+from lncrnapy import utils
 
 utils.DEVICE = torch.device('cpu') 
 

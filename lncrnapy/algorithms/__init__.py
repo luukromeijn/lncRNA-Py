@@ -1,0 +1,1 @@
+from lncrnapy.algorithms.algorithm import Algorithm

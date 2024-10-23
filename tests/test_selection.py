@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
-from rhythmnblues.selection import *
-from rhythmnblues.selection.methods import FeatureSelectionBase
+from lncrnapy.selection import *
+from lncrnapy.selection.methods import FeatureSelectionBase
 
 @pytest.mark.parametrize('method', [
     NoSelection, TTestSelection, RegressionSelection, ForestSelection, 

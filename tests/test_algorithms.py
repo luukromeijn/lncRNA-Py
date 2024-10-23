@@ -1,9 +1,9 @@
 import pytest
-from rhythmnblues.algorithms import Algorithm
-from rhythmnblues.algorithms.traditional import *
-from rhythmnblues.features import *
-from rhythmnblues.modules import Classifier
-from rhythmnblues.modules import MycoAICNN
+from lncrnapy.algorithms import Algorithm
+from lncrnapy.algorithms.traditional import *
+from lncrnapy.features import *
+from lncrnapy.modules import Classifier
+from lncrnapy.modules import MycoAICNN
 
 algorithms = [
     ('CPAT',   lambda data: CPAT('tests/data/fickett_paper.txt', data)),

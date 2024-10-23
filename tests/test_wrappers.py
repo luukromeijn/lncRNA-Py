@@ -1,9 +1,9 @@
 import pytest
 import torch
-from rhythmnblues.modules import Classifier, MaskedTokenModel, Regressor
-from rhythmnblues.modules.wrappers import WrapperBase
-from rhythmnblues.modules import MycoAICNN, BERT
-from rhythmnblues.features import KmerFreqs, KmerTokenizer
+from lncrnapy.modules import Classifier, MaskedTokenModel, Regressor
+from lncrnapy.modules.wrappers import WrapperBase
+from lncrnapy.modules import MycoAICNN, BERT
+from lncrnapy.features import KmerFreqs, KmerTokenizer
 
 
 def test_wrapper_base(data):

@@ -1,15 +1,15 @@
 import pytest
 import torch
-from rhythmnblues.features import (KmerFreqs, KmerTokenizer, ORFCoordinates, 
+from lncrnapy.features import (KmerFreqs, KmerTokenizer, ORFCoordinates, 
                                    Standardizer)
-from rhythmnblues.modules import Classifier, Regressor
-from rhythmnblues.modules import MaskedTokenModel, MaskedMotifModel
-from rhythmnblues.modules import MycoAICNN, BERT, MotifBERT, MotifResNet
-from rhythmnblues.train.loggers import *
-from rhythmnblues.train import train_classifier, train_regressor
-from rhythmnblues.train import train_masked_token_modeling
-from rhythmnblues.train import train_masked_motif_modeling
-from rhythmnblues import utils
+from lncrnapy.modules import Classifier, Regressor
+from lncrnapy.modules import MaskedTokenModel, MaskedMotifModel
+from lncrnapy.modules import MycoAICNN, BERT, MotifBERT, MotifResNet
+from lncrnapy.train.loggers import *
+from lncrnapy.train import train_classifier, train_regressor
+from lncrnapy.train import train_masked_token_modeling
+from lncrnapy.train import train_masked_motif_modeling
+from lncrnapy import utils
 
 loggers = [
     ('LoggerBase',  lambda path: LoggerBase()),

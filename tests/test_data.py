@@ -4,9 +4,9 @@ from matplotlib.figure import Figure
 from sklearn.decomposition import PCA
 from Bio import SeqIO
 from torch.utils.data import DataLoader
-from rhythmnblues.data import Data, plot_cross_dataset_violins
-from rhythmnblues.features import Length
-from rhythmnblues import utils
+from lncrnapy.data import Data, plot_cross_dataset_violins
+from lncrnapy.features import Length
+from lncrnapy import utils
 
 def test_init_fasta(data):
     for col, test_col in zip(data.df.columns, ['id', 'sequence', 'label']):

@@ -1,10 +1,10 @@
 import pytest
 import numpy as np
-from rhythmnblues.features import *
-from rhythmnblues.features.sequence_base import SequenceBase
-from rhythmnblues.features.kmer import KmerBase
-from rhythmnblues.features.orf import orf_column_names
-from rhythmnblues.features.sse import get_hl_sse_sequence, HL_SSE_NAMES
+from lncrnapy.features import *
+from lncrnapy.features.sequence_base import SequenceBase
+from lncrnapy.features.kmer import KmerBase
+from lncrnapy.features.orf import orf_column_names
+from lncrnapy.features.sse import get_hl_sse_sequence, HL_SSE_NAMES
 
 class TestNoError:
     '''For every feature, simply check whether the calculate method can be run

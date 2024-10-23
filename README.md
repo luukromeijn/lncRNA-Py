@@ -1,12 +1,12 @@
-Development package (codename 'rhyhtmnblues') for investigating and classifying
+Development package lncRNA-Py for investigating and classifying
 (long non-coding) RNA.
 
 ## Conda setup
 Following the following order of installation will lead to the least tedious 
 and cumbersome virtual environment setup.
 
-    conda create -n rnb -y
-    conda activate rnb
+    conda create -n lncrna -y
+    conda activate lncrna
 
 PyTorch for CPU only: 
 
@@ -22,7 +22,7 @@ Others:
     conda install numpy pandas scikit-learn -c conda-forge -y
     conda install matplotlib biopython -c conda-forge -y
     conda install bioconda::blast
-    pip install viennarna
+    pip install viennarna umap-learn
 
 Optional:
     

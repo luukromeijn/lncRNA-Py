@@ -169,8 +169,8 @@ args = {
     },
     '--learning_rate': {
         'type': float,
-        'default': 1e-6,
-        'help': 'Learning rate used by Adam optimizer. (float=1e-6)'
+        'default': 1e-5,
+        'help': 'Learning rate used by Adam optimizer. (float=1e-5)'
     },
     '--weight_decay': {
         'type': float,

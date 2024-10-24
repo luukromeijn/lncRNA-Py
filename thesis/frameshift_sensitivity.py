@@ -63,7 +63,7 @@ def frameshifts(
                                          context_length)
         data.calculate_feature(tokenizer)
         data.set_tensor_features(tokenizer.name, torch.long)
-    elif encoding_method == 'cse':
+    elif encoding_method == 'conv':
         len_4d_dna = (context_length-1)*kernel_size
         data.set_tensor_features('4D-DNA', len_4d_dna=len_4d_dna)
 
@@ -109,9 +109,9 @@ args = {
     },
     '--encoding_method': {
         'type': str,
-        'choices': ['cse', 'bpe', 'kmer', 'nuc'],
-        'default': 'cse',
-        'help': 'Sequence encoding method. (str="cse")'
+        'choices': ['conv', 'bpe', 'kmer', 'nuc'],
+        'default': 'conv',
+        'help': 'Sequence encoding method. (str="conv")'
     },
     '--bpe_file': {
         'type': str,

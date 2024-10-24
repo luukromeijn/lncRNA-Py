@@ -4,7 +4,7 @@ transcripts as either protein-coding or long non-coding.'''
 import torch
 from torch.utils.data import DataLoader, RandomSampler
 from lncrnapy import utils
-from lncrnapy.modules import MotifBERT
+from lncrnapy.modules import CSEBERT
 from lncrnapy.train.loggers import LoggerBase
 from lncrnapy.train.mixed_precision import get_gradient_scaler, get_amp_args
 from lncrnapy.train.metrics import classification_metrics
@@ -12,7 +12,7 @@ from lncrnapy.train.metrics import classification_metrics
 
 def train_classifier(
         model, train_data, valid_data, epochs, n_samples_per_epoch=None, 
-        batch_size=8, optimizer=None, weighted_loss=False,                      # TODO update weighted_loss default value if necessary.
+        batch_size=8, optimizer=None, weighted_loss=True,
         random_reading_frame=True, logger=None, metrics=classification_metrics
     ):
     '''Trains `model` for classification task, using `train_data`, for specified
@@ -43,9 +43,9 @@ def train_classifier(
         Whether to apply weighted loss to correct for class imbalance (default
         is False)
     `random_reading_frame`: `bool`:
-        If True (default) and `model.base_arch==MotifBERT`, trains the model 
+        If True (default) and `model.base_arch==CSEBERT`, trains the model 
         with sequences that have been frameshifted by a random number (between 
-        `[0,motif_size]`).
+        `[0,kernel_size]`).
     `logger`: `lncrnapy.train.loggers`
     	Logger object whose `log` method will be called at every epoch. If None
         (default), will use LoggerBase, which only keeps track of the history.
@@ -55,8 +55,8 @@ def train_classifier(
     # Initializing required objects
     if n_samples_per_epoch is None:
         n_samples_per_epoch = len(train_data)
-    if random_reading_frame and type(model) == MotifBERT:
-        train_data.set_random_reading_frame(model.base_arch.motif_size-1)
+    if random_reading_frame and type(model) == CSEBERT:
+        train_data.set_random_reading_frame(model.base_arch.kernel_size-1)
     sampler = RandomSampler(train_data, num_samples=n_samples_per_epoch)
     train_dataloader = DataLoader(train_data, batch_size, sampler=sampler)
     train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))

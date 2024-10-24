@@ -5,7 +5,7 @@ from `lncrnapy`.'''
 import torch
 from torch.utils.data import DataLoader
 from sklearn.manifold import TSNE
-from lncrnapy.modules.bert import BERT, MotifBERT
+from lncrnapy.modules.bert import BERT, CSEBERT
 from lncrnapy.data import reduce_dimensionality
 
 
@@ -82,8 +82,8 @@ class WrapperBase(torch.nn.Module):
         `dim_red`: `sklearn` | `NoneType`
             Dimensionality reduction algorithm from `sklearn` to use.'''
         
-        if pooling is not None and type(self.base_arch) not in [BERT,MotifBERT]:
-            raise TypeError("self.base_arch must be of type BERT or MotifBERT" + 
+        if pooling is not None and type(self.base_arch) not in [BERT,CSEBERT]:
+            raise TypeError("self.base_arch must be of type BERT or CSEBERT" + 
                             f" for {pooling} pooling.")
 
         spaces = []
@@ -133,7 +133,7 @@ class Classifier(WrapperBase):
         ])
         self.output = torch.nn.LazyLinear(1) 
         self.sigmoid = torch.nn.Sigmoid()
-        if type(base_arch) == BERT or type(base_arch) == MotifBERT:
+        if type(base_arch) == BERT or type(base_arch) == CSEBERT:
             self._forward_base_arch = self._forward_base_arch_bert
             self.pooling = pooling
         else:
@@ -173,32 +173,32 @@ class MaskedTokenModel(WrapperBase):
         return self.mlm_layer(self.dropout(self.base_arch(X)))
 
 
-class MaskedMotifModel(WrapperBase):
+class MaskedConvModel(WrapperBase):
     '''Wrapper class for model that performs Masked Language Modeling with 
-    motif-encoded sequences as input.'''
+    cse-encoded sequences as input.'''
 
-    def __init__(self, base_arch, dropout=0.0, n_hidden_motifs=0, 
-                 project_embeddings=True, activate_embeddings=False, 
+    def __init__(self, base_arch, dropout=0.0, n_hidden_kernels=0, 
+                 output_linear=True, output_relu=False, 
                  pred_batch_size=8):
-        '''Initializes `MaskedMotifModel` object.
+        '''Initializes `MaskedConvModel` object.
         
         Arguments
         ---------
-        `base_arch`: `lncrnapy.modules.MotifBERT`
+        `base_arch`: `lncrnapy.modules.CSEBERT`
             PyTorch module to be used as base architecture of the model.
         `dropout`: `float`
             Amount of dropout to apply to the pre-final layer (default is 0). 
         `output`: 'nucleotides' | 'triplets'
             Output prediction level (default is 'nucleotides').
-        `n_hidden_motifs`: `int` 
+        `n_hidden_kernels`: `int` 
             If > 0, adds an extra hidden convolutional layer with a kernel size
             and stride of 3 with the specified amount of output channels. This
             layer is added before the final output layer (default is 0).
-        `project_embeddings`: `bool`
+        `output_linear`: `bool`
             Whether to project the base architecture's embeddings onto a 
-            `n_motifs` number of dimensions before the output layer (default is
+            `n_kernels` number of dimensions before the output layer (default is
             True)
-        `activate_embeddings`: `bool`
+        `output_relu`: `bool`
             Whether to apply ReLU activation before transposed convolution(s) 
             (default is False).
         `pred_batch_size`: `int`
@@ -206,38 +206,38 @@ class MaskedMotifModel(WrapperBase):
         
         super().__init__(base_arch, pred_batch_size)
         self.dropout = torch.nn.Dropout(p=dropout)
-        if type(base_arch) != MotifBERT:
-            raise TypeError("Base architecture should be of type MotifBERT.")
-        if project_embeddings:
-            self.linear = torch.nn.Linear(base_arch.d_model, base_arch.n_motifs)
-            in_channels = base_arch.n_motifs
+        if type(base_arch) != CSEBERT:
+            raise TypeError("Base architecture should be of type CSEBERT.")
+        if output_linear:
+            self.linear = torch.nn.Linear(base_arch.d_model,base_arch.n_kernels)
+            in_channels = base_arch.n_kernels
         else:
             self.linear = False
             in_channels = base_arch.d_model
-        motif_size = base_arch.motif_size
+        kernel_size = base_arch.kernel_size
         self.transposed_conv_layers = torch.nn.ModuleList()
         
-        # Defining the hidden motif layer (if specified by user)
-        if n_hidden_motifs > 0:
-            if motif_size % 3 != 0:
-                raise AttributeError('base_arch.motif_size should be multiple' +
-                                     ' of 3 when n_hidden_motifs > 0.')
+        # Defining the hidden kernel layer (if specified by user)
+        if n_hidden_kernels > 0:
+            if kernel_size % 3 != 0:
+                raise AttributeError('base_arch.kernel_size should be multiple'+
+                                     ' of 3 when n_hidden_kernels > 0.')
             self.transposed_conv_layers.append(
                 torch.nn.ConvTranspose1d(
-                    in_channels=in_channels, out_channels=n_hidden_motifs,
+                    in_channels=in_channels, out_channels=n_hidden_kernels,
                     kernel_size=3, stride=3
                 )
             )
-            motif_size = int(motif_size/3)
-            in_channels = n_hidden_motifs
+            kernel_size = int(kernel_size/3)
+            in_channels = n_hidden_kernels
         
-        # Defining the final output motif layer
-        if activate_embeddings:
+        # Defining the final output kernel layer
+        if output_relu:
             self.transposed_conv_layers.append(torch.nn.ReLU())
         self.transposed_conv_layers.append(
             torch.nn.ConvTranspose1d( # 4 output channels (A,C,G,T)
-                in_channels=in_channels, out_channels=4, kernel_size=motif_size,
-                stride=motif_size
+                in_channels=in_channels, out_channels=4,kernel_size=kernel_size,
+                stride=kernel_size
             )
         )
 
@@ -245,7 +245,7 @@ class MaskedMotifModel(WrapperBase):
         X = self.base_arch(X)[:,1:,:] # Forward pass base arch, remove CLS
         X = self.dropout(X)
         if self.linear:
-            X = self.linear(X) # Transform to motif 'space' 
+            X = self.linear(X) # Transform to kernel 'space' 
         X = X.transpose(1,2)
         for layer in self.transposed_conv_layers:
             X = layer(X) # Apply deconvolution
@@ -265,7 +265,7 @@ class Regressor(WrapperBase):
                                                for n_nodes in fcn_layers])
         self.output = torch.nn.LazyLinear(n_features)
         self.data_columns = [f'F{i}' for i in range(n_features)]
-        if type(base_arch) == BERT or type(base_arch) == MotifBERT: # TODO come up with a nicer solution here
+        if type(base_arch) == BERT or type(base_arch) == CSEBERT:
             self._forward_base_arch = self._forward_base_arch_bert
             self.pooling = pooling
         else:

@@ -8,7 +8,7 @@ import torch
 from lncrnapy import utils
 from lncrnapy.data import Data
 from lncrnapy.features import KmerTokenizer, BytePairEncoding
-from lncrnapy.modules import MotifBERT
+from lncrnapy.modules import CSEBERT
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 import umap
@@ -37,8 +37,8 @@ def embeddings(
     # Loading the model
     model = torch.load(f'{model_dir}/{model_file}', utils.DEVICE)
     model.pred_batch_size = batch_size
-    if type(model.base_arch) == MotifBERT:
-        motif_size = model.base_arch.motif_size
+    if type(model.base_arch) == CSEBERT:
+        kernel_size = model.base_arch.kernel_size
     print("Model loaded.")
 
     # Encoding the data
@@ -52,8 +52,8 @@ def embeddings(
                                          context_length)
         data.calculate_feature(tokenizer)
         data.set_tensor_features(tokenizer.name, torch.long)
-    elif encoding_method == 'motif':
-        len_4d_dna = (context_length-1)*motif_size
+    elif encoding_method == 'conv':
+        len_4d_dna = (context_length-1)*kernel_size
         data.set_tensor_features('4D-DNA', len_4d_dna=len_4d_dna)
 
     # Retrieving and saving the embeddings (+ dimensionality reduction)
@@ -90,9 +90,9 @@ args = {
     },
     '--encoding_method': {
         'type': str,
-        'choices': ['motif', 'bpe', 'kmer', 'nuc'],
-        'default': 'motif',
-        'help': 'Sequence encoding method. (str="motif")'
+        'choices': ['conv', 'bpe', 'kmer', 'nuc'],
+        'default': 'conv',
+        'help': 'Sequence encoding method. (str="conv")'
     },
     '--bpe_file': {
         'type': str,
@@ -127,7 +127,7 @@ args = {
     '--context_length': {
         'type': int,
         'default': 768,
-        'help': 'Number of input positions. For motif/k-mer encoding, this '
+        'help': 'Number of input positions. For cse/k-mer encoding, this '
                 'translates to a maximum of (768-1)*k input nucleotides. '
                 '(int=768)'
     },

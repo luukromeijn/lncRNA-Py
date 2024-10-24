@@ -1,4 +1,4 @@
 from lncrnapy.train.classification import train_classifier
 from lncrnapy.train.masked_token_modeling import train_masked_token_modeling
-from lncrnapy.train.masked_motif_modeling import train_masked_motif_modeling
+from lncrnapy.train.masked_conv_modeling import train_masked_conv_modeling
 from lncrnapy.train.regression import train_regressor

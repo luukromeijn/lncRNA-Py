@@ -3,12 +3,12 @@ import torch
 from lncrnapy.features import (KmerFreqs, KmerTokenizer, ORFCoordinates, 
                                    Standardizer)
 from lncrnapy.modules import Classifier, Regressor
-from lncrnapy.modules import MaskedTokenModel, MaskedMotifModel
-from lncrnapy.modules import MycoAICNN, BERT, MotifBERT, MotifResNet
+from lncrnapy.modules import MaskedTokenModel, MaskedConvModel
+from lncrnapy.modules import MycoAICNN, BERT, CSEBERT, CSEResNet
 from lncrnapy.train.loggers import *
 from lncrnapy.train import train_classifier, train_regressor
 from lncrnapy.train import train_masked_token_modeling
-from lncrnapy.train import train_masked_motif_modeling
+from lncrnapy.train import train_masked_conv_modeling
 from lncrnapy import utils
 
 loggers = [
@@ -45,31 +45,31 @@ def test_train_classifier_cnn(data):
 
 def test_train_classifier_bert(data):
     kmers = KmerTokenizer(3)
-    model = Classifier(BERT(kmers.vocab_size, d_model=16, d_ff=32))
+    model = Classifier(BERT(kmers.vocab_size, N=1))
     data.calculate_feature(kmers)
     data.set_tensor_features(kmers.name, torch.long)
     train_classifier(model, data, data, 1)
 
-def test_train_classifier_motifbert(data):
-    model = Classifier(MotifBERT(12, d_model=16, d_ff=32))
+def test_train_classifier_csebert(data):
+    model = Classifier(CSEBERT(12, N=1))
     data.set_tensor_features('4D-DNA')
     train_classifier(model, data, data, 1)
 
 def test_train_masked_token_modeling(data):
     kmers = KmerTokenizer(3)
-    model = MaskedTokenModel(BERT(kmers.vocab_size, d_model=16, d_ff=32))
+    model = MaskedTokenModel(BERT(kmers.vocab_size, N=1))
     data.calculate_feature(kmers)
     data.set_tensor_features(kmers.name, torch.long)
     train_masked_token_modeling(model, data, data, 1)
 
-def test_train_masked_motif_modeling(data):
-    model = MaskedMotifModel(MotifBERT(12, d_model=16, d_ff=32))
+def test_train_masked_conv_modeling(data):
+    model = MaskedConvModel(CSEBERT(12, N=1))
     data.set_tensor_features('4D-DNA')
-    train_masked_motif_modeling(model, data, data, 1)
+    train_masked_conv_modeling(model, data, data, 1)
 
 def test_train_regression(data):
     kmers = KmerTokenizer(3)
-    model = Regressor(BERT(kmers.vocab_size, d_model=16, d_ff=32), n_features=2)
+    model = Regressor(BERT(kmers.vocab_size, N=1), n_features=2)
     orf = ORFCoordinates()
     data.calculate_feature(kmers)
     data.calculate_feature(orf)

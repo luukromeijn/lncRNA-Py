@@ -38,10 +38,10 @@ mtm_metrics = {
 averaged), as well as counts per token.'''
 
 
-mmm_metrics = {
+mcm_metrics = {
     'Accuracy': accuracy_score
 }
-'''Default MMM evaluation metrics: accuracy.'''
+'''Default MCM evaluation metrics: accuracy.'''
 
 
 def regression_distribution(y_true, y_pred):

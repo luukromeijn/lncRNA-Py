@@ -11,19 +11,19 @@ from lncrnapy.data import Data
 from lncrnapy.features import KmerTokenizer, BytePairEncoding
 from lncrnapy.train.loggers import EarlyStopping
 from lncrnapy.train.loggers import LoggerList, LoggerPlot, LoggerWrite
-from lncrnapy.modules import BERT, MotifBERT
-from lncrnapy.modules import MaskedTokenModel, MaskedMotifModel
+from lncrnapy.modules import BERT, CSEBERT
+from lncrnapy.modules import MaskedTokenModel, MaskedConvModel
 from lncrnapy.train import train_masked_token_modeling
-from lncrnapy.train import train_masked_motif_modeling
+from lncrnapy.train import train_masked_conv_modeling
 
 
 def pretrain(
         fasta_train, fasta_valid, exp_prefix, encoding_method, epochs, 
         n_samples_per_epoch, batch_size, warmup_steps, d_model, N, d_ff, h, 
-        dropout, n_motifs, motif_size, bpe_file, k, p_mlm, p_mask, p_random, 
+        dropout, n_kernels, kernel_size, bpe_file, k, p_mlm, p_mask, p_random, 
         context_length, data_dir, results_dir, model_dir, mask_size, 
-        random_reading_frame, project_motifs, activate_motifs, 
-        project_embeddings, activate_embeddings, 
+        random_reading_frame, input_linear, input_relu, 
+        output_linear, output_relu, 
     ):
     '''Pre-training function as used in pre-training script. Run 
     `lncrnapy.scripts.pretrain --help` for usage info.'''
@@ -49,26 +49,26 @@ def pretrain(
         for dataset in [train_data, valid_data]:
             dataset.calculate_feature(tokenizer)
             dataset.set_tensor_features(tokenizer.name, torch.long)
-    elif encoding_method == 'motif':
-        len_4d_dna = (context_length-1)*motif_size
+    elif encoding_method == 'conv':
+        len_4d_dna = (context_length-1)*kernel_size
         for dataset in [train_data, valid_data]:
             dataset.set_tensor_features('4D-DNA', len_4d_dna=len_4d_dna)
-        exp_name += f'_nm{n_motifs}_sm{motif_size}'
+        exp_name += f'_nm{n_kernels}_sm{kernel_size}'
 
     # Initializing the model
     if encoding_method in ['nuc', 'kmer', 'bpe']:
         base_arch = BERT(tokenizer.vocab_size, d_model, N, d_ff, h)
         model = MaskedTokenModel(base_arch, dropout, batch_size)
         pretrain_function = train_masked_token_modeling
-    elif encoding_method == 'motif':
-        base_arch = MotifBERT(
-            n_motifs, motif_size, d_model, N, d_ff, h, 
-            project_motifs=project_motifs, activate_motifs=activate_motifs
+    elif encoding_method == 'conv':
+        base_arch = CSEBERT(
+            n_kernels, kernel_size, d_model, N, d_ff, h, 
+            input_linear=input_linear, input_relu=input_relu
         )
-        model = MaskedMotifModel(base_arch, dropout, pred_batch_size=batch_size,
-                                 project_embeddings=project_embeddings, 
-                                 activate_embeddings=activate_embeddings)
-        pretrain_function = partial(train_masked_motif_modeling, 
+        model = MaskedConvModel(base_arch, dropout, pred_batch_size=batch_size,
+                                 output_linear=output_linear, 
+                                 output_relu=output_relu)
+        pretrain_function = partial(train_masked_conv_modeling, 
                                     mask_size=mask_size, 
                                     random_reading_frame=random_reading_frame) 
 
@@ -80,10 +80,10 @@ def pretrain(
     exp_name += f'_cl{context_length}_d{dropout}'
     exp_name = f'{exp_name}_ms{mask_size}' if mask_size != 1 else exp_name
     exp_name = f'{exp_name}--no_rrf' if not random_reading_frame else exp_name
-    exp_name = f'{exp_name}--motif_lin' if project_motifs else exp_name
-    exp_name = f'{exp_name}--no_motif_relu' if not activate_motifs else exp_name
-    exp_name = f'{exp_name}--no_emb_lin' if not project_embeddings else exp_name
-    exp_name = f'{exp_name}--emb_relu' if activate_embeddings else exp_name
+    exp_name = f'{exp_name}--in_lin' if input_linear else exp_name
+    exp_name = f'{exp_name}--no_in_relu' if not input_relu else exp_name
+    exp_name = f'{exp_name}--no_out_lin' if not output_linear else exp_name
+    exp_name = f'{exp_name}--out_relu' if output_relu else exp_name
 
     # Pre-training the model
     model = model.to(utils.DEVICE) # Send model to GPU
@@ -116,9 +116,9 @@ args = {
     },
     '--encoding_method': {
         'type': str,
-        'choices': ['motif', 'bpe', 'kmer', 'nuc'],
-        'default': 'motif',
-        'help': 'Sequence encoding method. (str="motif")'
+        'choices': ['conv', 'bpe', 'kmer', 'nuc'],
+        'default': 'conv',
+        'help': 'Sequence encoding method. (str="conv")'
     },
     '--epochs': {
         'type': int,
@@ -168,16 +168,17 @@ args = {
         'default': 0,
         'help': 'Dropout probability in MLM output head. (float=0)'
     },
-    '--n_motifs': {
+    '--n_kernels': {
         'type': int,
         'default': 768,
-        'help': 'Specifies number of motifs when motif encoding is used. '
-                '(int=768)'
+        'help': 'Specifies number of kernels when convolutional sequence '
+                'encoding is used. (int=768)'
     },
-    '--motif_size': {
+    '--kernel_size': {
         'type': int,
         'default': 10,
-        'help': 'Specifies motif size when motif encoding is used. (int=10)'
+        'help': 'Specifies kernel size when convolutional sequence encoding is '
+                'used. (int=10)'
     },
     '--bpe_file': {
         'type': str,
@@ -209,7 +210,7 @@ args = {
     '--context_length': {
         'type': int,
         'default': 768,
-        'help': 'Number of input positions. For motif/k-mer encoding, this '
+        'help': 'Number of input positions. For cse/k-mer encoding, this '
                 'translates to a maximum of (768-1)*k input nucleotides. '
                 '(int=768)'
     },
@@ -240,31 +241,32 @@ args = {
     '--no_random_reading_frame': {
         'action': 'store_true',
         'default': False,
-        'help': 'Turns off sampling in random reading frame for motif encoding '
-                ' (bool)'
+        'help': 'Turns off sampling in random reading frame for convolutional '
+                'sequence encoding (bool)'
     }, 
-    '--project_motifs': {
+    '--input_linear': {
         'action': 'store_true',
         'default': None,
-        'help': 'Forces linear projection of motifs onto d_model dimensions in '
-                'motif encoding. (bool)'
+        'help': 'Forces linear projection of kernels onto d_model dimensions in'
+                ' convolutional sequence encoding. (bool)'
     }, 
-    '--no_activate_motifs': {
+    '--no_input_relu': {
         'action': 'store_true',
         'default': False,
-        'help': 'Turns off ReLU activation of motifs in motif encoding. (bool)'
+        'help': 'Turns off ReLU activation of kernels in convolutional sequence'
+                ' encoding. (bool)'
     }, 
-    '--no_project_embeddings': {
+    '--no_output_linear': {
         'action': 'store_true',
         'default': False,
-        'help': 'Forces linear projection of embeddings onto n_motifs ' 
-                'dimensions before masked motif output layer. (bool)'
+        'help': 'Forces linear projection of embeddings onto n_kernels ' 
+                'dimensions before masked convolution output layer. (bool)'
     }, 
-    '--activate_embeddings': {
+    '--output_relu': {
         'action': 'store_true',
         'default': False,
-        'help': 'Forces ReLU activation of embeddings before masked motif ' 
-                'output layer. (bool)'
+        'help': 'Forces ReLU activation of embeddings before masked convolution' 
+                ' output layer. (bool)'
     }, 
 }
 
@@ -292,14 +294,14 @@ if __name__ == '__main__':
         exp_prefix=p.exp_prefix, encoding_method=p.encoding_method, 
         epochs=p.epochs, n_samples_per_epoch=p.n_samples_per_epoch, 
         batch_size=p.batch_size, warmup_steps=p.warmup_steps, d_model=p.d_model,
-        N=p.N, d_ff=p.d_ff, h=p.h, dropout=p.dropout, n_motifs=p.n_motifs, 
-        motif_size=p.motif_size, bpe_file=p.bpe_file, k=p.k, p_mlm=p.p_mlm, 
+        N=p.N, d_ff=p.d_ff, h=p.h, dropout=p.dropout, n_kernels=p.n_kernels, 
+        kernel_size=p.kernel_size, bpe_file=p.bpe_file, k=p.k, p_mlm=p.p_mlm, 
         p_mask=p.p_mask, p_random=p.p_random, context_length=p.context_length, 
         data_dir=p.data_dir, results_dir=p.results_dir, model_dir=p.model_dir,
         mask_size=p.mask_size, 
         random_reading_frame=(not p.no_random_reading_frame),
-        project_motifs=p.project_motifs, 
-        activate_motifs=(not p.no_activate_motifs), 
-        project_embeddings=(not p.no_project_embeddings), 
-        activate_embeddings=p.activate_embeddings, 
+        input_linear=p.input_linear, 
+        input_relu=(not p.no_input_relu), 
+        output_linear=(not p.no_output_linear), 
+        output_relu=p.output_relu, 
     )

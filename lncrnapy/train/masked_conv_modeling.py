@@ -1,5 +1,5 @@
 '''Masked Language Modeling pre-training task for nucleotide sequences that are
-encoded using Motif Encoding.
+encoded using Convolutional Sequence Encoding.
 
 References
 ----------
@@ -12,23 +12,23 @@ from lncrnapy import utils
 from lncrnapy.train.mixed_precision import get_gradient_scaler, get_amp_args
 from lncrnapy.train.loggers import LoggerBase
 from lncrnapy.train.lr_schedule import LrSchedule
-from lncrnapy.train.metrics import mmm_metrics
+from lncrnapy.train.metrics import mcm_metrics
 
 
-def train_masked_motif_modeling(
+def train_masked_conv_modeling(
         model, train_data, valid_data, epochs, n_samples_per_epoch=None,
         batch_size=8, p_mlm=0.15, p_mask=0.8, p_random=0.1, warmup_steps=32000,
         loss_function=None, mask_size=1, random_reading_frame=True, logger=None,
-        metrics=mmm_metrics
+        metrics=mcm_metrics
     ):
     '''Trains `model` for Masked Language Modeling task, using `train_data`, 
     for specified amount of `epochs`. Assumes sequence data is inputted in 
     four channels (using `Data.set_tensor_features('4D-DNA')`), and a model of 
-    type `MaskedMotifModel`.
+    type `MaskedConvModel`.
     
     Arguments
     ---------
-    `model`: `torch.nn.Module` | `lncrnapy.modules.MaskedMotifModel`
+    `model`: `torch.nn.Module` | `lncrnapy.modules.MaskedConvModel`
         Neural network that is to be trained.
     `train_data`: `lncrnapy.data.Data`
         Data to use for training, must call `set_tensor_features(4D-DNA)` first.
@@ -62,7 +62,7 @@ def train_masked_motif_modeling(
         Number of contiguous nucleotides that make up a mask (default is 1).
     `random_reading_frame`: `bool`:
         If True (default), trains the model with sequences that have been
-        frameshifted by a random number (between [0,motif_size]).
+        frameshifted by a random number (between [0,kernel_size]).
     `logger`: `lncrnapy.train.loggers`
     	Logger object whose `log` method will be called at every epoch. If None
         (default), will use LoggerBase, which only keeps track of the history.
@@ -73,11 +73,11 @@ def train_masked_motif_modeling(
     if n_samples_per_epoch is None:
         n_samples_per_epoch = len(train_data)
     if random_reading_frame:
-        train_data.set_random_reading_frame(model.base_arch.motif_size-1)
+        train_data.set_random_reading_frame(model.base_arch.kernel_size-1)
     sampler = RandomSampler(train_data, num_samples=n_samples_per_epoch)
     train_dataloader = DataLoader(train_data, batch_size, sampler=sampler)
     train_subset = train_data.sample(N=min(len(valid_data), len(train_data)))
-    mask_size = model.base_arch.motif_size if mask_size is None else mask_size
+    mask_size = model.base_arch.kernel_size if mask_size is None else mask_size
     if loss_function is None:
         loss_function = torch.nn.CrossEntropyLoss(ignore_index=-1)
     optimizer = torch.optim.Adam(model.parameters(), lr=1, betas=(0.9,0.98))
@@ -107,7 +107,7 @@ def epoch(model, dataloader, p_mlm, p_mask, p_random, mask_size, loss_function,
     '''Trains `model` for a single epoch.'''
     model.train() # Set training mode
     for X, _ in dataloader: # Loop through data
-        X, y = mask_batch(X, model.base_arch.motif_size, p_mlm, p_mask, 
+        X, y = mask_batch(X, model.base_arch.kernel_size, p_mlm, p_mask, 
                           p_random, mask_size)
         optimizer.zero_grad() # Zero out gradients
         with torch.autocast(**get_amp_args(utils.DEVICE)):
@@ -127,15 +127,15 @@ def epoch(model, dataloader, p_mlm, p_mask, p_random, mask_size, loss_function,
     return model # Return model
 
 
-def mask_batch(X, motif_size, p_mlm, p_mask, p_random, mask_size):
-    '''Maks a batch of sequence data for MMM'''
+def mask_batch(X, kernel_size, p_mlm, p_mask, p_random, mask_size):
+    '''Maks a batch of sequence data for MCM'''
 
     # Correct p_mlm by mask size
     p_mlm = p_mlm / mask_size
 
     # Select bases with corrected p_mlm probability
-    len_emb = int(X.shape[2] / motif_size)
-    len_out = len_emb * motif_size
+    len_emb = int(X.shape[2] / kernel_size)
+    len_out = len_emb * kernel_size
     X = X[:,:,:len_out]
     mask_shape = (X.shape[0], len_out)
     num_selected = int(p_mlm*len_out)
@@ -202,7 +202,7 @@ def get_random_nucs(X_shape):
 
 def evaluate(model, data, p_mlm, p_mask, p_random, mask_size, loss_function, 
              metrics):
-    '''Evaluation function to keep track of in-training progress for MMM.'''
+    '''Evaluation function to keep track of in-training progress for MCM.'''
     
     # Initialization
     loss = 0 # Running loss
@@ -213,7 +213,7 @@ def evaluate(model, data, p_mlm, p_mask, p_random, mask_size, loss_function,
     model.eval() # Set in evaluation mode and turn off gradient calculation
     with torch.no_grad():
         for X, _ in dataloader: # Loop through + mask data
-            X, y_true = mask_batch(X, model.base_arch.motif_size, p_mlm, 
+            X, y_true = mask_batch(X, model.base_arch.kernel_size, p_mlm, 
                                    p_mask, p_random, mask_size)                                         
             y_pred = model(X) # Make a prediction
             y_pred = y_pred.transpose(1,2).reshape(-1,4)

@@ -10,7 +10,7 @@ from lncrnapy.data import Data
 from lncrnapy.features import KmerTokenizer, BytePairEncoding
 from lncrnapy.train.loggers import EarlyStopping
 from lncrnapy.train.loggers import LoggerList, LoggerPlot, LoggerWrite
-from lncrnapy.modules import BERT, MotifBERT
+from lncrnapy.modules import BERT, CSEBERT
 from lncrnapy.modules import Classifier
 from lncrnapy.train import train_classifier
 
@@ -19,10 +19,10 @@ def train(
         fasta_pcrna_train, fasta_ncrna_train, fasta_pcrna_valid, 
         fasta_ncrna_valid, exp_prefix, pretrained_model, encoding_method, 
         epochs, n_samples_per_epoch, batch_size, learning_rate, weight_decay, 
-        d_model, N, d_ff, h, dropout, hidden_cls_layers, n_motifs, motif_size, 
+        d_model, N, d_ff, h, dropout, hidden_cls_layers, n_kernels, kernel_size, 
         bpe_file, k, context_length, data_dir, results_dir, model_dir, 
-        weighted_loss, random_reading_frame, freeze_network, freeze_motifs, 
-        project_motifs, activate_motifs,
+        weighted_loss, random_reading_frame, freeze_network, freeze_kernels, 
+        input_linear, input_relu,
     ):
     '''lncRNA classification function as called by training script. Run
     `lncrnapy.scripts.train --help` for usage info.'''
@@ -44,11 +44,11 @@ def train(
         N = base_arch.N
         d_ff = base_arch.d_ff
         h = base_arch.h
-        if type(base_arch) == MotifBERT:
-            n_motifs = base_arch.n_motifs
-            motif_size = base_arch.motif_size
-            project_motifs = base_arch.project_motifs
-            activate_motifs = base_arch.activate_motifs
+        if type(base_arch) == CSEBERT:
+            n_kernels = base_arch.n_kernels
+            kernel_size = base_arch.kernel_size
+            input_linear = base_arch.input_linear
+            input_relu = base_arch.input_relu
     
     # Encoding the data
     if encoding_method in ['nuc', 'kmer', 'bpe']:
@@ -64,22 +64,22 @@ def train(
         for dataset in [train_data, valid_data]:
             dataset.calculate_feature(tokenizer)
             dataset.set_tensor_features(tokenizer.name, torch.long)
-    elif encoding_method == 'motif':
-        len_4d_dna = (context_length-1)*motif_size
+    elif encoding_method == 'conv':
+        len_4d_dna = (context_length-1)*kernel_size
         for dataset in [train_data, valid_data]:
             dataset.set_tensor_features('4D-DNA', len_4d_dna=len_4d_dna)
-        exp_name += f'_nm{n_motifs}_sm{motif_size}'
+        exp_name += f'_nm{n_kernels}_sm{kernel_size}'
 
     # Initializing the base arch. (if no pre-trained model is provided) & model
     if len(pretrained_model) == 0:
         if encoding_method in ['nuc', 'kmer', 'bpe']:
             base_arch = BERT(tokenizer.vocab_size, d_model, N, d_ff, h)
-        elif encoding_method == 'motif':
-            base_arch = MotifBERT(n_motifs, motif_size, d_model, N, d_ff, h,
-                 project_motifs=project_motifs, activate_motifs=activate_motifs)
+        elif encoding_method == 'conv':
+            base_arch = CSEBERT(n_kernels, kernel_size, d_model, N, d_ff, h,
+                 input_linear=input_linear, input_relu=input_relu)
     pooling = 'CLS'
-    if freeze_motifs:
-        base_arch.freeze_motifs()
+    if freeze_kernels:
+        base_arch.freeze_kernels()
     if freeze_network:
         base_arch.freeze()
         pooling = 'mean'
@@ -95,9 +95,9 @@ def train(
     exp_name =f'{exp_name}--no_weighted_loss' if not weighted_loss else exp_name
     exp_name = f'{exp_name}--no_rrf' if not random_reading_frame else exp_name
     exp_name = f'{exp_name}--freeze_network' if freeze_network else exp_name
-    exp_name = f'{exp_name}--freeze_motifs' if freeze_motifs else exp_name
-    exp_name = f'{exp_name}--motif_lin' if project_motifs else exp_name
-    exp_name = f'{exp_name}--no_motif_relu' if not activate_motifs else exp_name
+    exp_name = f'{exp_name}--freeze_kernels' if freeze_kernels else exp_name
+    exp_name = f'{exp_name}--in_lin' if input_linear else exp_name
+    exp_name = f'{exp_name}--no_in_relu' if not input_relu else exp_name
 
     # Pre-training the model
     model = model.to(utils.DEVICE) # Send model to GPU
@@ -148,9 +148,9 @@ args = {
     },
     '--encoding_method': {
         'type': str,
-        'choices': ['motif', 'bpe', 'kmer', 'nuc'],
-        'default': 'motif',
-        'help': 'Sequence encoding method. (str="motif")'
+        'choices': ['conv', 'bpe', 'kmer', 'nuc'],
+        'default': 'conv',
+        'help': 'Sequence encoding method. (str="conv")'
     },
     '--epochs': {
         'type': int,
@@ -209,16 +209,17 @@ args = {
         'help': 'Space-separated list with number of hidden nodes in ReLU-'
                 'activated classification head layers. (int=[])'
     },
-    '--n_motifs': {
+    '--n_kernels': {
         'type': int,
         'default': 768,
-        'help': 'Specifies number of motifs when motif encoding is used. '
-                '(int=768)'
+        'help': 'Specifies number of kernels when convolutional sequence '
+                'encoding is used. (int=768)'
     },
-    '--motif_size': {
+    '--kernel_size': {
         'type': int,
         'default': 10,
-        'help': 'Specifies motif size when motif encoding is used. (int=10)'
+        'help': 'Specifies kernel size when convolutional sequence encoding is '
+            	'used. (int=10)'
     },
     '--bpe_file': {
         'type': str,
@@ -234,7 +235,7 @@ args = {
     '--context_length': {
         'type': int,
         'default': 768,
-        'help': 'Number of input positions. For motif/k-mer encoding, this '
+        'help': 'Number of input positions. For cse/k-mer encoding, this '
                 'translates to a maximum of (768-1)*k input nucleotides. '
                 '(int=768)'
     },
@@ -265,8 +266,8 @@ args = {
     '--no_random_reading_frame': {
         'action': 'store_true',
         'default': False,
-        'help': 'Turns off sampling in random reading frame for motif encoding '
-                ' (bool)'
+        'help': 'Turns off sampling in random reading frame for convolutional '
+                'sequence encoding. (bool)'
     }, 
     '--freeze_network': {
         'action': 'store_true',
@@ -275,22 +276,24 @@ args = {
                 'clasification on the mean embeddings of this model. This only '
                 'works with the --pretrained_model flag. (bool)'
     }, 
-    '--freeze_motifs': {
+    '--freeze_kernels': {
         'action': 'store_true',
         'default': False,
-        'help': 'Freezes all motif encoding weights from the pre-trained model.'
-                ' Only works with the --pretrained_model flag. (bool)'
+        'help': 'Freezes all convolutional sequence encoding weights from the '
+                'pre-trained model. Only works with the --pretrained_model '
+                'flag. (bool)'
     }, 
-    '--project_motifs': {
+    '--input_linear': {
         'action': 'store_true',
         'default': None,
-        'help': 'Forces linear projection of motifs onto d_model dimensions in '
-                'motif encoding. (bool)'
+        'help': 'Forces linear projection of kernels onto d_model dimensions in '
+                'convolutional sequence encoding. (bool)'
     }, 
-    '--no_activate_motifs': {
+    '--no_input_relu': {
         'action': 'store_true',
         'default': False,
-        'help': 'Turns off ReLU activation of motifs in motif encoding. (bool)'
+        'help': 'Turns off ReLU activation of kernels in convolutional sequence'
+                ' encoding. (bool)'
     }, 
 }
 
@@ -322,14 +325,14 @@ if __name__ == '__main__':
         batch_size=p.batch_size, learning_rate=p.learning_rate, 
         weight_decay=p.weight_decay, 
         d_model=p.d_model, N=p.N, d_ff=p.d_ff, h=p.h, dropout=p.dropout, 
-        hidden_cls_layers=p.hidden_cls_layers, n_motifs=p.n_motifs, 
-        motif_size=p.motif_size, bpe_file=p.bpe_file, k=p.k, 
+        hidden_cls_layers=p.hidden_cls_layers, n_kernels=p.n_kernels, 
+        kernel_size=p.kernel_size, bpe_file=p.bpe_file, k=p.k, 
         context_length=p.context_length, data_dir=p.data_dir, 
         results_dir=p.results_dir, model_dir=p.model_dir, 
         weighted_loss=(not p.no_weighted_loss),
         random_reading_frame=(not p.no_random_reading_frame),
-        freeze_network=p.freeze_network, freeze_motifs=p.freeze_motifs, 
-        project_motifs=p.project_motifs, 
-        activate_motifs=(not p.no_activate_motifs),
+        freeze_network=p.freeze_network, freeze_kernels=p.freeze_kernels, 
+        input_linear=p.input_linear, 
+        input_relu=(not p.no_input_relu),
     )
 

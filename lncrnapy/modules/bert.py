@@ -4,7 +4,7 @@ network designs.'''
 import math
 import torch
 from lncrnapy import utils
-from lncrnapy.modules.motif_encoding import MotifEmbedding
+from lncrnapy.modules.conv_seq_encoding import ConvSeqEmbedding
 
 
 class BERT(torch.nn.Module):
@@ -263,25 +263,25 @@ def attention(query, key, value, mask=None, dropout=None):
     return torch.matmul(p_attn, value), p_attn
 
 
-class MotifBERT(torch.nn.Module):
-    '''BERT variant that takes learnt sequence motifs (instead of tokens) as 
-    input. Based on vision transformer. 
+class CSEBERT(torch.nn.Module):
+    '''BERT variant that takes learnt convolutional sequence encodings (instead 
+    of tokens) as input. Based on vision transformer. 
     
     References
     ----------
     ViT: Dosovitskiy et al. (2020) https://doi.org/10.48550/arXiv.2010.11929'''
 
-    def __init__(self, n_motifs, motif_size=10, d_model=768, N=12, d_ff=None, 
-                 h=None, dropout=0.1, project_motifs=None, activate_motifs=True, 
-                 n_hidden_motifs=0):
-        '''Initializes `MotifBERT`.
+    def __init__(self, n_kernels, kernel_size=10, d_model=768, N=12, d_ff=None, 
+                 h=None, dropout=0.1, input_linear=None, input_relu=True, 
+                 n_hidden_kernels=0):
+        '''Initializes `CSEBERT`.
         
         Parameters
         ----------
-        n_motifs: int
-            Number of motifs to learn from the data.
-        motif_size: int
-            Number of nucleotides that make up a single motif (default is 10).
+        n_kernels: int
+            Number of kernels to learn from the data.
+        kernel_size: int
+            Number of nucleotides that make up a single kernel (default is 10).
         d_model: int
             Dimension of sequence repr. (embedding) in model (default is 768)
         N: int
@@ -292,34 +292,35 @@ class MotifBERT(torch.nn.Module):
             Number of self-attention heads (default is None, `int(d_model/64)`)
         dropout: float
             Dropout probability to use throughout network (default is 0.1)
-        project_motifs: bool
-            Whether or not motifs are projected with a linear layer onto 
-            `d_model` dimensions. Must be True when `d_model != n_motifs` 
-            (default is None, which results in `d_model != n_motifs`)
-        activate_motifs: bool
-            Whether or not motifs are relu-activated (default is True)
-        n_hidden_motifs: int
+        input_linear: bool
+            Whether or not convolutions are projected with a linear layer onto 
+            `d_model` dimensions. Must be True when `d_model != n_kernels` 
+            (default is None, which results in `d_model != n_kernels`)
+        input_relu: bool
+            Whether or not convolutions are relu-activated (default is True)
+        n_hidden_kernels: int
             If > 0, adds an extra hidden convolutional layer with a kernel size
             and stride of 3 with the specified amount of output channels. This
-            layer precedes the normal motif encoding layer (default is 0).'''
+            layer precedes the normal convolutional sequence encoding layer 
+            (default is 0).'''
 
         super().__init__()
         d_ff = 4*d_model if d_ff is None else d_ff
         h = int(d_model/64) if h is None else h
-        if project_motifs is None:
-            project_motifs = d_model != n_motifs
-        self.motif_embedder = MotifEmbedding(n_motifs, d_model, motif_size, 
-                               project_motifs, activate_motifs, n_hidden_motifs)
+        if input_linear is None:
+            input_linear = d_model != n_kernels
+        self.conv_seq_embedder = ConvSeqEmbedding(n_kernels, d_model, 
+                        kernel_size, input_linear, input_relu, n_hidden_kernels)
         self.positional_encoder = PositionalEncoding(d_model, dropout)
         self.encoder = Encoder(d_model, d_ff, h, N, dropout)
-        self.motif_size = motif_size
-        self.n_motifs = n_motifs
+        self.kernel_size = kernel_size
+        self.n_kernels = n_kernels
         self.d_model = d_model
         self.N = N
         self.d_ff = d_ff
         self.h = h
-        self.project_motifs = project_motifs
-        self.activate_motifs = activate_motifs
+        self.input_linear = input_linear
+        self.input_relu = input_relu
 
         # Initialize parameters with Glorot / fan_avg.
         for p in self.parameters():
@@ -330,11 +331,11 @@ class MotifBERT(torch.nn.Module):
         '''Given a source, retrieve encoded representation'''
 
         src_lengths = ( # Calculate start of zero-padding in convolved output...
-            torch.count_nonzero(src.sum(axis=1), dim=1) / self.motif_size
+            torch.count_nonzero(src.sum(axis=1), dim=1) / self.kernel_size
         ).to(torch.int32).unsqueeze(-1) # ... and round down to nearest int
         
-        # Embed using motif encoding and add positional encoding
-        src_embedding = self.motif_embedder(src)
+        # Embed using CSE and add positional encoding
+        src_embedding = self.conv_seq_embedder(src)
         src_embedding = src_embedding*math.sqrt(self.d_model)
         src_embedding = self.positional_encoder(src_embedding)
 
@@ -354,8 +355,8 @@ class MotifBERT(torch.nn.Module):
         if pooling == 'CLS':
             y = y[:,0,:] # CLS is first input position
         else:
-            len_seqs = ( # Length of motif-encoded sequences
-                torch.count_nonzero(src.sum(axis=1), dim=1) / self.motif_size
+            len_seqs = ( # Length of CSE-encoded sequences
+                torch.count_nonzero(src.sum(axis=1), dim=1) / self.kernel_size
             ).to(torch.int32).unsqueeze(-1)
             hide = ~( # Set True part of the zero-padding...
                 torch.arange(y.shape[1], device=utils.DEVICE) <= len_seqs)
@@ -372,13 +373,13 @@ class MotifBERT(torch.nn.Module):
         return y
     
     def freeze(self):
-        '''Freezes all weights of MotifBERT model.'''
+        '''Freezes all weights of CSEBERT model.'''
         utils.freeze(self)
 
-    def freeze_motifs(self):
-        '''Freezes all motif encoder weights of MotifBERT model.'''
-        utils.freeze(self.motif_embedder.motif_encoder)
+    def freeze_kernels(self):
+        '''Freezes all CSE weights of CSEBERT model.'''
+        utils.freeze(self.conv_seq_embedder.conv_seq_encoder)
     
     def unfreeze(self):
-        '''Unfreezes all weights of MotifBERT model.'''
+        '''Unfreezes all weights of CSEBERT model.'''
         utils.freeze(self, unfreeze=True)

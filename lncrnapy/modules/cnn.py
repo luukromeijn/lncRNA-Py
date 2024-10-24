@@ -2,7 +2,7 @@
 `lncrnapy`.'''
 
 import torch
-from lncrnapy.modules.motif_encoding import MotifEncoding
+from lncrnapy.modules.conv_seq_encoding import ConvSeqEncoding
 
 
 class MycoAICNN(torch.nn.Module):
@@ -110,8 +110,8 @@ class ResidualBlock(torch.nn.Module):
     def __init__(self, in_channels, out_channels, stride=1, downsample = None):
         super(ResidualBlock, self).__init__()
         self.conv1 = torch.nn.Sequential(
-            torch.nn.Conv1d(in_channels, out_channels, kernel_size=3, stride=stride, 
-                            padding=1),
+            torch.nn.Conv1d(in_channels, out_channels, kernel_size=3, 
+                            stride=stride, padding=1),
             torch.nn.BatchNorm1d(out_channels), torch.nn.ReLU())
         self.conv2 = torch.nn.Sequential(
             torch.nn.Conv1d(out_channels, out_channels, kernel_size=3, stride=1, 
@@ -132,13 +132,13 @@ class ResidualBlock(torch.nn.Module):
         return out
     
 
-class MotifResNet(torch.nn.Module):
-    '''Like ResNet, but initial layers correspond to learnt motifs.'''
+class CSEResNet(torch.nn.Module):
+    '''Like ResNet, but initial layers correspond to CSE.'''
 
-    def __init__(self, n_motifs, motif_size, layers):
+    def __init__(self, n_kernels, kernel_size, layers):
         super().__init__()
-        self.motif_encoding = MotifEncoding(n_motifs, motif_size)
-        self.resnet = ResNet(layers, in_channels=n_motifs)
+        self.conv_seq_encoding = ConvSeqEncoding(n_kernels, kernel_size)
+        self.resnet = ResNet(layers, in_channels=n_kernels)
 
     def forward(self, x):
-        return self.resnet(self.motif_encoding(x))
+        return self.resnet(self.conv_seq_encoding(x))

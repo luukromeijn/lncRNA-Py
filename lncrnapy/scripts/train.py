@@ -195,7 +195,7 @@ args = {
     '--h': {
         'type': int,
         'default': None,
-        'help': 'Number of BERT self-attention heads (int=int(d_model/12))'
+        'help': 'Number of BERT self-attention heads (int=int(d_model/64))'
     },
     '--dropout': {
         'type': float,

@@ -169,8 +169,8 @@ args = {
     },
     '--learning_rate': {
         'type': float,
-        'default': 1e-6,
-        'help': 'Learning rate used by Adam optimizer. (float=1e-6)'
+        'default': 1e-5,
+        'help': 'Learning rate used by Adam optimizer. (float=1e-5)'
     },
     '--weight_decay': {
         'type': float,
@@ -195,7 +195,7 @@ args = {
     '--h': {
         'type': int,
         'default': None,
-        'help': 'Number of BERT self-attention heads (int=int(d_model/12))'
+        'help': 'Number of BERT self-attention heads (int=int(d_model/64))'
     },
     '--dropout': {
         'type': float,

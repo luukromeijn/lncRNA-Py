@@ -1,7 +1,7 @@
 '''Produces figures about the data resources uses in this study.'''
 
-from rhythmnblues.data import Data, plot_cross_dataset_violins
-from rhythmnblues.features import Length
+from lncrnapy.data import Data, plot_cross_dataset_violins
+from lncrnapy.features import Length
 
 seq_dir = '/data/s2592800/data/sequences'
 datafiles = {

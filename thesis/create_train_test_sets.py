@@ -3,8 +3,8 @@
 import copy
 import numpy as np
 import pandas as pd
-from rhythmnblues.data import Data
-from rhythmnblues.features import Length
+from lncrnapy.data import Data
+from lncrnapy.features import Length
 
 seq_dir = '/data/s2592800/data/sequences'
 
@@ -36,9 +36,11 @@ for i, dataset in enumerate([pretrain, finetune, valid, test]):
 # Export files
 pretrain.to_fasta([f'{seq_dir}/pretrain_human_pcrna.fasta',
                    f'{seq_dir}/pretrain_human_ncrna.fasta'])
+pretrain.to_fasta( f'{seq_dir}/pretrain_human.fasta')
 finetune.to_fasta([f'{seq_dir}/finetune_gencode_pcrna.fasta',
                    f'{seq_dir}/finetune_gencode_ncrna.fasta'])
 valid.to_fasta(   [f'{seq_dir}/valid_gencode_pcrna.fasta',
                    f'{seq_dir}/valid_gencode_ncrna.fasta'])
+valid.to_fasta(    f'{seq_dir}/valid_gencode.fasta')
 test.to_fasta(    [f'{seq_dir}/test_gencode_pcrna.fasta',
                    f'{seq_dir}/test_gencode_ncrna.fasta'])

@@ -63,8 +63,6 @@ class Algorithm:
                 used_features = used_features + feature_names
         self.used_features = used_features
 
-        print(self.feature_extractors, self.used_features)
-
     def fit(self, data):
         '''Fits model on `data`, extracting features first if necessary. Will
         only fit on features as specified in the `used_features` attribute.

@@ -24,9 +24,9 @@ dim_red_functions = {
 
 
 def frameshifts(
-        fasta_file, model_file, max_shift, output_plot_file, encoding_method, 
-        bpe_file, k, pooling, dim_red, batch_size, context_length, random_state,
-        data_dir, results_dir, model_dir, 
+        fasta_file, model_file, max_shift, output_file, output_plot_file, 
+        encoding_method, bpe_file, k, pooling, dim_red, batch_size, 
+        context_length, random_state, data_dir, results_dir, model_dir, 
     ):
 
     np.random.seed(random_state)
@@ -70,20 +70,22 @@ def frameshifts(
     # Retrieving and saving the embeddings (+ dimensionality reduction)
     dim_red = dim_red_functions[dim_red] if dim_red != 'None' else None
     model.latent_space(data, inplace=True, pooling=pooling, dim_red=dim_red)
-    
-    data = data.df
-    plt.scatter('L0', 'L1', data=data[data['label']==-1], s=1, c='#BFBFBF')
-    colors = {i:plt.rcParams['axes.prop_cycle'].by_key()['color'][i] 
-              for i in range(10)}
-    markers = {0:'X', 1:'^', 2:'o'}
-    for i in range(10):
-        for j in range(3):
-            plt.scatter('L0', 'L1', c=colors[i], marker=markers[j],
-                         data=data[(data['label']==i) & (data['rf']==j)])
-    plt.xticks([])
-    plt.yticks([])
-    plt.tight_layout()
-    plt.savefig(f'{results_dir}/{output_plot_file}')
+    data.to_hdf(output_file)
+
+    if output_plot_file is not None:
+        data = data.df
+        plt.scatter('L0', 'L1', data=data[data['label']==-1], s=1, c='#BFBFBF')
+        colors = {i:plt.rcParams['axes.prop_cycle'].by_key()['color'][i] 
+                for i in range(10)}
+        markers = {0:'X', 1:'^', 2:'o'}
+        for i in range(10):
+            for j in range(3):
+                plt.scatter('L0', 'L1', c=colors[i], marker=markers[j],
+                            data=data[(data['label']==i) & (data['rf']==j)])
+        plt.xticks([])
+        plt.yticks([])
+        plt.tight_layout()
+        plt.savefig(f'{results_dir}/{output_plot_file}')
 
 
 args = {
@@ -102,9 +104,14 @@ args = {
         'type': int, 
         'help': 'Number of simulated frameshifts. (int)',
     },
+    '--output_file': {
+        'type': str, 
+        'default': 'frameshift_sensitivity.h5',
+        'help': 'Name of hdf output file. (str)',
+    },
     '--output_plot_file': {
         'type': str, 
-        'default': 'frameshift_embeddings.png',
+        'default': None,
         'help': 'Name of png output file. (str)',
     },
     '--encoding_method': {
@@ -194,8 +201,8 @@ if __name__ == '__main__':
     p.model_dir = f'{p.data_dir}/models' if p.model_dir=='.' else p.model_dir
     
     frameshifts( # Call
-        p.fasta_file, p.model_file, p.max_shift, p.output_plot_file, 
-        p.encoding_method, p.bpe_file, p.k, p.pooling, p.dim_red, p.batch_size, 
-        p.context_length, p.random_state, p.data_dir, p.results_dir, 
-        p.model_dir, 
+        p.fasta_file, p.model_file, p.max_shift, p.output_file, 
+        p.output_plot_file, p.encoding_method, p.bpe_file, p.k, p.pooling, 
+        p.dim_red, p.batch_size, p.context_length, p.random_state, p.data_dir, 
+        p.results_dir, p.model_dir, 
     )

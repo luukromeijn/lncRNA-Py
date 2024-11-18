@@ -26,7 +26,8 @@ dim_red_functions = {
 def frameshifts(
         fasta_file, model_file, max_shift, output_file, output_plot_file, 
         encoding_method, bpe_file, k, pooling, dim_red, batch_size, 
-        context_length, random_state, data_dir, results_dir, model_dir, 
+        context_length, random_state, coding_only, data_dir, results_dir, 
+        model_dir, 
     ):
 
     np.random.seed(random_state)
@@ -35,9 +36,10 @@ def frameshifts(
     fasta_file = [f'{data_dir}/{filepath}' for filepath in fasta_file]
     fasta_file = fasta_file[0] if len(fasta_file) == 1 else fasta_file
     data = Data(fasta_file)
+    choose_from = data.num_coding_noncoding()[0] if coding_only else len(data)
     data.df['label'] = -1
     data.df['rf'] = -1
-    for i, idx in enumerate(np.random.choice(len(data), 10, replace=False)):
+    for i, idx in enumerate(np.random.choice(choose_from, 10, replace=False)):
         to_add = data.df.iloc[[idx]*max_shift]
         to_add['sequence'] = [to_add['sequence'].iloc[j][j:] 
                               for j in range(max_shift)]
@@ -162,6 +164,11 @@ args = {
         'default': 42,
         'help': 'Seed for sequence selection. (int=42)'
     },
+    '--coding_only': {
+        'action': 'store_true',
+        'default': False,
+        'help': 'Select only pcRNAs to assess sensitivity.'
+    },
     '--data_dir': {
         'type': str,
         'default': '.',
@@ -203,6 +210,6 @@ if __name__ == '__main__':
     frameshifts( # Call
         p.fasta_file, p.model_file, p.max_shift, p.output_file, 
         p.output_plot_file, p.encoding_method, p.bpe_file, p.k, p.pooling, 
-        p.dim_red, p.batch_size, p.context_length, p.random_state, p.data_dir, 
-        p.results_dir, p.model_dir, 
+        p.dim_red, p.batch_size, p.context_length, p.random_state, 
+        p.coding_only, p.data_dir, p.results_dir, p.model_dir, 
     )

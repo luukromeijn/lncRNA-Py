@@ -21,9 +21,10 @@ Others:
     conda install pytables -c conda-forge -y
     conda install numpy pandas scikit-learn -c conda-forge -y
     conda install matplotlib biopython -c conda-forge -y
-    conda install bioconda::blast
-    pip install viennarna umap-learn
+    pip install umap-learn sentencepiece
 
 Optional:
     
+    pip install viennarna
     conda install tqdm xgboost pytest -c conda-forge -y
+    conda install bioconda::blast

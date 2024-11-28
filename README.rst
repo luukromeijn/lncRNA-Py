@@ -35,7 +35,7 @@ re-implemented features.
 .. usage intro end
 
 We refer to the `official documentation page <todo.com>`_ for detailed usage 
-information.
+information and also provide an `example notebook <example.ipynb>`_.
 
 .. about start
 

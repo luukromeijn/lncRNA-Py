@@ -1,0 +1,2275 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lncrnapy.features &mdash; lncRNA-Py  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="lncrnapy.modules" href="modules.html" />
+    <link rel="prev" title="lncrnapy.data" href="data.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            lncRNA-Py
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scripts.html">Running Scripts</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="data.html">lncrnapy.data</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">lncrnapy.features</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.features.blast">BLAST</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.blast.BLASTXBinary"><code class="docutils literal notranslate"><span class="pre">BLASTXBinary</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.blast.BLASTXSearch"><code class="docutils literal notranslate"><span class="pre">BLASTXSearch</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.features.eiip">EIIP</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.eiip.EIIPPhysicoChemical"><code class="docutils literal notranslate"><span class="pre">EIIPPhysicoChemical</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.features.fickett">Fickett</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.fickett.FickettScore"><code class="docutils literal notranslate"><span class="pre">FickettScore</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.features.general">General</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.general.Complexity"><code class="docutils literal notranslate"><span class="pre">Complexity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.general.Entropy"><code class="docutils literal notranslate"><span class="pre">Entropy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.general.EntropyDensityProfile"><code class="docutils literal notranslate"><span class="pre">EntropyDensityProfile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.general.GCContent"><code class="docutils literal notranslate"><span class="pre">GCContent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.general.Length"><code class="docutils literal notranslate"><span class="pre">Length</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.general.Quality"><code class="docutils literal notranslate"><span class="pre">Quality</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.general.SequenceDistribution"><code class="docutils literal notranslate"><span class="pre">SequenceDistribution</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.general.StdStopCodons"><code class="docutils literal notranslate"><span class="pre">StdStopCodons</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.features.kmer">K-mer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.kmer.KmerBase"><code class="docutils literal notranslate"><span class="pre">KmerBase</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.kmer.KmerDistance"><code class="docutils literal notranslate"><span class="pre">KmerDistance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.kmer.KmerFreqs"><code class="docutils literal notranslate"><span class="pre">KmerFreqs</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.kmer.KmerScore"><code class="docutils literal notranslate"><span class="pre">KmerScore</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.features.mlcds">MLCDS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.mlcds.MLCDS"><code class="docutils literal notranslate"><span class="pre">MLCDS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.mlcds.MLCDSLength"><code class="docutils literal notranslate"><span class="pre">MLCDSLength</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.mlcds.MLCDSLengthPercentage"><code class="docutils literal notranslate"><span class="pre">MLCDSLengthPercentage</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.mlcds.MLCDSLengthStd"><code class="docutils literal notranslate"><span class="pre">MLCDSLengthStd</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.mlcds.MLCDSScoreDistance"><code class="docutils literal notranslate"><span class="pre">MLCDSScoreDistance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.mlcds.MLCDSScoreStd"><code class="docutils literal notranslate"><span class="pre">MLCDSScoreStd</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.features.mlm_accuracy">MLM Accuracy</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.mlm_accuracy.MLMAccuracy"><code class="docutils literal notranslate"><span class="pre">MLMAccuracy</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.features.orf">ORF</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.orf.ORFAminoAcidFreqs"><code class="docutils literal notranslate"><span class="pre">ORFAminoAcidFreqs</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.orf.ORFCoordinates"><code class="docutils literal notranslate"><span class="pre">ORFCoordinates</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.orf.ORFCoverage"><code class="docutils literal notranslate"><span class="pre">ORFCoverage</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.orf.ORFIsoelectric"><code class="docutils literal notranslate"><span class="pre">ORFIsoelectric</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.orf.ORFLength"><code class="docutils literal notranslate"><span class="pre">ORFLength</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.orf.ORFProtein"><code class="docutils literal notranslate"><span class="pre">ORFProtein</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.orf.ORFProteinAnalysis"><code class="docutils literal notranslate"><span class="pre">ORFProteinAnalysis</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.orf.UTRCoverage"><code class="docutils literal notranslate"><span class="pre">UTRCoverage</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.orf.UTRLength"><code class="docutils literal notranslate"><span class="pre">UTRLength</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.orf.orf_column_names"><code class="docutils literal notranslate"><span class="pre">orf_column_names()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.features.sequence_base">Sequence Base</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.sequence_base.SequenceBase"><code class="docutils literal notranslate"><span class="pre">SequenceBase</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.features.sse">SSE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.sse.SSE"><code class="docutils literal notranslate"><span class="pre">SSE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.sse.UPFrequency"><code class="docutils literal notranslate"><span class="pre">UPFrequency</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.sse.get_hl_sse_sequence"><code class="docutils literal notranslate"><span class="pre">get_hl_sse_sequence()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.features.standardizer">Standardizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.standardizer.Standardizer"><code class="docutils literal notranslate"><span class="pre">Standardizer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.features.tokenizers">Tokenizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.tokenizers.BPELength"><code class="docutils literal notranslate"><span class="pre">BPELength</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.tokenizers.BPEPieces"><code class="docutils literal notranslate"><span class="pre">BPEPieces</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.tokenizers.BytePairEncoding"><code class="docutils literal notranslate"><span class="pre">BytePairEncoding</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.tokenizers.KmerTokenizer"><code class="docutils literal notranslate"><span class="pre">KmerTokenizer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.tokenizers.TokenLocalization"><code class="docutils literal notranslate"><span class="pre">TokenLocalization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.tokenizers.TokenizerBase"><code class="docutils literal notranslate"><span class="pre">TokenizerBase</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.tokenizers.coverage_table"><code class="docutils literal notranslate"><span class="pre">coverage_table()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.tokenizers.plot_bpe_lengths"><code class="docutils literal notranslate"><span class="pre">plot_bpe_lengths()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.features.zhang">Zhang</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.zhang.ZhangScore"><code class="docutils literal notranslate"><span class="pre">ZhangScore</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">lncrnapy.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="train.html">lncrnapy.train</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluate.html">lncrnapy.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">lncrnapy.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="algorithms.html">lncrnapy.algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="selection.html">lncrnapy.selection</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">lncRNA-Py</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+      <li class="breadcrumb-item active">lncrnapy.features</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/luukromeijn/rhythmnblues/blob/master/docs/api_docs/features.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-lncrnapy.features">
+<span id="lncrnapy-features"></span><h1>lncrnapy.features<a class="headerlink" href="#module-lncrnapy.features" title="Link to this heading"></a></h1>
+<p>Contains feature extractor classes that can calculate several features of RNA
+sequences, such as Most-Like Coding Sequences and nucleotide frequencies.</p>
+<p>Every feature extractor class contains:
+* A <cite>name</cite> attribute of type <cite>str</cite>, indicating what name a <cite>Data</cite> column for
+this feature will have.
+* A <cite>calculate</cite> method with a <cite>Data</cite> object as argument, returning a list or
+array of the same length as the <cite>Data</cite> object.</p>
+<section id="module-lncrnapy.features.blast">
+<span id="blast"></span><h2>BLAST<a class="headerlink" href="#module-lncrnapy.features.blast" title="Link to this heading"></a></h2>
+<p>Feature extractors that perform a BLAST database search.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTXBinary">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.blast.</span></span><span class="sig-name descname"><span class="pre">BLASTXBinary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTXBinary" title="Link to this definition"></a></dt>
+<dd><p>Calculates whether or not the number of BLASTX hits surpasses a preset
+threshold.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`threshold`</span></span></dt>
+<dd><p>Minimum number of BLASTX hits to be surpassed to return True (default is
+0).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Name of <cite>BLASTXBinary</cite> feature (‘BLASTX hits &gt; {threshold}’)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTXBinary.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTXBinary.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates the BLASTX binary feature for every row in <cite>data</cite></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTXSearch">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.blast.</span></span><span class="sig-name descname"><span class="pre">BLASTXSearch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evalue</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strand</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'plus'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTXSearch" title="Link to this definition"></a></dt>
+<dd><p>Derives features based on a BLAST database search:
+* BLASTX hits: number of blastx hits found for given transcript.
+* BLASTX hit score: mean of the mean log evalue over each of the three
+reading frames (as proposed by CPC).
+* BLASTX frame score: mean of the deviation from the hit score over each of
+the three reading frames (as proposed by CPC).
+* BLASTX S-score: sum of the logs of the significant scores (as proposed by
+PLncPro)
+* BLASTX bit score: total bit score (as proposed by PLncPro)
+* BLASTX frame entropy: Shannon entropy of probabilities that hits are in
+the ith frame (as proposed by PLncPro)
+* BLASTX identity: sum of the identity percentage for each of the blast hits
+for a given sequence.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`reference`</span></span></dt>
+<dd><p>Reference to use for BLASTX feature extraction, usually the path to a
+local BLAST database. When the provided string ends with ‘.csv’, will
+assume that it refers to a saved BLASTX output from a finished run. Note
+that all other arguments will then be ignored. Alternatively, when
+running remotely (<cite>remote=True</cite>), this argument should correspond to the
+name of an official BLAST database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`remote`</span></span></dt>
+<dd><p>Whether to run remotely or locally. If False, requires a local
+installation of BLAST with a callable blastx program (default is False).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>bool</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`evalue`</span></span></dt>
+<dd><p>Cut-off value for statistical significance (default is 1e-10).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>float</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`strand`</span></span></dt>
+<dd><p>Which reading direction(s) to consider (default is ‘plus’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[‘both’|’plus’|’minus’]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`threads`</span></span></dt>
+<dd><p>Specifies how many threads for BLAST to use (when running locally).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`tmp_folder`</span></span></dt>
+<dd><p>Path to folder where temporary FASTA and output files will be saved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column names for MLCDS length standard deviation (‘MLCDS length (std)’)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">References</p>
+<p>CPC: Kong et al. (2007) <a class="reference external" href="https://doi.org/10.1093/nar/gkm391">https://doi.org/10.1093/nar/gkm391</a>
+PLncPro: Singh et al. (2017) <a class="reference external" href="https://doi.org/10.1093/nar/gkx866">https://doi.org/10.1093/nar/gkx866</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTXSearch.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTXSearch.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates BLASTX database search features for all rows in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTXSearch.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blast_result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTXSearch.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Calculate BLASTX features for given query result</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTXSearch.read_blastx_output">
+<span class="sig-name descname"><span class="pre">read_blastx_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTXSearch.read_blastx_output" title="Link to this definition"></a></dt>
+<dd><p>Reads a BLAST .csv output file (outfmt 10) with good column names.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTXSearch.run_blastx">
+<span class="sig-name descname"><span class="pre">run_blastx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTXSearch.run_blastx" title="Link to this definition"></a></dt>
+<dd><p>Runs a BLASTX database search for all rows in <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.features.eiip">
+<span id="eiip"></span><h2>EIIP<a class="headerlink" href="#module-lncrnapy.features.eiip" title="Link to this heading"></a></h2>
+<p>Features based on Electron-IonInteraction profile, proposed by Han et al.
+(2018)</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.eiip.EIIPPhysicoChemical">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.eiip.</span></span><span class="sig-name descname"><span class="pre">EIIPPhysicoChemical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eiip_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'A':</span> <span class="pre">0.126,</span> <span class="pre">'C':</span> <span class="pre">0.134,</span> <span class="pre">'G':</span> <span class="pre">0.0806,</span> <span class="pre">'T':</span> <span class="pre">0.1335}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.eiip.EIIPPhysicoChemical" title="Link to this definition"></a></dt>
+<dd><p>EIIP-derived physico-chemical features, as proposed by LNCFinder. Every
+sequence is converted into an EIIP representation, of which the power
+spectrum is calculated with a Fast Fourier Transform. Several properties
+are derived from this power spectrum.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Names of the EIIP-derived physico-chemical features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`eiip_map`</span></span></dt>
+<dd><p>Mapping to convert nucleotides into EIIP values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>dict[str:float]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">References</p>
+<p>LNCFinder: Han et al. (2018) <a class="reference external" href="https://doi.org/10.1093/bib/bby065">https://doi.org/10.1093/bib/bby065</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.eiip.EIIPPhysicoChemical.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.eiip.EIIPPhysicoChemical.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculate EIIP physico-chemical features for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.eiip.EIIPPhysicoChemical.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.eiip.EIIPPhysicoChemical.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Calculate EIIP physico-chemical features of given <cite>sequence</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.eiip.EIIPPhysicoChemical.calculate_power_spectrum">
+<span class="sig-name descname"><span class="pre">calculate_power_spectrum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.eiip.EIIPPhysicoChemical.calculate_power_spectrum" title="Link to this definition"></a></dt>
+<dd><p>Given an RNA <cite>sequence</cite>, convert it to EIIP values and calculate
+its power spectrum.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.features.fickett">
+<span id="fickett"></span><h2>Fickett<a class="headerlink" href="#module-lncrnapy.features.fickett" title="Link to this heading"></a></h2>
+<p>Fickett TESTCODE statistic (Fickett et al., 1982).</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.fickett.FickettScore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.fickett.</span></span><span class="sig-name descname"><span class="pre">FickettScore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.fickett.FickettScore" title="Link to this definition"></a></dt>
+<dd><p>Calculates the Fickett TESTCODE statistic as used by CPAT. Summarizes
+bias in nucleotide position values and frequencies.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column name for Fickett score (‘Fickett Score’)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`pos_intervals`</span></span></dt>
+<dd><p>Thresholds determining which index to use for the position LUT.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>np.ndarray</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`cont_intervals`</span></span></dt>
+<dd><p>Thresholds determining which index to use for the content LUT.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>np.ndarray</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`pos_lut`</span></span></dt>
+<dd><p>Position value look-up table. Percentage of coding fragments in the
+interval (as defined by <cite>pos_interval</cite>) divided by the total number of
+fragments in the interval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>np.ndarray</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`cont_lut`</span></span></dt>
+<dd><p>Nucleotide content look-up table. Percentage of coding fragments in the
+interval (as defined by <cite>cont_interval</cite>) divided by the total number of
+fragments in the interval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>np.ndarray</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`fickett_weights`</span></span></dt>
+<dd><p>Parameters used to weigh the four position values and four nucleotide
+content values. Equals the percentage of time that each value alone can
+successfully distinguish between coding/noncoding sequences.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>np.ndarray</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">References</p>
+<p>CPAT: Wang et al. (2013) <a class="reference external" href="https://doi.org/10.1093/nar/gkt006">https://doi.org/10.1093/nar/gkt006</a>
+Fickett et al. (1982) <a class="reference external" href="https://doi.org/10.1093/nar/10.17.5303">https://doi.org/10.1093/nar/10.17.5303</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.fickett.FickettScore.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.fickett.FickettScore.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates Fickett score for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.fickett.FickettScore.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.fickett.FickettScore.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Calculates Fickett score of <cite>sequence</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.fickett.FickettScore.loadtxt">
+<span class="sig-name descname"><span class="pre">loadtxt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.fickett.FickettScore.loadtxt" title="Link to this definition"></a></dt>
+<dd><p>Extracts look-up tables and weights from txt file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.fickett.FickettScore.nucleotide_frequencies">
+<span class="sig-name descname"><span class="pre">nucleotide_frequencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.fickett.FickettScore.nucleotide_frequencies" title="Link to this definition"></a></dt>
+<dd><p>Calculates nucleotide frequencies of <cite>sequence</cite> for every codon,
+returning a list of four values (corresponding to A, C, G, T,
+respectively).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.fickett.FickettScore.position_values">
+<span class="sig-name descname"><span class="pre">position_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.fickett.FickettScore.position_values" title="Link to this definition"></a></dt>
+<dd><p>Calculates position values of <cite>sequence</cite> for every codon, returning a
+list of four values (corresponding to A, C, G, T, respectively).
+Describes bias of nucleotides occurrence at specific codon positions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.fickett.FickettScore.savetxt">
+<span class="sig-name descname"><span class="pre">savetxt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.fickett.FickettScore.savetxt" title="Link to this definition"></a></dt>
+<dd><p>Saves look-up tables and weights to txt file.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.features.general">
+<span id="general"></span><h2>General<a class="headerlink" href="#module-lncrnapy.features.general" title="Link to this heading"></a></h2>
+<p>Feature extractors for general features.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.general.Complexity">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.general.</span></span><span class="sig-name descname"><span class="pre">Complexity</span></span><a class="headerlink" href="#lncrnapy.features.general.Complexity" title="Link to this definition"></a></dt>
+<dd><p>Calculates the (local) compositional complexity (entropy) of a transcript
+sequence.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.general.Complexity.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.Complexity.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates local compositional complexity of all rows in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.general.Complexity.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.Complexity.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Calculates the complexity for a given <cite>sequence</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.general.Entropy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.general.</span></span><span class="sig-name descname"><span class="pre">Entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_feature_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.Entropy" title="Link to this definition"></a></dt>
+<dd><p>Calculates the shannon entropy of specific features of a sequence.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`feature_names`</span></span></dt>
+<dd><p>Names of the features for which the entropy should be calculated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Name of the combined entropy feature calculated by this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.general.Entropy.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.Entropy.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates the entropy of features for every row in <cite>Data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.general.EntropyDensityProfile">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.general.</span></span><span class="sig-name descname"><span class="pre">EntropyDensityProfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.EntropyDensityProfile" title="Link to this definition"></a></dt>
+<dd><p>Calculates the Entropy Density Profile (EDP) as utilized by LncADeep.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`feature_names`</span></span></dt>
+<dd><p>Names of the features for which the entropy should be calculated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Names of entropy density columns calculated by this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.general.EntropyDensityProfile.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.EntropyDensityProfile.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates the EDP for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.general.EntropyDensityProfile.calculate_edp">
+<span class="sig-name descname"><span class="pre">calculate_edp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.EntropyDensityProfile.calculate_edp" title="Link to this definition"></a></dt>
+<dd><p>Calculates the EDP for given list of values</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.general.GCContent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.general.</span></span><span class="sig-name descname"><span class="pre">GCContent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">apply_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sequence'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.GCContent" title="Link to this definition"></a></dt>
+<dd><p>Calculates the proportion of bases that are either Guanine or Cytosine.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`apply_to`</span></span></dt>
+<dd><p>Indicates which column this class extracts its features from.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Name of the feature calculated by this object (‘GC content’)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.general.GCContent.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.GCContent.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates GC content for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.general.GCContent.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.GCContent.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Calculates the GC content for a given sequence.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.general.Length">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.general.</span></span><span class="sig-name descname"><span class="pre">Length</span></span><a class="headerlink" href="#lncrnapy.features.general.Length" title="Link to this definition"></a></dt>
+<dd><p>Calculates lengths of sequences.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column name for sequence length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>‘length’</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.general.Quality">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.general.</span></span><span class="sig-name descname"><span class="pre">Quality</span></span><a class="headerlink" href="#lncrnapy.features.general.Quality" title="Link to this definition"></a></dt>
+<dd><p>Calculates the ratio of uncertain bases (bases other than ACGT) per
+sequence.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Name of the feature calculated by this class (‘quality’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.general.Quality.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.Quality.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates the quality for all sequences in <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.general.SequenceDistribution">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.general.</span></span><span class="sig-name descname"><span class="pre">SequenceDistribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">apply_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sequence'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocabulary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['A',</span> <span class="pre">'C',</span> <span class="pre">'G',</span> <span class="pre">'T']</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.SequenceDistribution" title="Link to this definition"></a></dt>
+<dd><p>For every word in a given vocabulary, calculate the percentage that is
+contained within every quarter of the total length of the sequence.
+Loosely based on the D (disrtibution) feature of CTD as proposed by CPPred.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`vocabulary`</span></span></dt>
+<dd><p>Words of equal length <cite>k</cite> for which to determine distribution for.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>dict[str:int]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`k`</span></span></dt>
+<dd><p>Inferred lenght of the words in the vocabulary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`apply_to`</span></span></dt>
+<dd><p>Indicates which column this class extracts its features from.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>List of column names of feature calculated by this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">References</p>
+<p>CPPred: Tong et al. (2019) <a class="reference external" href="https://doi.org/10.1093/nar/gkz087">https://doi.org/10.1093/nar/gkz087</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.general.SequenceDistribution.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.SequenceDistribution.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates the sequence distribution for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.general.SequenceDistribution.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.SequenceDistribution.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Calculates the distriution of a given <cite>sequence</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.general.StdStopCodons">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.general.</span></span><span class="sig-name descname"><span class="pre">StdStopCodons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">apply_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sequence'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.StdStopCodons" title="Link to this definition"></a></dt>
+<dd><p>Calculates the standard deviations of stop codon counts between three
+reading frames, as formulated by lncRScan-SVM.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`apply_to`</span></span></dt>
+<dd><p>Indicates which column this class extracts its features from.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column name of feature calculated by this class (‘SCS’)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">References</p>
+<p>lncRScan-SVM: Sun et al. (2015) <a class="reference external" href="https://doi.org/10.1371/journal.pone.0139654">https://doi.org/10.1371/journal.pone.0139654</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.general.StdStopCodons.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.StdStopCodons.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates the std of stop codon counts for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.general.StdStopCodons.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.general.StdStopCodons.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Calculates the std of stop codon counts for a given <cite>sequence</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.features.kmer">
+<span id="k-mer"></span><h2>K-mer<a class="headerlink" href="#module-lncrnapy.features.kmer" title="Link to this heading"></a></h2>
+<p>Feature extractors based on k-mer frequencies.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.kmer.KmerBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.kmer.</span></span><span class="sig-name descname"><span class="pre">KmerBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alphabet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ACGT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.kmer.KmerBase" title="Link to this definition"></a></dt>
+<dd><p>Base class for k-mer-based feature extractors.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`k`</span></span></dt>
+<dd><p>Length of to-be-generated nucleotide combinations in the vocabulary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`stride`</span></span></dt>
+<dd><p>Step size of sliding window during calculation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`alphabet`</span></span></dt>
+<dd><p>Alphabet of characters that the k-mers exist of (default is ‘ACGT’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`gap_length`</span></span></dt>
+<dd><p>Introduces a gap of specified length to k-mer sequences, position of
+this gap is controlled by <cite>gap_pos</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`gap_pos`</span></span></dt>
+<dd><p>Introduces a gap at specified position to k-mer sequences, length of
+this gap is controlled by <cite>gap_length</cite>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`uncertain`</span></span></dt>
+<dd><p>Optional character that indicates any base that falls outside of ACGT.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`k-mers`</span></span></dt>
+<dd><p>Dictionary containing k-mers (keys) and corresponding indices (values).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>dict[str:int]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.kmer.KmerBase.calculate_kmer_freqs">
+<span class="sig-name descname"><span class="pre">calculate_kmer_freqs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.kmer.KmerBase.calculate_kmer_freqs" title="Link to this definition"></a></dt>
+<dd><p>Calculates k-mer frequency spectrum for given <cite>sequence</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.kmer.KmerBase.replace_uncertain_bases">
+<span class="sig-name descname"><span class="pre">replace_uncertain_bases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.kmer.KmerBase.replace_uncertain_bases" title="Link to this definition"></a></dt>
+<dd><p>Replaces non-ACGT bases in <cite>sequence</cite> with <cite>self.uncertain</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.kmer.KmerDistance">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.kmer.</span></span><span class="sig-name descname"><span class="pre">KmerDistance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sequence'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alphabet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ACGT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.kmer.KmerDistance" title="Link to this definition"></a></dt>
+<dd><p>Calculates distance to average k-mer profiles of coding and non-coding
+RNA transcripts, as introduced by LncFinder. Also calculates the ratio of
+the two distances.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`k`</span></span></dt>
+<dd><p>Length of to-be-generated nucleotide combinations in the vocabulary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`pc_kmer_profile`</span></span></dt>
+<dd><p>Average k-mer frequency spectrum of protein-coding transcripts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>np.ndarray</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`nc_kmer_profile`</span></span></dt>
+<dd><p>Average k-mer frequency spectrum of non-coding transcripts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>np.ndarray</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`dist_type`</span></span></dt>
+<dd><p>Whether to use euclididan or logarithmic distance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>‘euc’|’log’</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`apply_to`</span></span></dt>
+<dd><p>Indicates which column this class extracts its features from.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`stride`</span></span></dt>
+<dd><p>Step size of sliding window during calculation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`alphabet`</span></span></dt>
+<dd><p>Alphabet of characters that the k-mers exist of.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`gap_length`</span></span></dt>
+<dd><p>Introduces a gap of specified length to k-mer sequences, position of
+this gap is controlled by <cite>gap_pos</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`gap_pos`</span></span></dt>
+<dd><p>Introduces a gap at specified position to k-mer sequences, length of
+this gap is controlled by <cite>gap_length</cite>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`uncertain`</span></span></dt>
+<dd><p>Optional character that indicates any base that falls outside of ACGT.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`k-mers`</span></span></dt>
+<dd><p>Dictionary containing k-mers (keys) and corresponding indices (values).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>dict[str:int]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column names for k-mer distance (to protein-/non-coding) (ratio)
+features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">References</p>
+<p>LncFinder: Han et al. (2019) <a class="reference external" href="https://doi.org/10.1093/bib/bby065">https://doi.org/10.1093/bib/bby065</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.kmer.KmerDistance.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.kmer.KmerDistance.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates k-mer distance for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.kmer.KmerFreqs">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.kmer.</span></span><span class="sig-name descname"><span class="pre">KmerFreqs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sequence'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alphabet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ACGT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PLEK</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.kmer.KmerFreqs" title="Link to this definition"></a></dt>
+<dd><p>For every k-mer, calculate its occurrence frequency in the sequence
+divided by the total number of k-mers appearing in that sequence.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`k`</span></span></dt>
+<dd><p>Length of to-be-generated nucleotide combinations in the vocabulary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`scaling`</span></span></dt>
+<dd><p>Scaling factor applied to every k-mer spectrum. Usually set to 1, unless
+<cite>PLEK</cite> argument was True at initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>float</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`apply_to`</span></span></dt>
+<dd><p>Indicates which column this class extracts its features from.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`stride`</span></span></dt>
+<dd><p>Step size of sliding window during calculation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`alphabet`</span></span></dt>
+<dd><p>Alphabet of characters that the k-mers exist of (default is ‘ACGT’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`gap_length`</span></span></dt>
+<dd><p>Introduces a gap of specified length to k-mer sequences, position of
+this gap is controlled by <cite>gap_pos</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`gap_pos`</span></span></dt>
+<dd><p>Introduces a gap at specified position to k-mer sequences, length of
+this gap is controlled by <cite>gap_length</cite>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`uncertain`</span></span></dt>
+<dd><p>Optional character that indicates any base that falls outside of ACGT.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`k-mers`</span></span></dt>
+<dd><p>Dictionary containing k-mers (keys) and corresponding indices (values).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>dict[str:int]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column names for frequency features (= all k-mers).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.kmer.KmerFreqs.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.kmer.KmerFreqs.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates k-mer frequencies for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.kmer.KmerScore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.kmer.</span></span><span class="sig-name descname"><span class="pre">KmerScore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sequence'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alphabet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ACGT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.kmer.KmerScore" title="Link to this definition"></a></dt>
+<dd><p>Calculates k-mer score, indicating how likely a sequence is to be
+protein-coding (the higher, the more likely). Sums the log-ratios of k-mer
+frequencies in protein-coding RNA over non-coding RNA. Introduced by CPAT
+as hexamer score or hexamer usage bias.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`k`</span></span></dt>
+<dd><p>Length of to-be-generated nucleotide combinations in the vocabulary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`kmer_freqs`</span></span></dt>
+<dd><p>Log-ratios of k-mer frequencies in protein-coding RNA over non-coding
+RNA.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>np.ndarray</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`apply_to`</span></span></dt>
+<dd><p>Indicates which column this class extracts its features from.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`stride`</span></span></dt>
+<dd><p>Step size of sliding window during calculation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`alphabet`</span></span></dt>
+<dd><p>Alphabet of characters that the k-mers exist of (default is ‘ACGT’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`uncertain`</span></span></dt>
+<dd><p>Optional character that indicates any base that falls outside of ACGT.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`k-mers`</span></span></dt>
+<dd><p>Dictionary containing k-mers (keys) and corresponding indices (values).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>dict[str:int]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column names for frequency features (= all k-mers).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">References</p>
+<p>CPAT: Wang et al. (2013) <a class="reference external" href="https://doi.org/10.1093/nar/gkt006">https://doi.org/10.1093/nar/gkt006</a>
+FEELnc: Wucher et al. (2017) <a class="reference external" href="https://doi.org/10.1093/nar/gkw1306">https://doi.org/10.1093/nar/gkw1306</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.kmer.KmerScore.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.kmer.KmerScore.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates k-mer score for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.kmer.KmerScore.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.kmer.KmerScore.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Calculates k-mer score of <cite>sequence</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.kmer.KmerScore.count_kmers">
+<span class="sig-name descname"><span class="pre">count_kmers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.kmer.KmerScore.count_kmers" title="Link to this definition"></a></dt>
+<dd><p>Returns an array of frequencies k-mer counts in <cite>sequence</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.kmer.KmerScore.plot_bias">
+<span class="sig-name descname"><span class="pre">plot_bias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.kmer.KmerScore.plot_bias" title="Link to this definition"></a></dt>
+<dd><p>Plots log ratio of usage frequency of k-mers in pcRNA/ncRNA.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.features.mlcds">
+<span id="mlcds"></span><h2>MLCDS<a class="headerlink" href="#module-lncrnapy.features.mlcds" title="Link to this heading"></a></h2>
+<p>Feature extractors based on the Most-Like Coding Sequence (MLCDS)</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDS">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.mlcds.</span></span><span class="sig-name descname"><span class="pre">MLCDS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDS" title="Link to this definition"></a></dt>
+<dd><p>Determines Most-Like Coding Sequence (MLCDS) coordinates based on
+Adjoined Nucleotide Triplets (ANT), as proposed by CNCI. Calculates six
+MLCDSs, based on two directions and three reading frames. The MLCDSs are
+sorted based on score, where MLCDS1 has the highest score.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column names for MLCDS coordinates and scores.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`kmers`</span></span></dt>
+<dd><p>Dictionary containing 3-mers (keys) and corresponding indices (values).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>dict[str:int]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`ant_matrix`</span></span></dt>
+<dd><p>Adjoined Nucleotide Triplet matrix, containing the log-ratios of ANTs
+appearing in coding over non-coding RNA.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>np.ndarray</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">References</p>
+<p>CNCI: Sun et al. (2013) <a class="reference external" href="https://doi.org/10.1093/nar/gkt646">https://doi.org/10.1093/nar/gkt646</a>
+CNIT: Guo et al. (2019) <a class="reference external" href="https://doi.org/10.1093/nar/gkz400">https://doi.org/10.1093/nar/gkz400</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDS.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDS.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates MLCDS for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDS.calculate_ant_matrix">
+<span class="sig-name descname"><span class="pre">calculate_ant_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDS.calculate_ant_matrix" title="Link to this definition"></a></dt>
+<dd><p>Calculates Adjoined Nucleotide Triplet matrix, containing the
+log-ratios of ANTs appearing in coding over non-coding RNA.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDS.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDS.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Calculates MLCDS of <cite>sequence</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDS.get_abs_coordinates">
+<span class="sig-name descname"><span class="pre">get_abs_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coord2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDS.get_abs_coordinates" title="Link to this definition"></a></dt>
+<dd><p>Transforms a set of coordinates relative to a reading frame to a set
+of coordinates that are defined in relation to the original sequence.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDS.get_mlcds">
+<span class="sig-name descname"><span class="pre">get_mlcds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reading_frame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDS.get_mlcds" title="Link to this definition"></a></dt>
+<dd><p>Calculates Most-Like Coding Sequence (MLCDS) given reading frame,
+using the Adjoined Nucleotide Triplet (ANT) matrix.</p>
+<p>Adapted from <cite>cal_score</cite> function in CNIT’s code by Fang Shuangsang.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDS.get_reading_frame">
+<span class="sig-name descname"><span class="pre">get_reading_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDS.get_reading_frame" title="Link to this definition"></a></dt>
+<dd><p>Extract reading frame from sequence given direction and offset</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDS.imshow_ant_matrix">
+<span class="sig-name descname"><span class="pre">imshow_ant_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDS.imshow_ant_matrix" title="Link to this definition"></a></dt>
+<dd><p>Plots ANT matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filepath</strong> (<cite>str</cite>) – If provided, will export figure to this filepath.</p></li>
+<li><p><strong>kwargs</strong> – Any <cite>kwargs</cite> accepted by <cite>matplotlib.pyplot.imshow</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDSLength">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.mlcds.</span></span><span class="sig-name descname"><span class="pre">MLCDSLength</span></span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDSLength" title="Link to this definition"></a></dt>
+<dd><p>Lengths of Most-Like Coding Sequences.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column name for MLCDS lengths</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDSLength.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDSLength.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates MLCDS lengths for all rows in <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDSLengthPercentage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.mlcds.</span></span><span class="sig-name descname"><span class="pre">MLCDSLengthPercentage</span></span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDSLengthPercentage" title="Link to this definition"></a></dt>
+<dd><p>Length percentages of Most-Like Coding Sequences. Defined as the length
+of the MLCDS with the highest score, divided by the sum of the lengths of
+the remaining MLCDSs.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column name for MLCDS length percentage (‘MLCDS length-percentage’)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDSLengthPercentage.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDSLengthPercentage.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates length percentage for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDSLengthStd">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.mlcds.</span></span><span class="sig-name descname"><span class="pre">MLCDSLengthStd</span></span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDSLengthStd" title="Link to this definition"></a></dt>
+<dd><p>Standard deviation of Most-Like Coding Sequences lengths.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column name for MLCDS length standard deviation (‘MLCDS length (std)’)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDSLengthStd.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDSLengthStd.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates MLCDS length standard deivation for all rows in <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDSScoreDistance">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.mlcds.</span></span><span class="sig-name descname"><span class="pre">MLCDSScoreDistance</span></span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDSScoreDistance" title="Link to this definition"></a></dt>
+<dd><p>Score distance of Most-Like Coding Sequences. Defined as sum of the
+differences between the score of the highest MLCDS and that of the the
+remaining ones.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column name for MLCDS score distance (‘MLCDS score-distance’)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDSScoreDistance.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDSScoreDistance.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates score distance for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDSScoreStd">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.mlcds.</span></span><span class="sig-name descname"><span class="pre">MLCDSScoreStd</span></span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDSScoreStd" title="Link to this definition"></a></dt>
+<dd><p>Standard deviation of Most-Like Coding Sequences scores.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column name for MLCDS score standard deviation (‘MLCDS score (std)’)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.mlcds.MLCDSScoreStd.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.mlcds.MLCDSScoreStd.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates MLCDS score standard deivation for all rows in <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.features.mlm_accuracy">
+<span id="mlm-accuracy"></span><h2>MLM Accuracy<a class="headerlink" href="#module-lncrnapy.features.mlm_accuracy" title="Link to this heading"></a></h2>
+<p>Evaluates a Masked Language Model and adds the per-sequence accuracy as
+feature to the data.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.mlm_accuracy.MLMAccuracy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.mlm_accuracy.</span></span><span class="sig-name descname"><span class="pre">MLMAccuracy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mlm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_random</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.mlm_accuracy.MLMAccuracy" title="Link to this definition"></a></dt>
+<dd><p>Calculates per-sequence MLM accuracy.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.mlm_accuracy.MLMAccuracy.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.mlm_accuracy.MLMAccuracy.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates MLM accuracy for every row in data.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.features.orf">
+<span id="orf"></span><h2>ORF<a class="headerlink" href="#module-lncrnapy.features.orf" title="Link to this heading"></a></h2>
+<p>Feature extractors that identify and rely on the Open Reading Frame (ORF) in
+a transcript.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFAminoAcidFreqs">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.orf.</span></span><span class="sig-name descname"><span class="pre">ORFAminoAcidFreqs</span></span><a class="headerlink" href="#lncrnapy.features.orf.ORFAminoAcidFreqs" title="Link to this definition"></a></dt>
+<dd><p>Calculates occurrence frequencies in the protein encoded by an ORF
+for all amino acids.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`amino_acids`</span></span></dt>
+<dd><p>All 20 possible amino acid symbols.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>List of column names for ORF amino acid frequencies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">References</p>
+<p>CONC: Blake et al. (2006) <a class="reference external" href="https://doi.org/10.1371/journal.pgen.0020029">https://doi.org/10.1371/journal.pgen.0020029</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFAminoAcidFreqs.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.ORFAminoAcidFreqs.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates ORF amino acid frequencies for all rows in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFAminoAcidFreqs.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">protein</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.ORFAminoAcidFreqs.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Calculates ORF amino acid frequencies for a given <cite>protein</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFCoordinates">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.orf.</span></span><span class="sig-name descname"><span class="pre">ORFCoordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relaxation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.ORFCoordinates" title="Link to this definition"></a></dt>
+<dd><p>Determines Open Reading Frame (ORF) coordinates, similar to NCBI’s
+ORFFinder (<a class="reference external" href="https://www.ncbi.nlm.nih.gov/orffinder/">https://www.ncbi.nlm.nih.gov/orffinder/</a>)</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column names for ORF coordinates (‘ORF (start)’, ‘ORF (end)’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`min_length`</span></span></dt>
+<dd><p>Minimum required length for an ORF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`relaxation`</span></span></dt>
+<dd><p>Relaxation type of the ORF algorithm, as defined by FEELnc.
+* 0: Start and stop codon is required.
+* 1: Start codon is required.
+* 2: Stop codon is required.
+* 3: Start or stop codon is required.
+* 4: If no ORF found, use full-length transcript.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">References</p>
+<p>FEELnc: Wucher et al. (2017) <a class="reference external" href="https://doi.org/10.1093/nar/gkw1306">https://doi.org/10.1093/nar/gkw1306</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFCoordinates.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.ORFCoordinates.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates ORF for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFCoordinates.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.ORFCoordinates.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Returns start (incl.) and stop (excl.) position of longest ORF in
+<cite>sequence</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFCoverage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.orf.</span></span><span class="sig-name descname"><span class="pre">ORFCoverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">relaxation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.ORFCoverage" title="Link to this definition"></a></dt>
+<dd><p>Calculates ORF coverage (ORF length / sequence length).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`relaxation`</span></span></dt>
+<dd><p>The relaxation level(s) of the ORFs for which this feature must be
+calculated (default is 0).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list`|`int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column names for ORF length (‘ORF length’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFCoverage.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.ORFCoverage.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates ORF coverage for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFIsoelectric">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.orf.</span></span><span class="sig-name descname"><span class="pre">ORFIsoelectric</span></span><a class="headerlink" href="#lncrnapy.features.orf.ORFIsoelectric" title="Link to this definition"></a></dt>
+<dd><p>Theoretical isoelectric point of the protein encoded by the ORF.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFLength">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.orf.</span></span><span class="sig-name descname"><span class="pre">ORFLength</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">relaxation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.ORFLength" title="Link to this definition"></a></dt>
+<dd><p>Calculates length of Open Reading Frame (ORF) based on coordinates.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`relaxation`</span></span></dt>
+<dd><p>The relaxation level(s) of the ORFs for which this feature must be
+calculated (default is 0).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list`|`int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column names for ORF length (given relaxation type).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFLength.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.ORFLength.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates ORF length for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFProtein">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.orf.</span></span><span class="sig-name descname"><span class="pre">ORFProtein</span></span><a class="headerlink" href="#lncrnapy.features.orf.ORFProtein" title="Link to this definition"></a></dt>
+<dd><p>Translates ORF of transcript into amino acid sequence.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column name for ORF protein (‘ORF protein’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFProtein.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.ORFProtein.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates ORF protein for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFProtein.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.ORFProtein.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Translates a given <cite>sequence</cite> into a amino-acid sequence.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFProteinAnalysis">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.orf.</span></span><span class="sig-name descname"><span class="pre">ORFProteinAnalysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features={'MW':</span> <span class="pre">&lt;function</span> <span class="pre">ProteinAnalysis.molecular_weight&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'aromaticity':</span> <span class="pre">&lt;function</span> <span class="pre">ProteinAnalysis.aromaticity&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'gravy':</span> <span class="pre">&lt;function</span> <span class="pre">ProteinAnalysis.gravy&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'helix':</span> <span class="pre">&lt;function</span> <span class="pre">ORFProteinAnalysis.&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'instability':</span> <span class="pre">&lt;function</span> <span class="pre">ProteinAnalysis.instability_index&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'pI':</span> <span class="pre">&lt;function</span> <span class="pre">ProteinAnalysis.isoelectric_point&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'sheet':</span> <span class="pre">&lt;function</span> <span class="pre">ORFProteinAnalysis.&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'turn':</span> <span class="pre">&lt;function</span> <span class="pre">ORFProteinAnalysis.&lt;lambda&gt;&gt;}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.ORFProteinAnalysis" title="Link to this definition"></a></dt>
+<dd><p>Calculates features for the protein encoded by the ORF using methods from
+<cite>Bio.SeqUtils.ProtParam.ProteinAnalysis</cite>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`features`</span></span></dt>
+<dd><p>Dictionary with to-be-calculated features, with names (<cite>str</cite>) as keys,
+and corresponding methods of <cite>ProteinAnalysis</cite> as values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>dict</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column names for ORF features (inferred from <cite>features</cite>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFProteinAnalysis.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.ORFProteinAnalysis.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates ORF protein feature(s) for all rows in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.ORFProteinAnalysis.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.ORFProteinAnalysis.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Calculates ORF protein feature(s) for a given amino acid
+<cite>sequence</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.UTRCoverage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.orf.</span></span><span class="sig-name descname"><span class="pre">UTRCoverage</span></span><a class="headerlink" href="#lncrnapy.features.orf.UTRCoverage" title="Link to this definition"></a></dt>
+<dd><p>Calculates the coverage of the 5’ and 3’ Untranslated Regions (UTRs).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column names for 5’ and 3’ UTR coverage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.UTRCoverage.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.UTRCoverage.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates the UTR coverage for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.UTRLength">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.orf.</span></span><span class="sig-name descname"><span class="pre">UTRLength</span></span><a class="headerlink" href="#lncrnapy.features.orf.UTRLength" title="Link to this definition"></a></dt>
+<dd><p>Calculates the length of the 5’ and 3’ Untranslated Regions (UTRs).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column names for 5’ and 3’ UTR length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.UTRLength.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.UTRLength.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates the lengths of the 5’/3’ UTRs for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.UTRLength.no_orf_to_nan">
+<span class="sig-name descname"><span class="pre">no_orf_to_nan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.UTRLength.no_orf_to_nan" title="Link to this definition"></a></dt>
+<dd><p>Sets array value to nan if value at index is -1.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.features.orf.orf_column_names">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.features.orf.</span></span><span class="sig-name descname"><span class="pre">orf_column_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relaxation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.orf.orf_column_names" title="Link to this definition"></a></dt>
+<dd><p>Generate column names for the ORF features in <cite>columns</cite>, for a specific
+<cite>relaxation</cite> type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>columns</strong> (<cite>list[str]</cite>) – List of ORF feature names (e.g. ‘length’)</p></li>
+<li><p><strong>relaxation</strong> (<cite>list`|`int</cite>) – Relaxation type(s) for the to-be-generated columns.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.features.sequence_base">
+<span id="sequence-base"></span><h2>Sequence Base<a class="headerlink" href="#module-lncrnapy.features.sequence_base" title="Link to this heading"></a></h2>
+<p>Contains base class for features that operate on data (sub)sequences.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.sequence_base.SequenceBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.sequence_base.</span></span><span class="sig-name descname"><span class="pre">SequenceBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">apply_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sequence'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.sequence_base.SequenceBase" title="Link to this definition"></a></dt>
+<dd><p>Base class for features that operate on data (sub)sequences, the type of
+which is specified by the <cite>apply_to</cite> attribute.</p>
+<p>Sequence-based features in lncrnapy are not required to inherit from
+this class, but it does make them more versatile as it enables a single
+implementation to operate on multiple sequence types.</p>
+<p>Most important methods are <cite>get_sequence</cite> and <cite>check_columns</cite>, which will
+behave differently for different <cite>apply_to</cite> settings.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`apply_to`</span></span></dt>
+<dd><p>Indicates which column this class extracts its features from.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.sequence_base.SequenceBase.check_columns">
+<span class="sig-name descname"><span class="pre">check_columns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.sequence_base.SequenceBase.check_columns" title="Link to this definition"></a></dt>
+<dd><p>Checks if the required columns, based on the <cite>apply_to</cite> attribute,
+are present within <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.features.sse">
+<span id="sse"></span><h2>SSE<a class="headerlink" href="#module-lncrnapy.features.sse" title="Link to this heading"></a></h2>
+<p>Feature extractors based on Secondary Structure Elements (SSEs).</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.sse.SSE">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.sse.</span></span><span class="sig-name descname"><span class="pre">SSE</span></span><a class="headerlink" href="#lncrnapy.features.sse.SSE" title="Link to this definition"></a></dt>
+<dd><p>Calculates Secondare Elements (SSEs) based on Minimum Free Energy (MFE),
+using the ViennaRNA package, as proposed by LNCFinder.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Names features calculated by this object (‘MFE’, ‘SSE’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">References</p>
+<p>LNCFinder: Han et al. (2018) <a class="reference external" href="https://doi.org/10.1093/bib/bby065">https://doi.org/10.1093/bib/bby065</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.sse.SSE.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.sse.SSE.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates MFE and SSE for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.sse.SSE.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.sse.SSE.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Calculates MFE and SSE for a given <cite>sequence</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.sse.UPFrequency">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.sse.</span></span><span class="sig-name descname"><span class="pre">UPFrequency</span></span><a class="headerlink" href="#lncrnapy.features.sse.UPFrequency" title="Link to this definition"></a></dt>
+<dd><p>Calculates the frequency of unpaired nucleotide bases (UP frequency),
+using the SSE, as proposed by LNCFinder.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Name of the feature as calculated by this object (‘UP freq.’)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.sse.UPFrequency.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.sse.UPFrequency.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates the UP frequency for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.sse.UPFrequency.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.sse.UPFrequency.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Calculates the UP frequency of a given data row.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.features.sse.get_hl_sse_sequence">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.features.sse.</span></span><span class="sig-name descname"><span class="pre">get_hl_sse_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.sse.get_hl_sse_sequence" title="Link to this definition"></a></dt>
+<dd><p>Returns high-level secondary structure-derived sequence, using the
+‘sequence’ and ‘SSE’ columns of <cite>data_row</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_row</strong> (<cite>pd.Series</cite>) – Row with ‘sequence’ and ‘SSE’ columns.</p></li>
+<li><p><strong>type</strong> (<em>'acguD'</em><em>|</em><em>'acguS'</em><em>|</em><em>'acgu-ACGU'</em>) – Type of secondary structure-derived sequence.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>LNCFinder: Han et al. (2018) <a class="reference external" href="https://doi.org/10.1093/bib/bby065">https://doi.org/10.1093/bib/bby065</a></p>
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.features.standardizer">
+<span id="standardizer"></span><h2>Standardizer<a class="headerlink" href="#module-lncrnapy.features.standardizer" title="Link to this heading"></a></h2>
+<p>Contains the Standardizer class, expanding the StandardScaler from
+scikit-learn to match and work with the lncrnapy API.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.standardizer.Standardizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.standardizer.</span></span><span class="sig-name descname"><span class="pre">Standardizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_to</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.standardizer.Standardizer" title="Link to this definition"></a></dt>
+<dd><p>Integrates the StandardScaler object from scikit-learn with the
+lncrnapy API. This allows it to operate on <cite>Data</cite> objects and be
+considered a feature extractor. Furthermore, the <cite>inverse_transform</cite> method
+can be called during evaluation of a deep neural network, to get a realistic
+insight in what the model’s current error is.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.standardizer.Standardizer.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.standardizer.Standardizer.calculate" title="Link to this definition"></a></dt>
+<dd><p>Scales all rows in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.standardizer.Standardizer.inverse_transform">
+<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.standardizer.Standardizer.inverse_transform" title="Link to this definition"></a></dt>
+<dd><p>Scales back <cite>y</cite> into the original scaling.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.features.tokenizers">
+<span id="tokenizers"></span><h2>Tokenizers<a class="headerlink" href="#module-lncrnapy.features.tokenizers" title="Link to this heading"></a></h2>
+<p>Tokenization methods required for deep learning language models.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.BPELength">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.tokenizers.</span></span><span class="sig-name descname"><span class="pre">BPELength</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_defined_symbols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_sentence_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.BPELength" title="Link to this definition"></a></dt>
+<dd><p>Calculates the full Byte Pair Encoding length, without special tokens
+(e.g. CLS), assuming no context length cut-off.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.BPELength.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.BPELength.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates theoretical BPE length for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.BPEPieces">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.tokenizers.</span></span><span class="sig-name descname"><span class="pre">BPEPieces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_defined_symbols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_sentence_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.BPEPieces" title="Link to this definition"></a></dt>
+<dd><p>Calculates a piecewise representation of the sequence with Byte Pair
+Encoding, without converting the pieces to token indices.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.BPEPieces.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.BPEPieces.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates the piecewise BPE sequence for all rows in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.BPEPieces.print">
+<span class="sig-name descname"><span class="pre">print</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inspect_codon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ATG'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_chars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.BPEPieces.print" title="Link to this definition"></a></dt>
+<dd><p>Prints a (piecewise BPE) sequence, highlighting the codon specified
+in <cite>inspect_codon</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.BytePairEncoding">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.tokenizers.</span></span><span class="sig-name descname"><span class="pre">BytePairEncoding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4096</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_defined_symbols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_sentence_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.BytePairEncoding" title="Link to this definition"></a></dt>
+<dd><p>Byte Pair Encoding from sentenciepiece, applied to nucleotide sequences.</p>
+<p class="rubric">References</p>
+<p>BPE: Sennrich et al. (2016) <a class="reference external" href="https://doi.org/10.18653/v1/P16-1162">https://doi.org/10.18653/v1/P16-1162</a>
+DNABERT-2: Zhou et al. (2023) <a class="reference external" href="https://doi.org/10.48550/arXiv.2306.15006">https://doi.org/10.48550/arXiv.2306.15006</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.BytePairEncoding.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.BytePairEncoding.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates the BPE tokens for all rows in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.BytePairEncoding.get_piece_length_stats">
+<span class="sig-name descname"><span class="pre">get_piece_length_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.BytePairEncoding.get_piece_length_stats" title="Link to this definition"></a></dt>
+<dd><p>Returns the avg, std, min, and max length of word pieces in the BPE
+vocabulary.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.BytePairEncoding.vocab_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vocab_size</span></span><a class="headerlink" href="#lncrnapy.features.tokenizers.BytePairEncoding.vocab_size" title="Link to this definition"></a></dt>
+<dd><p>The number of unique tokens known by the model.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.KmerTokenizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.tokenizers.</span></span><span class="sig-name descname"><span class="pre">KmerTokenizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.KmerTokenizer" title="Link to this definition"></a></dt>
+<dd><p>Tokenizer based on k-mers, every k-mer is given its own token.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`k`</span></span></dt>
+<dd><p>Length of k-mers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.KmerTokenizer.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.KmerTokenizer.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates the token representations of all sequences in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.KmerTokenizer.calculate_kmer_tokens">
+<span class="sig-name descname"><span class="pre">calculate_kmer_tokens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.KmerTokenizer.calculate_kmer_tokens" title="Link to this definition"></a></dt>
+<dd><p>Tokenizes <cite>sequence</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.TokenLocalization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.tokenizers.</span></span><span class="sig-name descname"><span class="pre">TokenLocalization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.TokenLocalization" title="Link to this definition"></a></dt>
+<dd><p>Adds special MASK token to tokenized input sequence, with the location of
+this MASK as new feature.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.TokenLocalization.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.TokenLocalization.calculate" title="Link to this definition"></a></dt>
+<dd><p>Adds MASK token and localization target to every row in <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.TokenizerBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.tokenizers.</span></span><span class="sig-name descname"><span class="pre">TokenizerBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.TokenizerBase" title="Link to this definition"></a></dt>
+<dd><p>Base class for tokenizers, only for some shared attributes.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`context_length`</span></span></dt>
+<dd><p>Number of tokens this tokenizer generates per sample.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`vocab_size`</span></span></dt>
+<dd><p>The number of unique tokens known by the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`tokens`</span></span></dt>
+<dd><p>Mapping of sequences (or token indicators such as ‘CLS’) to the integer
+values that these tokens are represented by.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>dict[str:int]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>List of column names for the generated tokens.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.TokenizerBase.vocab_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vocab_size</span></span><a class="headerlink" href="#lncrnapy.features.tokenizers.TokenizerBase.vocab_size" title="Link to this definition"></a></dt>
+<dd><p>The number of unique tokens known by the model.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.coverage_table">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.features.tokenizers.</span></span><span class="sig-name descname"><span class="pre">coverage_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocab_sizes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_lengths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_num_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.coverage_table" title="Link to this definition"></a></dt>
+<dd><p>Creates a table that for ever combination of vocabulary size and context
+length, calculates the proportion of deprecated sequences. When
+<cite>show_num_tokens</cite> is True, will report the average number of skipped tokens.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.features.tokenizers.plot_bpe_lengths">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.features.tokenizers.</span></span><span class="sig-name descname"><span class="pre">plot_bpe_lengths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocab_sizes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.975</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.tokenizers.plot_bpe_lengths" title="Link to this definition"></a></dt>
+<dd><p>Combined density plot of BPE encoding length for all <cite>vocab_sizes</cite>.</p>
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.features.zhang">
+<span id="zhang"></span><h2>Zhang<a class="headerlink" href="#module-lncrnapy.features.zhang" title="Link to this heading"></a></h2>
+<p>‘Zhang nucleotide bias around start codon, as proposed by DeepCPP (Zhang et
+al. 2020)</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.zhang.ZhangScore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.zhang.</span></span><span class="sig-name descname"><span class="pre">ZhangScore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.zhang.ZhangScore" title="Link to this definition"></a></dt>
+<dd><p>Nucleotide bias around the start codon of the ORF, as proposed by
+DeepCPP.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`bias`</span></span></dt>
+<dd><p>Array containing the nucleotide bias around the start codon.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>np.ndarray</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column name of the feature calculated by this class (‘Zhang score’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">References</p>
+<p>DeepCPP: Zhang et al. (2020) <a class="reference external" href="https://doi.org/10.1093/bib/bbaa039">https://doi.org/10.1093/bib/bbaa039</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.zhang.ZhangScore.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.zhang.ZhangScore.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates the Zhang nucleotide bias score for every row in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.zhang.ZhangScore.calculate_per_sequence">
+<span class="sig-name descname"><span class="pre">calculate_per_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orf_start</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.zhang.ZhangScore.calculate_per_sequence" title="Link to this definition"></a></dt>
+<dd><p>Calculates the Zhang nucleotide bias score for given <cite>sequence</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="data.html" class="btn btn-neutral float-left" title="lncrnapy.data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="modules.html" class="btn btn-neutral float-right" title="lncrnapy.modules" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Luuk Romeijn.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

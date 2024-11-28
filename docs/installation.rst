@@ -1,18 +1,26 @@
 Installation 
 ============
 
-LncRNA-Py can be installed via GitHub and conda.
+LncRNA-Py can be installed via GitHub and 
+`conda <https://www.anaconda.com/download/success>`_.
 
 :: 
     
     git clone https://github.com/luukromeijn/rhythmnblues.git
 
-
 Required Dependencies
 ---------------------
 
-Following the following order of installation will lead to the least tedious 
-and cumbersome virtual environment setup.
+The required conda environment can be installed using the provided
+:code:`environment.yml` file. 
+
+:: 
+    
+    conda env create -f environment.yml
+
+Alternatively, one can install the required packages manually. We find that the
+following order of installation will lead to the least tedious and cumbersome 
+virtual environment setup.
 
 ::
 

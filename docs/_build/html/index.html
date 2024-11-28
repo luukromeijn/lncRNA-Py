@@ -75,7 +75,7 @@
 <h1>lncRNA-Py Documentation<a class="headerlink" href="#lncrna-py-documentation" title="Link to this heading"></a></h1>
 <p>lncRNA-Py is a development package for applying machine learning and deep
 learning to the problem of lncRNA classification, i.e. predicting whether a
-novel RNA transcript is coding or non-coding.</p>
+novel RNA transcript is coding (mRNA) or long non-coding (lncRNA).</p>
 <p>The main functionalities of the package are:</p>
 <ul class="simple">
 <li><p><strong>Library of predictor features</strong>: Re-implementations of a large collection of
@@ -102,8 +102,25 @@ re-implemented features.</p>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#optional-dependencies">Optional Dependencies</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="scripts.html">Running Scripts</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">Running Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="scripts.html#classify">Classify</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts.html#train">Train</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts.html#pre-train">Pre-Train</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts.html#generate-embeddings">Generate Embeddings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts.html#byte-pair-encoding">Byte Pair Encoding</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api_docs/data.html">lncrnapy.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_docs/features.html">lncrnapy.features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_docs/modules.html">lncrnapy.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_docs/train.html">lncrnapy.train</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_docs/evaluate.html">lncrnapy.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_docs/utils.html">lncrnapy.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_docs/algorithms.html">lncrnapy.algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_docs/selection.html">lncrnapy.selection</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
@@ -114,7 +131,7 @@ internship project at the Sequencing Analysis Support Core (SASC) at Leiden
 University Medical Center (LUMC), as part of the Computer Science master’s
 program at the Leiden Insitute of Advanced Computer Science (LIACS). The
 package accompanies the thesis: <a class="reference external" href="https://theses.liacs.nl/cs">LncRNA-BERT: An RNA Language Model for
-Classifying Coding and Long Non-Coding RNA*</a>. The
+Classifying Coding and Long Non-Coding RNA</a>. The
 project was supervised by Katy Wolstencroft (LIACS) and Hailiang Mei (LUMC).</p>
 </section>
 </section>

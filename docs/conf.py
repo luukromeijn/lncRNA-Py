@@ -6,6 +6,10 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import os
+import sys
+sys.path.insert(0, os.path.abspath('..'))
+
 project = 'lncRNA-Py'
 copyright = '2024, Luuk Romeijn'
 author = 'Luuk Romeijn'
@@ -15,7 +19,7 @@ author = 'Luuk Romeijn'
 
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
 ]
 
 templates_path = ['_templates']

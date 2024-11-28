@@ -6,7 +6,7 @@ LncRNA-Py can be installed via GitHub and
 
 :: 
     
-    git clone https://github.com/luukromeijn/rhythmnblues.git
+    git clone https://github.com/luukromeijn/lncRNA-Py.git
 
 Required Dependencies
 ---------------------

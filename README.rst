@@ -34,8 +34,9 @@ re-implemented features.
 
 .. usage intro end
 
-We refer to the `official documentation page <todo.com>`_ for detailed usage 
-information and also provide an `example notebook <example.ipynb>`_.
+We refer to the `official documentation page 
+<https://luukromeijn.github.io/lncRNA-Py/>`_ for detailed usage information 
+and also provide an `example notebook <example.ipynb>`_.
 
 .. about start
 

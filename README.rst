@@ -26,10 +26,12 @@ Usage
 -----
 
 .. usage intro start
+
 There are two ways in which lncRNA-Py can be used: 1) running pre-written
 scripts; or 2) via the object-oriented API. The scripts are dedicated to
 (pre-)training NLMs, the API provides access to the extensive library of 
 re-implemented features.
+
 .. usage intro end
 
 We refer to the `official documentation page <todo.com>`_ for detailed usage 

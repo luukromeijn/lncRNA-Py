@@ -15,6 +15,8 @@ def bpe(fasta_train, vocab_size, bpe_file, data_dir):
                      export_path=f'{data_dir}/{bpe_file}')
     
 
+description = 'Fits a Byte Pair Encoding (BPE) model to a dataset.'
+
 args = {
     'fasta_train': {
         'type': str,
@@ -42,9 +44,7 @@ args = {
 if __name__ == '__main__':
 
     # Parsing arguments
-    p = argparse.ArgumentParser(description=
-        'Fits a Byte Pair Encoding (BPE) model to a dataset.'
-    )
+    p = argparse.ArgumentParser(description=description)
     for arg in args:
         p.add_argument(arg, **args[arg])
     p = p.parse_args()

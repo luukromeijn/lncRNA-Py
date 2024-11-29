@@ -98,6 +98,10 @@ def pretrain(
         )
     )
 
+
+description = 'Pre-training script for a Nucleotide Language Model. Several ' \
+              'encoding methods and hyperparameter settings are supported.'
+
 # Arguments
 args = {
     'fasta_train': {
@@ -274,10 +278,7 @@ args = {
 if __name__ == '__main__':
 
     # Parsing arguments
-    p = argparse.ArgumentParser(description=
-        'Pre-training script for a Nucleotide Language Model. '
-        'Several encoding methods and hyperparameter settings are supported.'
-    )
+    p = argparse.ArgumentParser(description=description)
     for arg in args:
         p.add_argument(arg, **args[arg])
     p = p.parse_args()

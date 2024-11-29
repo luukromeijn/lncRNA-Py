@@ -65,6 +65,9 @@ def embeddings(
                                   filepath=f'{results_dir}/{output_plot_file}')
 
 
+description = 'Retrieves sequence embeddings by specified model for input ' \
+              'dataset.'
+
 args = {
     'fasta_file': {
         'type': str,
@@ -155,9 +158,7 @@ args = {
 if __name__ == '__main__':
 
     # Parsing arguments
-    p = argparse.ArgumentParser(description=
-        'Retrieves sequence embeddings by specified model for input dataset.'
-    )
+    p = argparse.ArgumentParser(description=description)
     for arg in args:
         p.add_argument(arg, **args[arg])
     p = p.parse_args()

@@ -114,6 +114,9 @@ def train(
     )
 
 
+description = 'Trains (or fine-tunes) a model (optionally pre-trained) for ' \
+              'lncRNA classification.'
+
 args = {
     'fasta_pcrna_train': {
         'type': str,
@@ -301,8 +304,7 @@ args = {
 if __name__ == '__main__':
 
     # Parsing arguments
-    p = argparse.ArgumentParser(description='Trains (or fine-tunes) ' 
-        'a model (optionally pre-trained) for lncRNA classification.')
+    p = argparse.ArgumentParser(description=description)
     for arg in args:
         p.add_argument(arg, **args[arg])
     p = p.parse_args()

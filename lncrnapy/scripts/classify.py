@@ -55,6 +55,9 @@ def classify(
     data.to_hdf(f'{results_dir}/{output_file}')                                 # NOTE: I guess .csv option would be nice here
 
 
+description = 'Performs lncRNA classification, classifying RNA sequences as ' \
+              'either coding or non-coding.'
+
 args = {
     'fasta_file': {
         'type': str,
@@ -125,10 +128,7 @@ args = {
 if __name__ == '__main__':
 
     # Parsing arguments
-    p = argparse.ArgumentParser(description=
-        'Performs lncRNA classification, classifying RNA sequences as either '
-        'coding or non-coding.'
-    )
+    p = argparse.ArgumentParser(description=description)
     for arg in args:
         p.add_argument(arg, **args[arg])
     p = p.parse_args()

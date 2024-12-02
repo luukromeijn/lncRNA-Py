@@ -49,7 +49,7 @@
 <li class="toctree-l2"><a class="reference internal" href="data.html">lncrnapy.data</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">lncrnapy.features</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.features.blast">BLAST</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.blast.BLASTNCoverage"><code class="docutils literal notranslate"><span class="pre">BLASTNCoverage</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.blast.BLASTNIdXCov"><code class="docutils literal notranslate"><span class="pre">BLASTNIdXCov</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.blast.BLASTNSearch"><code class="docutils literal notranslate"><span class="pre">BLASTNSearch</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.blast.BLASTXBinary"><code class="docutils literal notranslate"><span class="pre">BLASTXBinary</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.blast.BLASTXSearch"><code class="docutils literal notranslate"><span class="pre">BLASTXSearch</span></code></a></li>
@@ -186,13 +186,13 @@ array of the same length as the <cite>Data</cite> object.</p>
 <span id="blast"></span><h2>BLAST<a class="headerlink" href="#module-lncrnapy.features.blast" title="Link to this heading"></a></h2>
 <p>Feature extractors that perform a BLAST database search.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTNCoverage">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.blast.</span></span><span class="sig-name descname"><span class="pre">BLASTNCoverage</span></span><a class="headerlink" href="#lncrnapy.features.blast.BLASTNCoverage" title="Link to this definition"></a></dt>
-<dd><p>Alignment length / sequence length</p>
+<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTNIdXCov">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.blast.</span></span><span class="sig-name descname"><span class="pre">BLASTNIdXCov</span></span><a class="headerlink" href="#lncrnapy.features.blast.BLASTNIdXCov" title="Link to this definition"></a></dt>
+<dd><p>Alignment identity x coverage</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTNCoverage.calculate">
-<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTNCoverage.calculate" title="Link to this definition"></a></dt>
-<dd><p>Calculates the BLASTN coverage feature for every row in <cite>data</cite></p>
+<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTNIdXCov.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTNIdXCov.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates the BLASTN id x cov feature for every row in <cite>data</cite></p>
 </dd></dl>
 
 </dd></dl>
@@ -200,7 +200,8 @@ array of the same length as the <cite>Data</cite> object.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTNSearch">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.blast.</span></span><span class="sig-name descname"><span class="pre">BLASTNSearch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strand</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'plus'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTNSearch" title="Link to this definition"></a></dt>
-<dd><p>Performs BLASTN database search, returns max BLASTN identity per query.</p>
+<dd><p>Performs BLASTN database search, returns identity, alignment length and
+bit score for hit with max bit score per query.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">`reference`</span></span></dt>

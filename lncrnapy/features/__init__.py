@@ -8,7 +8,7 @@ this feature will have.
 array of the same length as the `Data` object.'''
 
 from lncrnapy.features.blast import (BLASTXSearch, BLASTXBinary, BLASTNSearch,
-                                     BLASTNCoverage)
+                                     BLASTNIdXCov)
 from lncrnapy.features.fickett import FickettScore
 from lncrnapy.features.general import (
     Length, Complexity, Entropy, EntropyDensityProfile, GCContent, 

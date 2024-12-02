@@ -150,7 +150,7 @@ class BLASTXSearch:
     
     def read_blastx_output(self, out_filepath):
         '''Reads a BLAST .csv output file (outfmt 10) with good column names.'''
-        return pd.read_csv(out_filepath, header=0, names=[ # Read dataframe
+        return pd.read_csv(out_filepath, header=None, names=[ # Read dataframe
             'query acc.ver', 'subject acc.ver', 'identity', 'alignment length',
             'mismatches', 'gap opens', 'q. start', 'q. end', 's. start', 
             's. end', 'evalue', 'bit score']
@@ -215,7 +215,8 @@ class BLASTXBinary:
 
 # NOTE Currently not included in unittests because of blast dependency
 class BLASTNSearch:
-    '''Performs BLASTN database search, returns max BLASTN identity per query.
+    '''Performs BLASTN database search, returns identity, alignment length and 
+    bit score for hit with max bit score per query.
     
     Attributes
     ----------
@@ -255,8 +256,6 @@ class BLASTNSearch:
             Whether to run remotely or locally. If False, requires a local
             installation of BLAST with a callable blastx program (default is 
             False).
-        `evalue`: `float`
-            Cut-off value for statistical significance (default is 1e-10).
         `strand`: ['both'|'plus'|'minus']
             Which reading direction(s) to consider (default is 'plus').
         `threads`: `int`
@@ -274,8 +273,9 @@ class BLASTNSearch:
         self.threads = threads
         self.output_dir = output_dir
         self.save_results = save_results
-        self.name = ['BLASTN max identity', 'BLASTN alignment length']
-
+        self.name = ['BLASTN identity', 'BLASTN alignment length',
+                     'BLASTN bit score']
+        
     def calculate(self, data):
         '''Calculates BLASTX database search features for all rows in `data`.'''
 
@@ -294,15 +294,15 @@ class BLASTNSearch:
                 group = output.get_group(row['id'])
             except KeyError:
                 group = pd.DataFrame(columns=columns)
-            results.append(group.sort_values(by='identity', ascending=False)[
-                                ['identity', 'alignment length']
+            results.append(group.sort_values(by='bit score', ascending=False)[
+                                ['identity', 'alignment length', 'bit score']
                            ].head(1).max().tolist())
 
         return np.nan_to_num(results, nan=0)
     
     def read_blastn_output(self, out_filepath):
         '''Reads a BLAST .csv output file (outfmt 10) with good column names.'''
-        return pd.read_csv(out_filepath, header=0, names=[ # Read dataframe
+        return pd.read_csv(out_filepath, header=None, names=[ # Read dataframe
             'query acc.ver', 'subject acc.ver', 'identity', 'alignment length',
             'mismatches', 'gap opens', 'q. start', 'q. end', 's. start', 
             's. end', 'evalue', 'bit score']
@@ -334,14 +334,16 @@ class BLASTNSearch:
         return output
     
 
-class BLASTNCoverage:
-    '''Alignment length / sequence length'''
+class BLASTNIdXCov:
+    '''Alignment identity x coverage'''
 
     def __init__(self):
-        '''Initializes `BLASTNcoverage` object.'''
-        self.name = 'BLASTN coverage'
+        '''Initializes `BLASTNIdXCov` object.'''
+        self.name = 'BLASTN id x cov'
 
     def calculate(self, data):
-        '''Calculates the BLASTN coverage feature for every row in `data`'''
-        data.check_columns(['length', 'BLASTN alignment length'])
-        return data.df['BLASTN alignment length'] / data.df['length']
+        '''Calculates the BLASTN id x cov feature for every row in `data`'''
+        data.check_columns(['length', 'BLASTN identity',
+                            'BLASTN alignment length'])
+        return (data.df['BLASTN identity'] * 
+                (data.df['BLASTN alignment length'] / data.df['length']))

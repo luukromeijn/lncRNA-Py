@@ -1,9 +1,8 @@
-'''Evaluation scripts for lncRNA-LR and lncRNA-RF.'''
+'''Prediction scripts for lncRNA-LR and lncRNA-RF.'''
 
 import argparse
 import torch
 from lncrnapy.data import Data
-from lncrnapy.evaluate import lncRNA_classification_report
 
 def evaluate(feature_table, model_type, dataset_name, data_dir, result_dir):
 
@@ -13,11 +12,9 @@ def evaluate(feature_table, model_type, dataset_name, data_dir, result_dir):
     # Loading the model & making prediction
     model = torch.load(f'{data_dir}/models/lncRNA-{model_type}.pt')
     features = model.feature_names_in_
-    y_pred = model.predict(data.df[features])
-    print(lncRNA_classification_report(
-        data.df['label'], y_pred, f'lncRNA-{model_type}', dataset_name, 
-        f'{result_dir}/lncrna-{model_type.lower()}_{dataset_name.lower()}.csv'
-    ))
+    data.df['pred'] = model.predict(data.df[features])
+    data.to_hdf(f'{result_dir}/lncrna-{model_type.lower()}_' +
+                f'{dataset_name.lower()}.h5')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

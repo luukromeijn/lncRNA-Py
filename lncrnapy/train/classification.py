@@ -87,7 +87,7 @@ def train_classifier(
 def epoch_classifier(model, dataloader, loss_function, optimizer, scaler):
     '''Trains `model` for a single epoch.'''
     model.train() # Set training mode
-    for X, y in utils.progress(dataloader): # Loop through data
+    for X, y in dataloader: # Loop through data
         optimizer.zero_grad() # Zero out gradients
         with torch.autocast(**get_amp_args(utils.DEVICE)):
             pred = model(X) # Make prediction

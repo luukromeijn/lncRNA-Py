@@ -54,9 +54,14 @@ def pretrain(
         for dataset in [train_data, valid_data]:
             dataset.set_tensor_features('4D-DNA', len_4d_dna=len_4d_dna)
         exp_name += f'_nm{n_kernels}_sm{kernel_size}'
+    elif encoding_method == '3mer': # TODO: UNDO
+        tokenizer = KmerTokenizer(3, context_length)
+        for dataset in [train_data, valid_data]:
+            dataset.set_tensor_features('3mer')
+        exp_name += f'_k{3}'
 
     # Initializing the model
-    if encoding_method in ['nuc', 'kmer', 'bpe']:
+    if encoding_method in ['nuc', 'kmer', 'bpe', '3mer']: # TODO: UNDO
         base_arch = BERT(tokenizer.vocab_size, d_model, N, d_ff, h)
         model = MaskedTokenModel(base_arch, dropout, batch_size)
         pretrain_function = train_masked_token_modeling
@@ -120,7 +125,7 @@ args = {
     },
     '--encoding_method': {
         'type': str,
-        'choices': ['conv', 'bpe', 'kmer', 'nuc'],
+        'choices': ['conv', 'bpe', 'kmer', 'nuc', '3mer'],
         'default': 'conv',
         'help': 'Sequence encoding method. (str="conv")'
     },

@@ -18,6 +18,102 @@ from torch.utils.data import Dataset
 import torch
 from lncrnapy import utils
 
+# TODO: UNDO or properly integrate
+import itertools
+class DataTokenizerBase:
+    '''Base class for tokenizers, only for some shared attributes.
+
+    Attributes
+    ----------
+    `context_length`: `int`
+        Number of tokens this tokenizer generates per sample.
+    `vocab_size`: `int`
+        The number of unique tokens known by the model.
+    `tokens`: `dict[str:int]`
+        Mapping of sequences (or token indicators such as 'CLS') to the integer
+        values that these tokens are represented by.
+    `name`: `list[str]`
+        List of column names for the generated tokens.'''
+
+    def __init__(self, context_length, method_name):
+        '''Initializes `TokenizerBase` object.
+        
+        Arguments
+        ---------
+        `context_length`: `int`
+            Number of tokens this tokenizer generates per sample.
+        `method_name`: `str`
+            Name of the tokenization method (used to generate unique column
+            names.)'''
+        
+        self.context_length = context_length
+        self.tokens = utils.TOKENS.copy()
+        self.name = [f'T{i} {method_name}' for i in range(self.context_length)]
+    
+    @property
+    def vocab_size(self):
+        '''The number of unique tokens known by the model.'''
+        return len(self.tokens)
+        
+
+class DataKmerTokenizer(DataTokenizerBase):
+    '''Tokenizer based on k-mers, every k-mer is given its own token.
+    
+    Attributes
+    ----------
+    `k`: `int`
+        Length of k-mers.'''
+
+    def __init__(self, k, context_length=768):
+        '''Initializes `KmerTokenizer` object.
+        
+        Arguments
+        ---------
+        `k`: `int`
+            Length of k-mers.
+        `context_length`: `int`
+            Number of tokens this tokenizer generates per sample.'''
+        
+        super().__init__(context_length, f'({k}-mer)')
+        self.k = k
+        self.tokens.update(
+            {''.join(list(kmer)):(i + len(self.tokens)) for i, kmer in 
+             enumerate(itertools.product('ACGT', repeat=self.k))}
+        )
+
+    def calculate(self, data):
+        '''Calculates the token representations of all sequences in `data`.'''
+        data.check_columns(['sequence'])
+        tokens = []
+        for _, row in utils.progress(data.df.iterrows()):
+            tokens.append(self.calculate_kmer_tokens(row['sequence']))
+        return np.stack(tokens)
+    
+    def calculate_kmer_tokens(self, sequence):
+        '''Tokenizes `sequence`.'''
+
+        # Initialize all tokens as 'PAD' except first ('CLS')
+        tokens = self.tokens['PAD']*np.ones(self.context_length, dtype=int)
+        tokens[0] = self.tokens['CLS']
+
+        # Loop through k-mers and add tokens at correct index
+        for t, i in enumerate(
+            range(self.k, 
+                  min(len(sequence)+1, ((self.context_length-1)*self.k)+1), 
+                  self.k)
+            ):
+            kmer = sequence[i-self.k:i]
+            try:
+                tokens[t+1] = self.tokens[kmer]
+            except KeyError: # In case of non-canonical bases (e.g. N)
+                tokens[t+1] = self.tokens['UNK'] 
+        if t+2 < self.context_length:
+            tokens[t+2] = self.tokens['SEP'] # Add seperator if still space left
+
+        return tokens
+    
+k3mer_tokenizer = DataKmerTokenizer(3)
+
 
 class Data(Dataset):
     '''Container for RNA sequence data. Contains methods for data analysis and 
@@ -85,6 +181,8 @@ class Data(Dataset):
         if self.X_name:
             if self.X_name[0] == '4D-DNA':
                 X = self._get_4d_batch(idx)
+            if self.X_name[0] == '3mer': # TODO UNDO
+                X = self._get_3mer_batch(idx)
             else:
                 X = self.df.iloc[idx][self.X_name].values.astype(np.float32)
                 X = torch.tensor(X, dtype=self.X_dtype, device=utils.DEVICE)
@@ -107,6 +205,21 @@ class Data(Dataset):
         y = torch.tensor(y, dtype=self.y_dtype, device=utils.DEVICE)
         
         return X, y
+    
+    def _get_3mer_batch(self, idx): # TODO UNDO
+        '''Retrieves 3-mer tokenizes batch of data (rows specified by `idx`)'''
+        if type(idx) == int:
+            X = self._get_3mer_seq(self.df.iloc[idx]['sequence'])
+            return X
+        else:
+            X = [self._get_3mer_seq(seq) for seq in self.df.iloc[idx]['sequence']]
+            return torch.stack(X, dim=0)
+        
+    def _get_3mer_seq(self, sequence): # TODO UNDO
+        '''Tokenizes a sequence with 3-mer tokenization.'''
+        sequence = torch.tensor(k3mer_tokenizer.calculate_kmer_tokens(sequence),
+                                device=utils.DEVICE, dtype=torch.long)
+        return sequence
         
     def _get_4d_batch(self, idx):
         '''Retrieves 4D-DNA encoded batch of data (rows specified by `idx`.)'''
@@ -312,8 +425,8 @@ class Data(Dataset):
         if behaviour != 'error' and behaviour != 'bool':
             raise ValueError(behaviour)
 
-        for column in columns:
-            if column == '4D-DNA':
+        for column in columns: # TODO undo
+            if column in ['4D-DNA', '3mer']:
                 continue
             elif column not in self.df.columns:
                 if behaviour == 'error':
@@ -431,54 +544,41 @@ class Data(Dataset):
         return fig
     
     def plot_feature_scatter(self, x_feature_name, y_feature_name, 
-                                   c_feature_name=None, c_lower=0.025,
-                             c_upper=0.975, filepath=None, figsize=None):
+                             c_feature_name=None, c_lower=0.025,
+                             c_upper=0.975, filepath=None, axis_labels=True,
+                             xlim=None, ylim=None, figsize=None):
         '''Returns a scatter plot with `x_feature_name` on the x-axis plotted
         against `y_feature_name` on the y-axis.'''
 
         self.check_columns([x_feature_name, y_feature_name])
         fig, ax = plt.subplots(figsize=figsize)
-        # colors = {                                                            # TODO delete this when no longer necessary
-        #     0: '#1f77b4',
-        #     1: '#ff7f0e',
-        #     2: '#2ca02c',
-        #     3: '#d62728',
-        #     4: '#9467bd',
-        #     5: '#8c564b',
-        #     6: '#e377c2',
-        #     7: '#7f7f7f',
-        #     8: '#bcbd22',
-        #     9: '#17becf',
-        # }
-        # ax.scatter(x_feature_name, y_feature_name, s=1, data=self.df[self.df['label'] == 0])
-        # data = self.df[self.df['label'] != 0]
-        # ax.scatter(x_feature_name, y_feature_name, color=data['label'].map(colors), data=data)
         if self.labelled and c_feature_name is None:
             for label in ['pcRNA', 'ncRNA']:
-                if label == 'pcRNA':
-                    ax.scatter(
-                        x_feature_name, y_feature_name, s=1, alpha=0.5,
-                        data=self.df[self.df['label']==label], label='pcRNA'
-                    )
-                if label == 'ncRNA':
-                    ax.scatter(
-                        x_feature_name, y_feature_name, s=1, alpha=0.5,
-                        data=self.df[self.df['label']==label], label='ncRNA'
-                    )
+                ax.scatter(
+                    x_feature_name, y_feature_name, s=1, alpha=0.5,
+                    data=self.df[self.df['label']==label], label=label,
+                    rasterized=True
+                )
             fig.legend(markerscale=5)
         else:
             map = ax.scatter(x_feature_name, y_feature_name, s=1, data=self.df,
-                             c=c_feature_name)
+                             c=c_feature_name, rasterized=True)
             if c_feature_name is not None:
                 map.set_clim(self.df[c_feature_name].quantile(c_lower), 
                              self.df[c_feature_name].quantile(c_upper))
                 cb = fig.colorbar(map)
                 cb.ax.set_ylabel(c_feature_name)
-        ax.set_xlabel(x_feature_name)
-        ax.set_ylabel(y_feature_name)
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        if axis_labels:
+            ax.set_xlabel(x_feature_name)
+            ax.set_ylabel(y_feature_name)
+        else:
+            ax.set_xticks([])
+            ax.set_yticks([])
         fig.tight_layout()
         if filepath is not None:
-            fig.savefig(filepath)
+            fig.savefig(filepath, dpi=300)
 
         return fig
     

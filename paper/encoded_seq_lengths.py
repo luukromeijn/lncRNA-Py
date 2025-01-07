@@ -6,8 +6,8 @@ from lncrnapy.data import Data
 from lncrnapy.features.tokenizers import BPELength
 from lncrnapy.features import Length
 
-seq_dir = '/data/s2592800/data/sequences'
-features_dir = '/data/s2592800/data/features'
+seq_dir = 'data/sequences'
+features_dir = 'data/features'
 
 # Encoding ---------------------------------------------------------------------
 dataset = Data([f'{seq_dir}/pretrain_human_pcrna.fasta',
@@ -20,14 +20,14 @@ dataset.df['length/6'] = dataset.df['length'] / 6
 dataset.df['length/9'] = dataset.df['length'] / 9
 dataset.df['length/10'] = dataset.df['length'] / 10
 dataset.df['length/13'] = dataset.df['length'] / 13
-for vocab_size in [256, 512, 768, 1024, 2048, 4096, 8192]:
+for vocab_size in [256, 1024, 4096]:
     print(vocab_size)
     dataset.calculate_feature(BPELength(f'{features_dir}/{vocab_size}.bpe', 
                                         vocab_size))
 
-dataset.to_hdf('f{features_dir}/lengths.h5')
+dataset.to_hdf(f'{features_dir}/lengths.h5')
 
-# Visualization ----------------------------------------------------------------
+# Visualization (pcRNA/ncRNA) ------------------------------------------------
 dataset = Data(hdf_filepath=f'{features_dir}/lengths.h5')
 
 to_plot = {
@@ -90,4 +90,65 @@ ax[len(to_plot)-1,1].set_xticks(np.arange(0,2049,256))
 
 plt.tight_layout()
 plt.subplots_adjust(left=0.14, hspace=0)
+plt.savefig('encoded_seq_lengths.pdf')
+
+# Visualization (overall) ------------------------------------------------------
+dataset = Data(hdf_filepath=f'{features_dir}/lengths.h5')
+
+to_plot = {
+    'NUC (4)': 'length',
+    '3-mer (256)': 'length/3', 
+    '6-mer (4096)': 'length/6', 
+    '9-mer (4^9)': 'length/9',
+    'BPE (256)': 'BPE length (vs=256)', 
+    'BPE (1024)': 'BPE length (vs=1024)',
+    'BPE (4096)': 'BPE length (vs=4096)',
+    'CSE k=9': 'length/9',
+    'CSE k=10': 'length/10',
+}
+
+fig, ax = plt.subplots(nrows=len(to_plot), figsize=(6,4.5))
+for i, length in enumerate(to_plot):
+    if length.startswith('NUC'):
+        color = '#1F77B4'
+    elif length[0].isnumeric(): 
+        color = '#FF7F0E'
+    elif length.startswith('BPE'):
+        color = '#2CA02C'
+    elif length.startswith('CSE'):
+        color = '#D62728'
+    else:
+        raise RuntimeError()
+    feature = to_plot[length]
+    data = dataset.df[feature]
+    left_text = round((data <= 768).sum() / len(data)*100)
+    right_text = round((data > 768).sum() / len(data)*100)
+    plot1 = data.plot.density(ind=np.arange(0,2112), ax=ax[i], alpha=0)
+    ax[i].axvline(x=768, c='black', linestyle='--', linewidth=1)
+
+    # grabbing x and y data from the kde plot
+    x = plot1.get_children()[0]._x
+    y = plot1.get_children()[0]._y
+
+    # filling the space beneath the distribution
+    ax[i].fill_between(x,y, alpha=0.5, color=color)
+
+    # ax[i,j].axvline(x=1024)
+    ax[i].set_xticks([])
+    ax[i].set_yticks([])
+    ax[i].set_xlim(0, 2112)
+    ax[i].set_ylim(0)
+    ax[i].text(0.5*768, 0.5, f'{left_text}%', va='center', ha='center',
+                    transform=ax[i].get_xaxis_transform())
+    ax[i].text(768+0.5*(2048-768), 0.5, f'{right_text}%', va='center', 
+                    transform=ax[i].get_xaxis_transform(), ha='center')
+    ylabel = length 
+    ax[i].set_ylabel(ylabel, rotation=0, size='large', ha='right', va='center')
+
+ax[len(to_plot)-1].set_xlabel('encoded sequence length')
+ax[len(to_plot)-1].set_xticks(np.arange(0,2049,256))
+ax[len(to_plot)-1].set_xticks(np.arange(0,2049,256))
+
+plt.tight_layout()
+plt.subplots_adjust(hspace=0)
 plt.savefig('encoded_seq_lengths.pdf')

@@ -21,3 +21,7 @@ TODO
 Hyperparameter Tuning
 ---------------------
 TODO
+
+.. image:: figures/hyppar_tuning.png
+  :width: 400
+  :alt: Alternative text

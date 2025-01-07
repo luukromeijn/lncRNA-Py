@@ -22,6 +22,6 @@ Hyperparameter Tuning
 ---------------------
 TODO
 
-.. image:: figures/hyppar_tuning.png
+.. image:: figures/hyppar_tuning/warmup.png
   :width: 400
-  :alt: Alternative text
+  :alt: Learning Curve warmup steps

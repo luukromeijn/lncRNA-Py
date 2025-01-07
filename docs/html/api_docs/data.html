@@ -1,0 +1,507 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lncrnapy.data &mdash; lncRNA-Py  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="lncrnapy.features" href="features.html" />
+    <link rel="prev" title="API Documentation" href="../api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            lncRNA-Py
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scripts.html">Running Scripts</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">lncrnapy.data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.data.Data"><code class="docutils literal notranslate"><span class="pre">Data</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.add_feature"><code class="docutils literal notranslate"><span class="pre">Data.add_feature()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.all_features"><code class="docutils literal notranslate"><span class="pre">Data.all_features()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.calculate_feature"><code class="docutils literal notranslate"><span class="pre">Data.calculate_feature()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.check_columns"><code class="docutils literal notranslate"><span class="pre">Data.check_columns()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.coding_noncoding_split"><code class="docutils literal notranslate"><span class="pre">Data.coding_noncoding_split()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.feature_correlation"><code class="docutils literal notranslate"><span class="pre">Data.feature_correlation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.filter_outliers"><code class="docutils literal notranslate"><span class="pre">Data.filter_outliers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.filter_sequence_quality"><code class="docutils literal notranslate"><span class="pre">Data.filter_sequence_quality()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.num_coding_noncoding"><code class="docutils literal notranslate"><span class="pre">Data.num_coding_noncoding()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.plot_feature_boxplot"><code class="docutils literal notranslate"><span class="pre">Data.plot_feature_boxplot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.plot_feature_correlation"><code class="docutils literal notranslate"><span class="pre">Data.plot_feature_correlation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.plot_feature_density"><code class="docutils literal notranslate"><span class="pre">Data.plot_feature_density()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.plot_feature_scatter"><code class="docutils literal notranslate"><span class="pre">Data.plot_feature_scatter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.plot_feature_space"><code class="docutils literal notranslate"><span class="pre">Data.plot_feature_space()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.plot_feature_violin"><code class="docutils literal notranslate"><span class="pre">Data.plot_feature_violin()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.pos_weight"><code class="docutils literal notranslate"><span class="pre">Data.pos_weight()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.sample"><code class="docutils literal notranslate"><span class="pre">Data.sample()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.set_random_reading_frame"><code class="docutils literal notranslate"><span class="pre">Data.set_random_reading_frame()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.set_tensor_features"><code class="docutils literal notranslate"><span class="pre">Data.set_tensor_features()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.test_features"><code class="docutils literal notranslate"><span class="pre">Data.test_features()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.to_fasta"><code class="docutils literal notranslate"><span class="pre">Data.to_fasta()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.to_hdf"><code class="docutils literal notranslate"><span class="pre">Data.to_hdf()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.train_test_split"><code class="docutils literal notranslate"><span class="pre">Data.train_test_split()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.data.get_gencode_gene_names"><code class="docutils literal notranslate"><span class="pre">get_gencode_gene_names()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.data.get_rna_type_refseq"><code class="docutils literal notranslate"><span class="pre">get_rna_type_refseq()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.data.merge_fasta"><code class="docutils literal notranslate"><span class="pre">merge_fasta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.data.plot_cross_dataset_violins"><code class="docutils literal notranslate"><span class="pre">plot_cross_dataset_violins()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.data.plot_refseq_labels"><code class="docutils literal notranslate"><span class="pre">plot_refseq_labels()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.data.reduce_dimensionality"><code class="docutils literal notranslate"><span class="pre">reduce_dimensionality()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.data.split_refseq"><code class="docutils literal notranslate"><span class="pre">split_refseq()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="features.html">lncrnapy.features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">lncrnapy.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="train.html">lncrnapy.train</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluate.html">lncrnapy.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">lncrnapy.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="algorithms.html">lncrnapy.algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="selection.html">lncrnapy.selection</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../experiments.html">Experiments</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">lncRNA-Py</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+      <li class="breadcrumb-item active">lncrnapy.data</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/luukromeijn/rhythmnblues/blob/master/docs/api_docs/data.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-lncrnapy.data">
+<span id="lncrnapy-data"></span><h1>lncrnapy.data<a class="headerlink" href="#module-lncrnapy.data" title="Link to this heading"></a></h1>
+<p>Contains <cite>Data</cite> class for containing, analyzing, and manipulating RNA
+sequence data.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.data.Data">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.data.</span></span><span class="sig-name descname"><span class="pre">Data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fasta_filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdf_filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data" title="Link to this definition"></a></dt>
+<dd><p>Container for RNA sequence data. Contains methods for data analysis and
+manipulation.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`df`</span></span></dt>
+<dd><p>The underlying <cite>DataFrame</cite> object containing the data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>pd.DataFrame</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`labelled`</span></span></dt>
+<dd><p>Whether the data has labels or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>bool</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`X_name`</span></span></dt>
+<dd><p>List of predictory feature names (columns) to be retrieved as
+tensors when <cite>__getitem__</cite> is called.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`X_dtype`</span></span></dt>
+<dd><p>Data type for X.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>type</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`y_name`</span></span></dt>
+<dd><p>List of target feature names (columns) to be retrieved as tensors
+when <cite>__getitem__</cite> is called.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`y_dtype`</span></span></dt>
+<dd><p>Data type for y.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>type</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.add_feature">
+<span class="sig-name descname"><span class="pre">add_feature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.add_feature" title="Link to this definition"></a></dt>
+<dd><p>Safely adds <cite>feature_data</cite> as new columns to <cite>Data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.all_features">
+<span class="sig-name descname"><span class="pre">all_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">except_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['id',</span> <span class="pre">'sequence',</span> <span class="pre">'label']</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.all_features" title="Link to this definition"></a></dt>
+<dd><p>Returns a list of all features present in data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.calculate_feature">
+<span class="sig-name descname"><span class="pre">calculate_feature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_extractor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.calculate_feature" title="Link to this definition"></a></dt>
+<dd><p>Extracts feature(s) from <cite>Data</cite> using <cite>feature_extractor</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.check_columns">
+<span class="sig-name descname"><span class="pre">check_columns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behaviour</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'error'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.check_columns" title="Link to this definition"></a></dt>
+<dd><p>Raises an error when a column from <cite>columns</cite> does not appear in this
+<cite>Data</cite> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>columns</strong> (<cite>list[str]</cite>) – List of column names that are checked for present in <cite>Data</cite> object.</p></li>
+<li><p><strong>behaviour</strong> (<em>[</em><em>'error'</em><em>|</em><em>'bool'</em><em>]</em>) – Whether to raise an error in case of a missing column or whether to
+return <cite>False</cite> or <cite>True</cite> (default is ‘error’).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.coding_noncoding_split">
+<span class="sig-name descname"><span class="pre">coding_noncoding_split</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.coding_noncoding_split" title="Link to this definition"></a></dt>
+<dd><p>Returns two <cite>Data</cite> objects, the first containing all pcRNA, the
+second containing all ncRNA</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.feature_correlation">
+<span class="sig-name descname"><span class="pre">feature_correlation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.feature_correlation" title="Link to this definition"></a></dt>
+<dd><p>Calculates the correlation between features in <cite>feature_names</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.filter_outliers">
+<span class="sig-name descname"><span class="pre">filter_outliers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.filter_outliers" title="Link to this definition"></a></dt>
+<dd><p>Removes data entries for which the value of <cite>feature_name</cite> falls
+outside of the tolerated range.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature_name</strong> (<cite>str</cite>) – Name of the feature that should be considered.</p></li>
+<li><p><strong>tolerance</strong> (<cite>float`|`int`|`list`|`range</cite>) – When numeric, refers to the tolerated amount of standard deviation
+from the mean. When a list or range, refers to the exact tolerated
+lower (inclusive) and upper (exclusive) bound.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.filter_sequence_quality">
+<span class="sig-name descname"><span class="pre">filter_sequence_quality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.filter_sequence_quality" title="Link to this definition"></a></dt>
+<dd><p>Removes data entries for which the percentage of uncertain bases
+(non-ACGT) exceeds a <cite>tolerance</cite> fraction.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.num_coding_noncoding">
+<span class="sig-name descname"><span class="pre">num_coding_noncoding</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.num_coding_noncoding" title="Link to this definition"></a></dt>
+<dd><p>Returns a tuple of which the elements are the number of coding and
+non-coding sequences in the <cite>Data</cite> object, respectively.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.plot_feature_boxplot">
+<span class="sig-name descname"><span class="pre">plot_feature_boxplot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.plot_feature_boxplot" title="Link to this definition"></a></dt>
+<dd><p>Returns a boxplot of the feature specified by <cite>feature_name</cite>,
+saving the plot to <cite>filepath</cite> if provided.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.plot_feature_correlation">
+<span class="sig-name descname"><span class="pre">plot_feature_correlation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.plot_feature_correlation" title="Link to this definition"></a></dt>
+<dd><p>Plots heatmap of absolute correlation values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.plot_feature_density">
+<span class="sig-name descname"><span class="pre">plot_feature_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.975</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.plot_feature_density" title="Link to this definition"></a></dt>
+<dd><p>Returns a density plot of the feature specified by <cite>feature_name</cite>,
+saving the plot to <cite>filepath</cite> if provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature_name</strong> (<cite>str</cite>) – Name of the to-be-plotted feature.</p></li>
+<li><p><strong>filepath</strong> (<cite>str</cite>) – If specified, will save plot to this path.</p></li>
+<li><p><strong>lower</strong> (<cite>float</cite>) – Lower limit of density plot, indicated as quantile (default is
+0.025).</p></li>
+<li><p><strong>upper</strong> (<cite>float</cite>) – Upper limit of density plot, indicated as quantile (default is
+0.975).</p></li>
+<li><p><strong>figsize</strong> (<cite>tuple[int]</cite>) – Matplotlib figure size (default is None).</p></li>
+<li><p><strong>kwargs</strong> – Any keyword argument from <cite>pd.DataFrame.plot.density</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.plot_feature_scatter">
+<span class="sig-name descname"><span class="pre">plot_feature_scatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_feature_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_feature_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_feature_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_lower</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_upper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.975</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.plot_feature_scatter" title="Link to this definition"></a></dt>
+<dd><p>Returns a scatter plot with <cite>x_feature_name</cite> on the x-axis plotted
+against <cite>y_feature_name</cite> on the y-axis.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.plot_feature_space">
+<span class="sig-name descname"><span class="pre">plot_feature_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_red</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TSNE()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.plot_feature_space" title="Link to this definition"></a></dt>
+<dd><p>Returns a visualization of the feature space of the data, reducing
+the dimensionality to 2.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.plot_feature_violin">
+<span class="sig-name descname"><span class="pre">plot_feature_violin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.plot_feature_violin" title="Link to this definition"></a></dt>
+<dd><p>Returns a violin plot of the feature specified by <cite>feature_name</cite>,
+saving the plot to <cite>filepath</cite> if provided.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.pos_weight">
+<span class="sig-name descname"><span class="pre">pos_weight</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.pos_weight" title="Link to this definition"></a></dt>
+<dd><p>Ratio of non-coding/coding samples, used as weight for positive class
+in weighted loss calculation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.sample" title="Link to this definition"></a></dt>
+<dd><p>Returns a randomly sampled <cite>Data</cite> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pc</strong> (<cite>int`|`float`|`None</cite>) – Number/fraction of protein-coding sequences in resulting dataset.</p></li>
+<li><p><strong>nc</strong> (<cite>int`|`float`|`None</cite>) – Number/fraction of protein-coding sequences in resulting dataset.</p></li>
+<li><p><strong>N</strong> (<cite>int`|`None</cite>) – Total number of sequences in resulting dataset. When specified
+together with <cite>pc</cite> and <cite>nc</cite>, will consider the latter two as
+fractions.</p></li>
+<li><p><strong>replace</strong> (<cite>bool</cite>) – Whether or not to sample with replacement. Required if <cite>N</cite> or
+<cite>pc+nc</cite> exceeds the number of samples in the <cite>Data</cite> object.</p></li>
+<li><p><strong>random_state</strong> (<cite>int</cite>) – Seed for random number generator.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.set_random_reading_frame">
+<span class="sig-name descname"><span class="pre">set_random_reading_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rrf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.set_random_reading_frame" title="Link to this definition"></a></dt>
+<dd><p>Sample data in a random reading frame by deleting a random number (
+within the range [0,`rrf`]) of nucleotides from the start of a sequence.
+Only works with 4D-DNA encoding.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.set_tensor_features">
+<span class="sig-name descname"><span class="pre">set_tensor_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">torch.float32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">torch.float32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">len_4d_dna</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7670</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.set_tensor_features" title="Link to this definition"></a></dt>
+<dd><p>Configures <cite>Data</cite> object to return a tuple of tensors (X,y) whenever
+<cite>__getitem__</cite> is called.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X_name</strong> (<cite>list[str]</cite> | str) – Predictory feature names (columns) to be retrieved as tensors when
+<cite>__getitem__</cite> is called.</p></li>
+<li><p><strong>X_dtype</strong> (<em>type</em>) – Data type for X (default is <cite>torch.float32</cite>)</p></li>
+<li><p><strong>y_name</strong> (<cite>list[str]</cite> | str) – Target feature names (columns) to be retrieved as tensors when
+<cite>__getitem__</cite> is called. If None (default) and the data is labelled,
+will set ‘label’ as target feature, with 1 indicating pcRNA and 0
+lncRNA.</p></li>
+<li><p><strong>y_dtype</strong> (<em>type</em>) – Data type for y (default is <cite>torch.float32</cite>)</p></li>
+<li><p><strong>len_4d_dna</strong> (<cite>int</cite>) – Max length of returned seq. when <cite>X_name==’4D-DNA’</cite> (default 7670)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.test_features">
+<span class="sig-name descname"><span class="pre">test_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.test_features" title="Link to this definition"></a></dt>
+<dd><p>Evaluates statistical significance of features specified in
+<cite>feature_names</cite> using a t-test.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.to_fasta">
+<span class="sig-name descname"><span class="pre">to_fasta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fasta_filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.to_fasta" title="Link to this definition"></a></dt>
+<dd><p>Writes sequence data to FASTA file(s) specified by <cite>fasta_filepath</cite>,
+which can be a string or a list of strings (length 2) indicating the
+filepaths for for coding and non-coding transcripts, respectively.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.to_hdf">
+<span class="sig-name descname"><span class="pre">to_hdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_or_buf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">except_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['sequence']</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.to_hdf" title="Link to this definition"></a></dt>
+<dd><p>Write data to .h5 file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path_or_buf</strong> – Target file or buffer.</p></li>
+<li><p><strong>except_columns</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>:</em>) – Column names specified here won’t be exported (default is
+[‘sequence’])</p></li>
+<li><p><strong>kwargs</strong> – Any keyword argument accepted by <cite>pd.DataFrame.to_csv</cite></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.train_test_split">
+<span class="sig-name descname"><span class="pre">train_test_split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test_size</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.train_test_split" title="Link to this definition"></a></dt>
+<dd><p>Splits data up in train and test datasets, as specified by
+<cite>test_size</cite>. Accepts all keyword arguments from
+<cite>sklearn.model_selection.train_test_split</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.data.get_gencode_gene_names">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.data.</span></span><span class="sig-name descname"><span class="pre">get_gencode_gene_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.get_gencode_gene_names" title="Link to this definition"></a></dt>
+<dd><p>Returns list of GENCODE gene names extracted from “id” column.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.data.get_rna_type_refseq">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.data.</span></span><span class="sig-name descname"><span class="pre">get_rna_type_refseq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fasta_header</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.get_rna_type_refseq" title="Link to this definition"></a></dt>
+<dd><p>Extract the RNA type from an input FASTA header line</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.data.merge_fasta">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.data.</span></span><span class="sig-name descname"><span class="pre">merge_fasta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_filepaths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.merge_fasta" title="Link to this definition"></a></dt>
+<dd><p>Merges FASTA files in <cite>in_filepaths</cite> into a single <cite>out_filepath</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.data.plot_cross_dataset_violins">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.data.</span></span><span class="sig-name descname"><span class="pre">plot_cross_dataset_violins</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_objects</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.975</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.plot_cross_dataset_violins" title="Link to this definition"></a></dt>
+<dd><p>Creates violin plots for multiple <cite>data_objects</cite> for a given
+<cite>feature_name</cite>. This allows to compare datasets.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.data.plot_refseq_labels">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.data.</span></span><span class="sig-name descname"><span class="pre">plot_refseq_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fasta_filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.plot_refseq_labels" title="Link to this definition"></a></dt>
+<dd><p>Plots the distribution of RNA labels of a FASTA file that follows the
+RefSeq format, optionally saving the figure to <cite>filepath</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.data.reduce_dimensionality">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.data.</span></span><span class="sig-name descname"><span class="pre">reduce_dimensionality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_red</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TSNE()</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.reduce_dimensionality" title="Link to this definition"></a></dt>
+<dd><p>Reduces the dimensionality of <cite>data</cite> using <cite>dim_red</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.data.split_refseq">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.data.</span></span><span class="sig-name descname"><span class="pre">split_refseq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pc_filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nc_filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pc_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['mRNA']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nc_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['long</span> <span class="pre">non-coding</span> <span class="pre">RNA']</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.split_refseq" title="Link to this definition"></a></dt>
+<dd><p>Splits RefSeq FASTA file into two files, coding and noncoding.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../api.html" class="btn btn-neutral float-left" title="API Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="features.html" class="btn btn-neutral float-right" title="lncrnapy.features" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Luuk Romeijn.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

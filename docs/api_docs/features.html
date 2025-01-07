@@ -49,6 +49,8 @@
 <li class="toctree-l2"><a class="reference internal" href="data.html">lncrnapy.data</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">lncrnapy.features</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.features.blast">BLAST</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.blast.BLASTNIdXCov"><code class="docutils literal notranslate"><span class="pre">BLASTNIdXCov</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.blast.BLASTNSearch"><code class="docutils literal notranslate"><span class="pre">BLASTNSearch</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.blast.BLASTXBinary"><code class="docutils literal notranslate"><span class="pre">BLASTXBinary</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#lncrnapy.features.blast.BLASTXSearch"><code class="docutils literal notranslate"><span class="pre">BLASTXSearch</span></code></a></li>
 </ul>
@@ -183,6 +185,115 @@ array of the same length as the <cite>Data</cite> object.</p>
 <section id="module-lncrnapy.features.blast">
 <span id="blast"></span><h2>BLAST<a class="headerlink" href="#module-lncrnapy.features.blast" title="Link to this heading"></a></h2>
 <p>Feature extractors that perform a BLAST database search.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTNIdXCov">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.blast.</span></span><span class="sig-name descname"><span class="pre">BLASTNIdXCov</span></span><a class="headerlink" href="#lncrnapy.features.blast.BLASTNIdXCov" title="Link to this definition"></a></dt>
+<dd><p>Alignment identity x coverage</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTNIdXCov.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTNIdXCov.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates the BLASTN id x cov feature for every row in <cite>data</cite></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTNSearch">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.blast.</span></span><span class="sig-name descname"><span class="pre">BLASTNSearch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strand</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'plus'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTNSearch" title="Link to this definition"></a></dt>
+<dd><p>Performs BLASTN database search, returns identity, alignment length and
+bit score for hit with max bit score per query.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`reference`</span></span></dt>
+<dd><p>Reference to use for BLASTX feature extraction, usually the path to a
+local BLAST database. When the provided string ends with ‘.csv’, will
+assume that it refers to a saved BLASTX output from a finished run. Note
+that all other arguments will then be ignored. Alternatively, when
+running remotely (<cite>remote=True</cite>), this argument should correspond to the
+name of an official BLAST database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`remote`</span></span></dt>
+<dd><p>Whether to run remotely or locally. If False, requires a local
+installation of BLAST with a callable blastx program (default is False).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>bool</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`strand`</span></span></dt>
+<dd><p>Which reading direction(s) to consider (default is ‘plus’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[‘both’|’plus’|’minus’]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`threads`</span></span></dt>
+<dd><p>Specifies how many threads for BLAST to use (when running locally).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`tmp_folder`</span></span></dt>
+<dd><p>Path to folder where temporary FASTA and output files will be saved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Column names for extracted features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTNSearch.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTNSearch.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates BLASTX database search features for all rows in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTNSearch.read_blastn_output">
+<span class="sig-name descname"><span class="pre">read_blastn_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTNSearch.read_blastn_output" title="Link to this definition"></a></dt>
+<dd><p>Reads a BLAST .csv output file (outfmt 10) with good column names.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTNSearch.run_blastn">
+<span class="sig-name descname"><span class="pre">run_blastn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTNSearch.run_blastn" title="Link to this definition"></a></dt>
+<dd><p>Runs a BLASTX database search for all rows in <cite>data</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="lncrnapy.features.blast.BLASTXBinary">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.features.blast.</span></span><span class="sig-name descname"><span class="pre">BLASTXBinary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.features.blast.BLASTXBinary" title="Link to this definition"></a></dt>

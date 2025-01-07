@@ -53,7 +53,7 @@ class KmerTokenizer(TokenizerBase):
     `k`: `int`
         Length of k-mers.'''
 
-    def __init__(self, k, context_length=512):
+    def __init__(self, k, context_length=768):
         '''Initializes `KmerTokenizer` object.
         
         Arguments

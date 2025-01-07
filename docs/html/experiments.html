@@ -1,0 +1,184 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Experiments &mdash; lncRNA-Py  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="lncrnapy.selection" href="api_docs/selection.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            lncRNA-Py
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">Running Scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Experiments</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#hyperparameter-tuning">Hyperparameter Tuning</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bert-configuration">BERT configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#masked-language-modeling">Masked Language Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#classification">Classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convolutional-sequence-encoding">Convolutional Sequence Encoding</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">lncRNA-Py</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Experiments</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/luukromeijn/rhythmnblues/blob/master/docs/experiments.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="experiments">
+<h1>Experiments<a class="headerlink" href="#experiments" title="Link to this heading"></a></h1>
+<p>This page contains descriptions of experiments that were conducted
+during the development of lncRNA-BERT, in addition to the experiments
+reported in <a class="reference external" href="todo.com">LncRNA-BERT: An RNA Language Model for Classifying Coding and Long
+Non-Coding RNA</a>.</p>
+<section id="hyperparameter-tuning">
+<h2>Hyperparameter Tuning<a class="headerlink" href="#hyperparameter-tuning" title="Link to this heading"></a></h2>
+<p>Hyperparameter tuning was carried out at several stages during the development of lncRNA-BERT.
+Here, we aim to provide a clear overview of the settings that were experimented with and the decisions that were made.
+The results are subject to improvements that were made in lncRNA-BERT’s implementation, as well as minor differences datasets utilized throughout development.
+The described experiments below are targeted towards allowing a fair comparisons between pre-training data, encoding methods, and other NLMs, as reported in our paper.
+Nevertheless, we acknowledge that lncRNA-BERT’s performance can likely be improved with additional tuning.
+We report hyperparameters with their appropriate <code class="docutils literal notranslate"><span class="pre">names</span></code>, such that experiments can be repeated by using lncRNA-Py’s scripts.</p>
+<section id="bert-configuration">
+<h3>BERT configuration<a class="headerlink" href="#bert-configuration" title="Link to this heading"></a></h3>
+<p>We experimented with the following architecture parameters of BERT, for pre-training, using BPE with <code class="docutils literal notranslate"><span class="pre">vocab_size</span></code> 256 and 4096:</p>
+<ul class="simple">
+<li><p>Transformer blocks (<code class="docutils literal notranslate"><span class="pre">N</span></code>): 6, 8, 10, 12, 16</p></li>
+<li><p>Dimensionality (<code class="docutils literal notranslate"><span class="pre">d_model</span></code>): 256, 512, 1024</p></li>
+</ul>
+<p>In total, this yields 2*5*3=30 configurations. The graphs in the visualizations below represent the average for each hyperparameter value (see legend), while the bands around the graphs represent the minimum and maximum performance for all settings, given that specific hyperparameter value.</p>
+<p><a class="reference internal" href="_images/bert_architectures.png"><img alt="BERT architectures" src="_images/bert_architectures.png" style="width: 660px;" /></a></p>
+<p>Larger values for <code class="docutils literal notranslate"><span class="pre">d_model</span></code> and <code class="docutils literal notranslate"><span class="pre">N</span></code> lead to increased MLM accuracy.
+The figure indicates that for <code class="docutils literal notranslate"><span class="pre">vocab_size</span></code>, 4096 requires a larger model than 256.
+Moreover, <code class="docutils literal notranslate"><span class="pre">d_model</span></code> is shown to be more impactful than <code class="docutils literal notranslate"><span class="pre">N</span></code>.</p>
+<p>Ultimately, we chose to adopt BERT-medium’s settings, mainly to ensure a fair comparison to methods like DNABERT-2, BiRNA-BERT, and GENA-LM, which use a similar configuration.
+This configuration uses a relatively large dimensionality (<code class="docutils literal notranslate"><span class="pre">d_model=768</span></code>), which was shown to be beneficial, while setting its number of transformer blocks to a not-so-extreme value (<code class="docutils literal notranslate"><span class="pre">N=12</span></code>).</p>
+</section>
+<section id="masked-language-modeling">
+<h3>Masked Language Modeling<a class="headerlink" href="#masked-language-modeling" title="Link to this heading"></a></h3>
+<p>For MLM, we set <code class="docutils literal notranslate"><span class="pre">warmup_steps=32000</span></code> and <code class="docutils literal notranslate"><span class="pre">batch_size=8</span></code>. The experiments that led to this conclusion are reported here, using model (<code class="docutils literal notranslate"><span class="pre">N=6,</span> <span class="pre">d_model=256</span></code>) and BPE with <code class="docutils literal notranslate"><span class="pre">vocab_size=4096</span></code>.
+MLM accuracy (% of correctly predicted masked tokens) is reported on the y-axis.</p>
+<p><a class="reference internal" href="_images/warmup.png"><img alt="Learning Curve warmup steps" src="_images/warmup.png" style="width: 300px;" /></a> <a class="reference internal" href="_images/mlm_batch_sizes_bpe.png"><img alt="MLM BPE batch sizes" src="_images/mlm_batch_sizes_bpe.png" style="width: 300px;" /></a></p>
+<p>While our choice for <code class="docutils literal notranslate"><span class="pre">warmup_steps</span></code> (while using <code class="docutils literal notranslate"><span class="pre">batch_size=8</span></code>) is obvious from the figure , deciding <code class="docutils literal notranslate"><span class="pre">batch_size=8</span></code> was motivated by a previous experiment as well as compute limitations, rather than these results.
+Specifically, our BERT configuration experiment pointed out that using a larger model is beneficial for performance, much more beneficial than the effect of <code class="docutils literal notranslate"><span class="pre">batch_size</span></code>, shown above.
+Unfortunately, using large models in combinations with large batch sizes is computationally demanding, as it requires significant GPU memory.
+Hence, we chose to prioritize model size over batch size here, setting <code class="docutils literal notranslate"><span class="pre">batch_size=8</span></code> to save computational expenses for other experiments.</p>
+<p>We repeated the experiment for a larger model (<code class="docutils literal notranslate"><span class="pre">N=12,</span> <span class="pre">d_model=1024</span></code>) with CSE in a much later development stage, confirming that <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> still only had limited effect.
+<a class="reference internal" href="_images/mlm_batch_sizes_cse.png"><img alt="MLM CSE batch sizes" src="_images/mlm_batch_sizes_cse.png" style="width: 300px;" /></a></p>
+</section>
+<section id="classification">
+<h3>Classification<a class="headerlink" href="#classification" title="Link to this heading"></a></h3>
+<p>For the fine-tuning task, we initially set learning rate (lr) <code class="docutils literal notranslate"><span class="pre">learning_rate=1e-05</span></code> based on an experiment (below, left) with BPE <code class="docutils literal notranslate"><span class="pre">vocab_size=4096</span></code>, and later confirmed that this setting was also
+appropriate for BERT-medium in combination with BPE or CSE (below, middle), also when training from scratch (instead of fine-tuning a pre-trained model, for CSE, below, right).
+This more recent experiment also included several batch sizes (bs), for which <code class="docutils literal notranslate"><span class="pre">batch_size=8</span></code> was found to be best (also identified at an earlier stage but not reported here).</p>
+<p><a class="reference internal" href="_images/finetune_lr_bpe.png"><img alt="cls_lr_bpe" src="_images/finetune_lr_bpe.png" style="width: 220px;" /></a> <a class="reference internal" href="_images/finetune_lr-bs_bpe-cse.png"><img alt="cls_lr_new" src="_images/finetune_lr-bs_bpe-cse.png" style="width: 220px;" /></a> <a class="reference internal" href="_images/finetune_lr_scratch_cse.png"><img alt="cls_lr_scratch" src="_images/finetune_lr_scratch_cse.png" style="width: 220px;" /></a></p>
+<p>We also experimented with the <code class="docutils literal notranslate"><span class="pre">weight_decay</span></code> hyperparameter of Adam as well as adding a dropout layer before the classification (sigmoid) output layer, both for BPE and CSE.
+None of these seemed to improve classification or reduce overfitting. The latter (overfitting) was assessed by considering the difference between training and validation performance, with training performance plotted as a lighter-colored curve.</p>
+<p><a class="reference internal" href="_images/finetune_wd_bpe.png"><img alt="cls_wd_bpe" src="_images/finetune_wd_bpe.png" style="width: 300px;" /></a> <a class="reference internal" href="_images/finetune_wd_cse.png"><img alt="cls_wd_cse" src="_images/finetune_wd_cse.png" style="width: 300px;" /></a>
+<a class="reference internal" href="_images/finetune_dr_bpe.png"><img alt="cls_dr_bpe" src="_images/finetune_dr_bpe.png" style="width: 300px;" /></a> <a class="reference internal" href="_images/finetune_dr_cse.png"><img alt="cls_dr_cse" src="_images/finetune_dr_cse.png" style="width: 300px;" /></a></p>
+<p>Finally, for the probing the network with a tiny MLP (256 hidden nodes), we found that a learning rate of 0.0001 was more appropriate.</p>
+<p><a class="reference internal" href="_images/probing_lr_cse.png"><img alt="cls_lr_prb" src="_images/probing_lr_cse.png" style="width: 300px;" /></a></p>
+</section>
+<section id="convolutional-sequence-encoding">
+<h3>Convolutional Sequence Encoding<a class="headerlink" href="#convolutional-sequence-encoding" title="Link to this heading"></a></h3>
+<p>We experimented with several architectural changes for the CSE component during its development, while using BERT-medium as base architecture.
+Based on the left plot below, we conclude that adding a linear layer before the final MLM output layer helps the model, while adding an extra linear (embedding) layer after the convolution in the input does not.
+The input CSE layer is further experimented with in the middle and right plot, which shows that ReLU-activating the convolution (but not linearly transforming it) helps for CSE with larger k (in this case, 9).</p>
+<p><a class="reference internal" href="_images/cse_linear.png"><img alt="cse_linear" src="_images/cse_linear.png" style="width: 220px;" /></a> <a class="reference internal" href="_images/cse_linear_relu_mlm.png"><img alt="cse_lin-rel_mlm" src="_images/cse_linear_relu_mlm.png" style="width: 220px;" /></a> <a class="reference internal" href="_images/cse_linear_relu_cls.png"><img alt="cse_lin-rel_cls" src="_images/cse_linear_relu_cls.png" style="width: 220px;" /></a></p>
+<p>While linearly transforming the convolved embeddings in the input layer was shown to have a negative affect, it did allow us to set the number of kernels to a value other than <code class="docutils literal notranslate"><span class="pre">d_model</span></code>.
+Hence, we experimented with several different number of kernels in the CSE, and then transforming the output to <code class="docutils literal notranslate"><span class="pre">d_model</span></code> dimensions with a linear layer.
+Our results (left plot) indicate that adding more kernels does not benefit performance. Adding too many kernels can even deteroriate performance.
+We also experimented whether masking out multiple consecutive nucleotides (defined by the <code class="docutils literal notranslate"><span class="pre">mask_size</span></code> hyperparameter, similar to SPAN-BERT) would improve pre-training (middle plot). This was not the case. In fact, we found that a model pre-trained with a mask size of 1 would perform better at predicting multiple masked nucleotides than a model pre-trained with mask size of 2.
+In a final attempt to increase CSE’s performance for short <code class="docutils literal notranslate"><span class="pre">k</span></code>, (i.e. 3), we tried adding layer normalization after convolution or significantly reducing the number of kernels to 64, but this did not help (right plot).</p>
+<p><a class="reference internal" href="_images/cse_kernels.png"><img alt="cse_kernels" src="_images/cse_kernels.png" style="width: 220px;" /></a> <a class="reference internal" href="_images/cse_mask_sizes.png"><img alt="cse_mask_sizes" src="_images/cse_mask_sizes.png" style="width: 220px;" /></a> <a class="reference internal" href="_images/cse_tryouts.png"><img alt="cse_tryouts" src="_images/cse_tryouts.png" style="width: 220px;" /></a></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="api_docs/selection.html" class="btn btn-neutral float-left" title="lncrnapy.selection" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Luuk Romeijn.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

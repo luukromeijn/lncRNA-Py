@@ -431,54 +431,41 @@ class Data(Dataset):
         return fig
     
     def plot_feature_scatter(self, x_feature_name, y_feature_name, 
-                                   c_feature_name=None, c_lower=0.025,
-                             c_upper=0.975, filepath=None, figsize=None):
+                             c_feature_name=None, c_lower=0.025,
+                             c_upper=0.975, filepath=None, axis_labels=True,
+                             xlim=None, ylim=None, figsize=None):
         '''Returns a scatter plot with `x_feature_name` on the x-axis plotted
         against `y_feature_name` on the y-axis.'''
 
         self.check_columns([x_feature_name, y_feature_name])
         fig, ax = plt.subplots(figsize=figsize)
-        # colors = {                                                            # TODO delete this when no longer necessary
-        #     0: '#1f77b4',
-        #     1: '#ff7f0e',
-        #     2: '#2ca02c',
-        #     3: '#d62728',
-        #     4: '#9467bd',
-        #     5: '#8c564b',
-        #     6: '#e377c2',
-        #     7: '#7f7f7f',
-        #     8: '#bcbd22',
-        #     9: '#17becf',
-        # }
-        # ax.scatter(x_feature_name, y_feature_name, s=1, data=self.df[self.df['label'] == 0])
-        # data = self.df[self.df['label'] != 0]
-        # ax.scatter(x_feature_name, y_feature_name, color=data['label'].map(colors), data=data)
         if self.labelled and c_feature_name is None:
             for label in ['pcRNA', 'ncRNA']:
-                if label == 'pcRNA':
-                    ax.scatter(
-                        x_feature_name, y_feature_name, s=1, alpha=0.5,
-                        data=self.df[self.df['label']==label], label='pcRNA'
-                    )
-                if label == 'ncRNA':
-                    ax.scatter(
-                        x_feature_name, y_feature_name, s=1, alpha=0.5,
-                        data=self.df[self.df['label']==label], label='ncRNA'
-                    )
+                ax.scatter(
+                    x_feature_name, y_feature_name, s=1, alpha=0.5,
+                    data=self.df[self.df['label']==label], label=label,
+                    rasterized=True
+                )
             fig.legend(markerscale=5)
         else:
             map = ax.scatter(x_feature_name, y_feature_name, s=1, data=self.df,
-                             c=c_feature_name)
+                             c=c_feature_name, rasterized=True)
             if c_feature_name is not None:
                 map.set_clim(self.df[c_feature_name].quantile(c_lower), 
                              self.df[c_feature_name].quantile(c_upper))
                 cb = fig.colorbar(map)
                 cb.ax.set_ylabel(c_feature_name)
-        ax.set_xlabel(x_feature_name)
-        ax.set_ylabel(y_feature_name)
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        if axis_labels:
+            ax.set_xlabel(x_feature_name)
+            ax.set_ylabel(y_feature_name)
+        else:
+            ax.set_xticks([])
+            ax.set_yticks([])
         fig.tight_layout()
         if filepath is not None:
-            fig.savefig(filepath)
+            fig.savefig(filepath, dpi=300)
 
         return fig
     

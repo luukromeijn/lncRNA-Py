@@ -150,7 +150,7 @@ class BLASTXSearch:
     
     def read_blastx_output(self, out_filepath):
         '''Reads a BLAST .csv output file (outfmt 10) with good column names.'''
-        return pd.read_csv(out_filepath, header=0, names=[ # Read dataframe
+        return pd.read_csv(out_filepath, header=None, names=[ # Read dataframe
             'query acc.ver', 'subject acc.ver', 'identity', 'alignment length',
             'mismatches', 'gap opens', 'q. start', 'q. end', 's. start', 
             's. end', 'evalue', 'bit score']
@@ -211,3 +211,139 @@ class BLASTXBinary:
         '''Calculates the BLASTX binary feature for every row in `data`'''
         data.check_columns(['BLASTX hits'])
         return (data.df['BLASTX hits'] > self.threshold).astype(int)
+    
+
+# NOTE Currently not included in unittests because of blast dependency
+class BLASTNSearch:
+    '''Performs BLASTN database search, returns identity, alignment length and 
+    bit score for hit with max bit score per query.
+    
+    Attributes
+    ----------
+    `reference`: `str`
+        Reference to use for BLASTX feature extraction, usually the path to a 
+        local BLAST database. When the provided string ends with '.csv', will 
+        assume that it refers to a saved BLASTX output from a finished run. Note
+        that all other arguments will then be ignored. Alternatively, when
+        running remotely (`remote=True`), this argument should correspond to the
+        name of an official BLAST database.
+    `remote`: `bool`
+        Whether to run remotely or locally. If False, requires a local
+        installation of BLAST with a callable blastx program (default is False).
+    `strand`: ['both'|'plus'|'minus']
+        Which reading direction(s) to consider (default is 'plus').
+    `threads`: `int`
+        Specifies how many threads for BLAST to use (when running locally).
+    `tmp_folder`: `str`
+        Path to folder where temporary FASTA and output files will be saved.
+    `name`: `list[str]`
+        Column names for extracted features.'''
+
+    def __init__(self, reference, remote=False, strand='plus', threads=None, 
+                 output_dir='', save_results=False):
+        '''Initializes `BLASTNSearch` object. 
+        
+        Arguments
+        ---------
+        `reference`: `str`
+            Reference to use for BLASTX feature extraction, usually the path to
+            a local BLAST database. When the provided string ends with '.csv', 
+            will assume that it refers to a saved BLASTX output from a finished
+            run. Note that all other arguments will then be ignored. 
+            Alternatively, when running remotely (`remote=True`), this argument
+            should correspond to the name of an official BLAST database.
+        `remote`: `bool`
+            Whether to run remotely or locally. If False, requires a local
+            installation of BLAST with a callable blastx program (default is 
+            False).
+        `strand`: ['both'|'plus'|'minus']
+            Which reading direction(s) to consider (default is 'plus').
+        `threads`: `int`
+            Specifies how many threads for BLAST to use (when running locally).
+        `output_dir`: `str`
+            Path to folder where temporary FASTA and output files will be saved
+            (default is '').
+        `save_results`: `bool`
+            If True, will not delete BLASTX output after calculation (default is
+            False)'''
+
+        self.reference = reference
+        self.remote = remote
+        self.strand = strand
+        self.threads = threads
+        self.output_dir = output_dir
+        self.save_results = save_results
+        self.name = ['BLASTN identity', 'BLASTN alignment length',
+                     'BLASTN bit score']
+        
+    def calculate(self, data):
+        '''Calculates BLASTX database search features for all rows in `data`.'''
+
+        if self.reference.endswith('csv'):
+            output = self.read_blastn_output(self.reference)
+        else:
+            output = self.run_blastn(data)
+        columns = output.columns
+
+        print("Calculating blastn scores...")
+        results = []
+        output = output.groupby(by='query acc.ver')
+        for i, row in utils.progress(data.df.iterrows()):
+            # Assumes query ids are same as row ids (error sensitive...?)
+            try:
+                group = output.get_group(row['id'])
+            except KeyError:
+                group = pd.DataFrame(columns=columns)
+            results.append(group.sort_values(by='bit score', ascending=False)[
+                                ['identity', 'alignment length', 'bit score']
+                           ].head(1).max().tolist())
+
+        return np.nan_to_num(results, nan=0)
+    
+    def read_blastn_output(self, out_filepath):
+        '''Reads a BLAST .csv output file (outfmt 10) with good column names.'''
+        return pd.read_csv(out_filepath, header=None, names=[ # Read dataframe
+            'query acc.ver', 'subject acc.ver', 'identity', 'alignment length',
+            'mismatches', 'gap opens', 'q. start', 'q. end', 's. start', 
+            's. end', 'evalue', 'bit score']
+        )
+
+    def run_blastn(self, data):
+        '''Runs a BLASTX database search for all rows in `data`.'''
+
+        fasta_filepath = f'{self.output_dir}/temp.fasta'
+        out_filepath = f'{self.output_dir}/BLASTN_results.csv'
+        data.to_fasta(fasta_filepath) # Generate FASTA query file
+
+        # Generate command based on object configuration
+        command = ['blastn', '-query', fasta_filepath, '-strand', self.strand, 
+                   '-db', self.reference, '-out', out_filepath, '-outfmt', 
+                   str(10)]
+        if self.remote: 
+            command += ['-remote']
+        elif self.threads is not None:
+            command += ['-num_threads', str(self.threads)]
+
+        print("Running blastn...")
+        subprocess.run(command, check=True) # Run the command
+        output = self.read_blastn_output(out_filepath)
+        os.remove(fasta_filepath) # Remove FASTA query file
+        if not self.save_results:
+            os.remove(out_filepath) # Remove BLASTX output (is in memory now)
+
+        return output
+    
+
+class BLASTNIdXCov:
+    '''Alignment identity x coverage'''
+
+    def __init__(self):
+        '''Initializes `BLASTNIdXCov` object.'''
+        self.name = 'BLASTN id x cov'
+
+    def calculate(self, data):
+        '''Calculates the BLASTN id x cov feature for every row in `data`'''
+        data.check_columns(['length', 'BLASTN identity',
+                            'BLASTN alignment length'])
+        return (data.df['BLASTN identity'] * 
+                (data.df['BLASTN alignment length'] / data.df['length']))

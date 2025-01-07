@@ -7,7 +7,8 @@ this feature will have.
 * A `calculate` method with a `Data` object as argument, returning a list or
 array of the same length as the `Data` object.'''
 
-from lncrnapy.features.blast import BLASTXSearch, BLASTXBinary
+from lncrnapy.features.blast import (BLASTXSearch, BLASTXBinary, BLASTNSearch,
+                                     BLASTNIdXCov)
 from lncrnapy.features.fickett import FickettScore
 from lncrnapy.features.general import (
     Length, Complexity, Entropy, EntropyDensityProfile, GCContent, 

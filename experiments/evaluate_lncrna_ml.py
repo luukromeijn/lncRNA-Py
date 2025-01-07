@@ -1,4 +1,4 @@
-'''Prediction scripts for lncRNA-LR and lncRNA-RF.'''
+'''Evaluation scripts for lncRNA-LR and lncRNA-RF.'''
 
 import argparse
 import torch

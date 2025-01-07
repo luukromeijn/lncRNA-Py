@@ -1,0 +1,422 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lncrnapy.selection &mdash; lncRNA-Py  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Experiments" href="../experiments.html" />
+    <link rel="prev" title="lncrnapy.algorithms" href="algorithms.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            lncRNA-Py
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scripts.html">Running Scripts</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="data.html">lncrnapy.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="features.html">lncrnapy.features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">lncrnapy.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="train.html">lncrnapy.train</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluate.html">lncrnapy.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">lncrnapy.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="algorithms.html">lncrnapy.algorithms</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">lncrnapy.selection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.selection.importance_analysis">Feature Importance Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.selection.importance_analysis.feature_importance_analysis"><code class="docutils literal notranslate"><span class="pre">feature_importance_analysis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.selection.importance_analysis.plot_feature_importance"><code class="docutils literal notranslate"><span class="pre">plot_feature_importance()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.selection.importance_analysis.plot_feature_selection_results"><code class="docutils literal notranslate"><span class="pre">plot_feature_selection_results()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.selection.importance_analysis.sorted_feature_importance"><code class="docutils literal notranslate"><span class="pre">sorted_feature_importance()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.selection.methods">Feature Selection Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.selection.methods.FeatureSelectionBase"><code class="docutils literal notranslate"><span class="pre">FeatureSelectionBase</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.selection.methods.ForestSelection"><code class="docutils literal notranslate"><span class="pre">ForestSelection</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.selection.methods.MDSSelection"><code class="docutils literal notranslate"><span class="pre">MDSSelection</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.selection.methods.NoSelection"><code class="docutils literal notranslate"><span class="pre">NoSelection</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.selection.methods.PermutationSelection"><code class="docutils literal notranslate"><span class="pre">PermutationSelection</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.selection.methods.RFESelection"><code class="docutils literal notranslate"><span class="pre">RFESelection</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.selection.methods.RegressionSelection"><code class="docutils literal notranslate"><span class="pre">RegressionSelection</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.selection.methods.TTestSelection"><code class="docutils literal notranslate"><span class="pre">TTestSelection</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../experiments.html">Experiments</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">lncRNA-Py</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+      <li class="breadcrumb-item active">lncrnapy.selection</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/luukromeijn/rhythmnblues/blob/master/docs/api_docs/selection.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-lncrnapy.selection">
+<span id="lncrnapy-selection"></span><h1>lncrnapy.selection<a class="headerlink" href="#module-lncrnapy.selection" title="Link to this heading"></a></h1>
+<p>A collection of feature selection and importance analysis methods.</p>
+<section id="module-lncrnapy.selection.importance_analysis">
+<span id="feature-importance-analysis"></span><h2>Feature Importance Analysis<a class="headerlink" href="#module-lncrnapy.selection.importance_analysis" title="Link to this heading"></a></h2>
+<p>Contains <cite>feature_importance_analysis</cite> function, as well as several
+accompanying plotting functions that are tailored to this output format.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.selection.importance_analysis.feature_importance_analysis">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.selection.importance_analysis.</span></span><span class="sig-name descname"><span class="pre">feature_importance_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">trainsets,</span> <span class="pre">testsets,</span> <span class="pre">k,</span> <span class="pre">tables_folder,</span> <span class="pre">methods=[&lt;class</span> <span class="pre">'lncrnapy.selection.methods.NoSelection'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'lncrnapy.selection.methods.TTestSelection'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'lncrnapy.selection.methods.RegressionSelection'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'lncrnapy.selection.methods.ForestSelection'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'lncrnapy.selection.methods.RFESelection'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'lncrnapy.selection.methods.MDSSelection'&gt;],</span> <span class="pre">excluded_features=['id',</span> <span class="pre">'label',</span> <span class="pre">'sequence',</span> <span class="pre">'ORF</span> <span class="pre">protein',</span> <span class="pre">'SSE'],</span> <span class="pre">test=False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.importance_analysis.feature_importance_analysis" title="Link to this definition"></a></dt>
+<dd><p>Runs a feature importance analysis, according to the following steps:
+- For every trainset in <cite>trainsets</cite>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>For every method in <cite>methods</cite>:</dt><dd><ul>
+<li><p>Assess feature importance.</p></li>
+<li><p>Select <cite>k</cite> most important features.</p></li>
+<li><p>Fit a random forest to the trainset using the selected features.</p></li>
+<li><p>Evaluate the F1-score of the random forest on all <cite>testsets</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>trainsets</strong> (<cite>list[str]</cite>) – Name of trainsets to be used for the importance analysis. For every name
+in the list, a hdf (.h5) file with feature data is assumed to be present
+in the directory specified by the <cite>tables_folder</cite> argument.</p></li>
+<li><p><strong>testsets</strong> (<cite>list[str]</cite>) – Name of testsets to report performance on. Like with <cite>trainsets</cite>, every
+testset is assumed as hdf (.h5) file with this name in <cite>tables_folder</cite>.</p></li>
+<li><p><strong>k</strong> (<cite>int</cite>) – Number of features to select.</p></li>
+<li><p><strong>methods</strong> (<cite>list[type]</cite>) – Type of feature selection methods to apply. Should be classes from
+<cite>lncrnapy.selection</cite>.</p></li>
+<li><p><strong>excluded_features</strong> (<cite>list[str]</cite>) – List of features to exclude from the importance analysis.</p></li>
+<li><p><strong>test</strong> (<cite>bool</cite>) – If True, performs analysis on 1000 random training samples.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>`importances`</strong> (<cite>pd.DataFrame</cite>) – Reports the importance of all features for every combination of trainset
+and selection method.</p></li>
+<li><p><strong>`results`</strong> (<cite>pd.DataFrame</cite>) – Reports the performance (macro-averaged F1-score) of all features for
+every combination of trainset, selection method, and testset.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.selection.importance_analysis.plot_feature_importance">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.selection.importance_analysis.</span></span><span class="sig-name descname"><span class="pre">plot_feature_importance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">importances</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.importance_analysis.plot_feature_importance" title="Link to this definition"></a></dt>
+<dd><p>Creates a feature importance plot, given the <cite>importances</cite> dataframe from
+<cite>feature_importance_analysis</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>importances</strong> (<cite>pd.DataFrame</cite>) – Output from <cite>feature_importance_analysis</cite>.</p></li>
+<li><p><strong>k</strong> (<cite>int</cite>) – Top number of features to plot, if specified (default is None).</p></li>
+<li><p><strong>method</strong> (<cite>str</cite>) – Method to consider, if specified (default is None). If not specified
+and data contains multiple metrics, will convert importances to rank.</p></li>
+<li><p><strong>trainset</strong> (<cite>str</cite>) – Trainset name to consider, if specified (default is None). If not
+specified, averages over all trainsets.</p></li>
+<li><p><strong>filepath</strong> (<cite>str</cite>) – If specified, saves figure to this filepath (default is None).</p></li>
+<li><p><strong>figsize</strong> (<cite>tuple[int]</cite>) – Matplotlib figure size (default is None).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.selection.importance_analysis.plot_feature_selection_results">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.selection.importance_analysis.</span></span><span class="sig-name descname"><span class="pre">plot_feature_selection_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groupby</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.importance_analysis.plot_feature_selection_results" title="Link to this definition"></a></dt>
+<dd><p>Plots the performance of different feature selection methods, based on
+output from <cite>feature_importance_analysis</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>results</strong> (<cite>pd.DataFrame</cite>) – Results output from <cite>feature_importance_analysis</cite>.</p></li>
+<li><p><strong>groupby</strong> (<cite>str</cite> | <cite>list[str]</cite> | <cite>tuple[str]</cite>) – How to group the data. If of type <cite>str</cite>, will average over this column.
+If of type <cite>list</cite> or <cite>tuple</cite>, will apply a nested grouping where the
+second element refers to the inner group.</p></li>
+<li><p><strong>filepath</strong> (<cite>str</cite>) – If specified, saves figure to this filepath (default is None).</p></li>
+<li><p><strong>figsize</strong> (<cite>tuple[int]</cite>) – Matplotlib figure size (default is None).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.selection.importance_analysis.sorted_feature_importance">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.selection.importance_analysis.</span></span><span class="sig-name descname"><span class="pre">sorted_feature_importance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">importances</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.importance_analysis.sorted_feature_importance" title="Link to this definition"></a></dt>
+<dd><p>Sorts feature <cite>importances</cite>, averaging over <cite>method</cite> or <cite>trainset</cite> if
+specified.</p>
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.selection.methods">
+<span id="feature-selection-methods"></span><h2>Feature Selection Methods<a class="headerlink" href="#module-lncrnapy.selection.methods" title="Link to this heading"></a></h2>
+<p>Classes for selecting features based on an importance asssesment.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.FeatureSelectionBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.selection.methods.</span></span><span class="sig-name descname"><span class="pre">FeatureSelectionBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.FeatureSelectionBase" title="Link to this definition"></a></dt>
+<dd><p>Base class for feature selection / importance analysis.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`name`</span></span></dt>
+<dd><p>Name of the applied method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`metric_name`</span></span></dt>
+<dd><p>Name of the metric that describes feature importance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`k`</span></span></dt>
+<dd><p>Number of features that will be selected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.FeatureSelectionBase.select_features">
+<span class="sig-name descname"><span class="pre">select_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.FeatureSelectionBase.select_features" title="Link to this definition"></a></dt>
+<dd><p>Selects features by assessing their importance for a given <cite>Data</cite>
+object. Returns a tuple in which the first element corresponds a list of
+selected feature names, and the second element is the feature
+importance array.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.ForestSelection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.selection.methods.</span></span><span class="sig-name descname"><span class="pre">ForestSelection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.ForestSelection" title="Link to this definition"></a></dt>
+<dd><p>Feature selection based on the feature importance of a random forest.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.ForestSelection.select_features">
+<span class="sig-name descname"><span class="pre">select_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.ForestSelection.select_features" title="Link to this definition"></a></dt>
+<dd><p>Selects features by assessing their importance for a given <cite>Data</cite>
+object. Returns a tuple in which the first element corresponds a list of
+selected feature names, and the second element is the feature
+importance array.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.MDSSelection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.selection.methods.</span></span><span class="sig-name descname"><span class="pre">MDSSelection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.975</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">35</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.MDSSelection" title="Link to this definition"></a></dt>
+<dd><p>Method based on Minimum Distribution Similarity (mDS) as proposed by
+DeepCPP. Uses relative entropy (Kullback-Leibler divergence) to calculate
+the difference between feature distributions of pcRNA and ncRNA, selects
+those that are most different from each other.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>k</strong> (<cite>int</cite>) – Number of features that will be selected.</p></li>
+<li><p><strong>lower</strong> (<cite>float</cite>) – Values below this percentile are considered outliers (default is 0.025).</p></li>
+<li><p><strong>upper</strong> (<cite>float</cite>) – Values above this percentile are considered outliers (default is 0.975).</p></li>
+<li><p><strong>smoothing</strong> (<cite>int</cite>) – Amount (sigma) of Gaussian smoothing applied to both distributions
+(default is 35).</p></li>
+<li><p><strong>n_bins</strong> (<cite>int</cite>) – Number of bins to calculate distribution histgram (default is 1000).</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>DeepCPP: Zhang et al. (2020) <a class="reference external" href="https://doi.org/10.1093/bib/bbaa039">https://doi.org/10.1093/bib/bbaa039</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.MDSSelection.calculate">
+<span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.MDSSelection.calculate" title="Link to this definition"></a></dt>
+<dd><p>Calculates Minimum Distribution Similarity (mDS) for given
+<cite>feature_name</cite> in <cite>data</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.MDSSelection.select_features">
+<span class="sig-name descname"><span class="pre">select_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.MDSSelection.select_features" title="Link to this definition"></a></dt>
+<dd><p>Selects features by assessing their importance for a given <cite>Data</cite>
+object. Returns a tuple in which the first element corresponds a list of
+selected feature names, and the second element is the feature
+importance array.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.NoSelection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.selection.methods.</span></span><span class="sig-name descname"><span class="pre">NoSelection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.NoSelection" title="Link to this definition"></a></dt>
+<dd><p>Dummy class that does not select or analyze features at all.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.NoSelection.select_features">
+<span class="sig-name descname"><span class="pre">select_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.NoSelection.select_features" title="Link to this definition"></a></dt>
+<dd><p>Selects features by assessing their importance for a given <cite>Data</cite>
+object. Returns a tuple in which the first element corresponds a list of
+selected feature names, and the second element is the feature
+importance array.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.PermutationSelection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.selection.methods.</span></span><span class="sig-name descname"><span class="pre">PermutationSelection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.PermutationSelection" title="Link to this definition"></a></dt>
+<dd><p>Calculates feature importance by performing permutations on them.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.PermutationSelection.select_features">
+<span class="sig-name descname"><span class="pre">select_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.PermutationSelection.select_features" title="Link to this definition"></a></dt>
+<dd><p>Selects features by assessing their importance for a given <cite>Data</cite>
+object. Returns a tuple in which the first element corresponds a list of
+selected feature names, and the second element is the feature
+importance array.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.RFESelection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.selection.methods.</span></span><span class="sig-name descname"><span class="pre">RFESelection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.RFESelection" title="Link to this definition"></a></dt>
+<dd><p>Recursive Feature Elimination. Uses ranks as importance measure.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.RFESelection.select_features">
+<span class="sig-name descname"><span class="pre">select_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.RFESelection.select_features" title="Link to this definition"></a></dt>
+<dd><p>Selects features by assessing their importance for a given <cite>Data</cite>
+object. Returns a tuple in which the first element corresponds a list of
+selected feature names, and the second element is the feature
+importance array.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.RegressionSelection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.selection.methods.</span></span><span class="sig-name descname"><span class="pre">RegressionSelection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.RegressionSelection" title="Link to this definition"></a></dt>
+<dd><p>Feature selection based on the size of regression coefficients.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.RegressionSelection.select_features">
+<span class="sig-name descname"><span class="pre">select_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.RegressionSelection.select_features" title="Link to this definition"></a></dt>
+<dd><p>Selects features by assessing their importance for a given <cite>Data</cite>
+object. Returns a tuple in which the first element corresponds a list of
+selected feature names, and the second element is the feature
+importance array.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.TTestSelection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.selection.methods.</span></span><span class="sig-name descname"><span class="pre">TTestSelection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.TTestSelection" title="Link to this definition"></a></dt>
+<dd><p>Feature selection based on an association test statistic (t-test).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.selection.methods.TTestSelection.select_features">
+<span class="sig-name descname"><span class="pre">select_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.selection.methods.TTestSelection.select_features" title="Link to this definition"></a></dt>
+<dd><p>Selects features by assessing their importance for a given <cite>Data</cite>
+object. Returns a tuple in which the first element corresponds a list of
+selected feature names, and the second element is the feature
+importance array.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="algorithms.html" class="btn btn-neutral float-left" title="lncrnapy.algorithms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../experiments.html" class="btn btn-neutral float-right" title="Experiments" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Luuk Romeijn.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

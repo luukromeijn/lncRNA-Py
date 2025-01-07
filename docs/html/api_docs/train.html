@@ -1,0 +1,898 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lncrnapy.train &mdash; lncRNA-Py  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="lncrnapy.evaluate" href="evaluate.html" />
+    <link rel="prev" title="lncrnapy.modules" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            lncRNA-Py
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scripts.html">Running Scripts</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="data.html">lncrnapy.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="features.html">lncrnapy.features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">lncrnapy.modules</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">lncrnapy.train</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.train.classification">Classification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.classification.epoch_classifier"><code class="docutils literal notranslate"><span class="pre">epoch_classifier()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.classification.evaluate_classifier"><code class="docutils literal notranslate"><span class="pre">evaluate_classifier()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.classification.train_classifier"><code class="docutils literal notranslate"><span class="pre">train_classifier()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.train.loggers">Loggers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.loggers.EarlyStopping"><code class="docutils literal notranslate"><span class="pre">EarlyStopping</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.loggers.LoggerBase"><code class="docutils literal notranslate"><span class="pre">LoggerBase</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.loggers.LoggerDistribution"><code class="docutils literal notranslate"><span class="pre">LoggerDistribution</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.loggers.LoggerList"><code class="docutils literal notranslate"><span class="pre">LoggerList</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.loggers.LoggerPlot"><code class="docutils literal notranslate"><span class="pre">LoggerPlot</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.loggers.LoggerPrint"><code class="docutils literal notranslate"><span class="pre">LoggerPrint</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.loggers.LoggerTokenCounts"><code class="docutils literal notranslate"><span class="pre">LoggerTokenCounts</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.loggers.LoggerWrite"><code class="docutils literal notranslate"><span class="pre">LoggerWrite</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.train.lr_schedule">Learning Rate Schedule</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.lr_schedule.LrSchedule"><code class="docutils literal notranslate"><span class="pre">LrSchedule</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.train.masked_conv_modeling">Masked Convolution Modeling</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.masked_conv_modeling.epoch"><code class="docutils literal notranslate"><span class="pre">epoch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.masked_conv_modeling.evaluate"><code class="docutils literal notranslate"><span class="pre">evaluate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.masked_conv_modeling.get_consecutive_indices"><code class="docutils literal notranslate"><span class="pre">get_consecutive_indices()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.masked_conv_modeling.get_random_nucs"><code class="docutils literal notranslate"><span class="pre">get_random_nucs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.masked_conv_modeling.index_to_bool"><code class="docutils literal notranslate"><span class="pre">index_to_bool()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.masked_conv_modeling.mask_batch"><code class="docutils literal notranslate"><span class="pre">mask_batch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.masked_conv_modeling.train_masked_conv_modeling"><code class="docutils literal notranslate"><span class="pre">train_masked_conv_modeling()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.train.masked_token_modeling">Masked Token Modeling</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.masked_token_modeling.epoch"><code class="docutils literal notranslate"><span class="pre">epoch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.masked_token_modeling.evaluate"><code class="docutils literal notranslate"><span class="pre">evaluate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.masked_token_modeling.mask_batch"><code class="docutils literal notranslate"><span class="pre">mask_batch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.masked_token_modeling.train_masked_token_modeling"><code class="docutils literal notranslate"><span class="pre">train_masked_token_modeling()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.train.metrics">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.metrics.classification_metrics"><code class="docutils literal notranslate"><span class="pre">classification_metrics</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.metrics.frame_agreement"><code class="docutils literal notranslate"><span class="pre">frame_agreement()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.metrics.frame_consistency"><code class="docutils literal notranslate"><span class="pre">frame_consistency()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.metrics.mcm_metrics"><code class="docutils literal notranslate"><span class="pre">mcm_metrics</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.metrics.mtm_metrics"><code class="docutils literal notranslate"><span class="pre">mtm_metrics</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.metrics.orf_prediction_metrics"><code class="docutils literal notranslate"><span class="pre">orf_prediction_metrics</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.metrics.regression_distribution"><code class="docutils literal notranslate"><span class="pre">regression_distribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.metrics.regression_metrics"><code class="docutils literal notranslate"><span class="pre">regression_metrics</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.train.mixed_precision">Mixed Precision</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.mixed_precision.DummyScaler"><code class="docutils literal notranslate"><span class="pre">DummyScaler</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.mixed_precision.get_amp_args"><code class="docutils literal notranslate"><span class="pre">get_amp_args()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.mixed_precision.get_gradient_scaler"><code class="docutils literal notranslate"><span class="pre">get_gradient_scaler()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lncrnapy.train.regression">Regression</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.regression.epoch_regressor"><code class="docutils literal notranslate"><span class="pre">epoch_regressor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.regression.evaluate_regressor"><code class="docutils literal notranslate"><span class="pre">evaluate_regressor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.train.regression.train_regressor"><code class="docutils literal notranslate"><span class="pre">train_regressor()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="evaluate.html">lncrnapy.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">lncrnapy.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="algorithms.html">lncrnapy.algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="selection.html">lncrnapy.selection</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../experiments.html">Experiments</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">lncRNA-Py</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+      <li class="breadcrumb-item active">lncrnapy.train</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/luukromeijn/rhythmnblues/blob/master/docs/api_docs/train.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-lncrnapy.train">
+<span id="lncrnapy-train"></span><h1>lncrnapy.train<a class="headerlink" href="#module-lncrnapy.train" title="Link to this heading"></a></h1>
+<section id="module-lncrnapy.train.classification">
+<span id="classification"></span><h2>Classification<a class="headerlink" href="#module-lncrnapy.train.classification" title="Link to this heading"></a></h2>
+<p>Functions for training a deep learning model for the classification of RNA
+transcripts as either protein-coding or long non-coding.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.classification.epoch_classifier">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.classification.</span></span><span class="sig-name descname"><span class="pre">epoch_classifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.classification.epoch_classifier" title="Link to this definition"></a></dt>
+<dd><p>Trains <cite>model</cite> for a single epoch.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.classification.evaluate_classifier">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.classification.</span></span><span class="sig-name descname"><span class="pre">evaluate_classifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics={'Accuracy':</span> <span class="pre">&lt;function</span> <span class="pre">accuracy_score&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'F1</span> <span class="pre">(macro)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'Precision</span> <span class="pre">(ncRNA)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'Precision</span> <span class="pre">(pcRNA)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'Recall</span> <span class="pre">(ncRNA)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'Recall</span> <span class="pre">(pcRNA)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.classification.evaluate_classifier" title="Link to this definition"></a></dt>
+<dd><p>Simple evaluation function to keep track of in-training progress.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.classification.train_classifier">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.classification.</span></span><span class="sig-name descname"><span class="pre">train_classifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples_per_epoch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted_loss=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_reading_frame=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics={'Accuracy':</span> <span class="pre">&lt;function</span> <span class="pre">accuracy_score&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'F1</span> <span class="pre">(macro)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'Precision</span> <span class="pre">(ncRNA)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'Precision</span> <span class="pre">(pcRNA)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'Recall</span> <span class="pre">(ncRNA)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'Recall</span> <span class="pre">(pcRNA)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.classification.train_classifier" title="Link to this definition"></a></dt>
+<dd><p>Trains <cite>model</cite> for classification task, using <cite>train_data</cite>, for specified
+amount of <cite>epochs</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<cite>torch.nn.Module</cite> | <cite>lncrnapy.modules.Classifier</cite>) – Neural network that is to be trained.</p></li>
+<li><p><strong>train_data</strong> (<cite>lncrnapy.data.Data</cite>) – Data to use for training, must call <cite>set_tensor_features</cite> first. After
+every training epoch, the performance of the model on a subset of the
+training set is determined. The length of this subset is
+<cite>min(len(train_data), len(valid_data))</cite>.</p></li>
+<li><p><strong>valid_data</strong> (<cite>lncrnapy.data.Data</cite>) – Data to use for validation, must call <cite>set_tensor_features</cite> first.</p></li>
+<li><p><strong>epochs</strong> (<cite>int</cite>) – How many epochs (data run-throughs) to train for.</p></li>
+<li><p><strong>n_samples_per_epoch</strong> (<cite>int</cite>) – If specified, indicates the number of samples per training epoch. If
+None, will sample the full training set.</p></li>
+<li><p><strong>batch_size</strong> (<cite>int</cite>) – Number of examples per batch (default is 64).</p></li>
+<li><p><strong>optimizer</strong> (<cite>torch.optim</cite>) – Optimizer to update the network’s weights during training. If None
+(default), will use Adam with learning rate 0.0001.</p></li>
+<li><p><strong>weighted_loss</strong> (<cite>bool</cite>) – Whether to apply weighted loss to correct for class imbalance (default
+is False)</p></li>
+<li><p><strong>random_reading_frame</strong> (<cite>bool</cite>:) – If True (default) and <cite>model.base_arch==CSEBERT</cite>, trains the model
+with sequences that have been frameshifted by a random number (between
+<cite>[0,kernel_size]</cite>).</p></li>
+<li><p><strong>logger</strong> (<cite>lncrnapy.train.loggers</cite>) – Logger object whose <cite>log</cite> method will be called at every epoch. If None
+(default), will use LoggerBase, which only keeps track of the history.</p></li>
+<li><p><strong>metrics</strong> (<cite>dict[str:callable]</cite>) – Metrics (name + function) that will be evaluated at every epoch.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.train.loggers">
+<span id="loggers"></span><h2>Loggers<a class="headerlink" href="#module-lncrnapy.train.loggers" title="Link to this heading"></a></h2>
+<p>Logger objects used by training functions. Loggers should inherit from
+<cite>LoggerBase</cite> and contain the following methods:
+* <cite>set_columns</cite>: Specifies which columns will be logged.
+* <cite>log</cite>: Called every epoch, logs new results.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.train.loggers.EarlyStopping">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.train.loggers.</span></span><span class="sig-name descname"><span class="pre">EarlyStopping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.loggers.EarlyStopping" title="Link to this definition"></a></dt>
+<dd><p>Special logger that saves the model if it has the best-so-far
+performance.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`metric_name`</span></span></dt>
+<dd><p>Column name of the metric that the early stopping is based on.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`filepath`</span></span></dt>
+<dd><p>Path to and name of file where model should be saved to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`sign`</span></span></dt>
+<dd><p>Whether the goal is max-/minimization (1/-1).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`best_score`</span></span></dt>
+<dd><p>Current best score of metric.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>float</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`epoch`</span></span></dt>
+<dd><p>Epoch counter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.train.loggers.LoggerBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.train.loggers.</span></span><span class="sig-name descname"><span class="pre">LoggerBase</span></span><a class="headerlink" href="#lncrnapy.train.loggers.LoggerBase" title="Link to this definition"></a></dt>
+<dd><p>Base logger that adds a new row to its <cite>history</cite> DataFrame with every
+log.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`history`</span></span></dt>
+<dd><p>Contains all logged data throughout training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>pd.DataFrame</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`columns`</span></span></dt>
+<dd><p>Column names of the values that are received every log.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.train.loggers.LoggerBase.finish">
+<span class="sig-name descname"><span class="pre">finish</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.loggers.LoggerBase.finish" title="Link to this definition"></a></dt>
+<dd><p>Finishes logging, reports training time and final performance.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.train.loggers.LoggerBase.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.loggers.LoggerBase.log" title="Link to this definition"></a></dt>
+<dd><p>Logs <cite>epoch_results</cite> for given <cite>model</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.train.loggers.LoggerBase.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.loggers.LoggerBase.start" title="Link to this definition"></a></dt>
+<dd><p>This method should be called right before the training loop starts.
+It sets columns according to the specified <cite>metrics</cite>, and starts the
+timrer. The class assumes the loss function as first logged value and
+train/validation results).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.train.loggers.LoggerDistribution">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.train.loggers.</span></span><span class="sig-name descname"><span class="pre">LoggerDistribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.loggers.LoggerDistribution" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.train.loggers.LoggerList">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.train.loggers.</span></span><span class="sig-name descname"><span class="pre">LoggerList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.loggers.LoggerList" title="Link to this definition"></a></dt>
+<dd><p>Combine multiple loggers into one, executing all of their actions per
+logging event while keeping track of a single, shared history.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`loggers`</span></span></dt>
+<dd><p>List of loggers from lncrnapy.train.loggers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.train.loggers.LoggerList.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.loggers.LoggerList.log" title="Link to this definition"></a></dt>
+<dd><p>Logs <cite>epoch_results</cite> for given <cite>model</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.train.loggers.LoggerList.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.loggers.LoggerList.start" title="Link to this definition"></a></dt>
+<dd><p>This method should be called right before the training loop starts.
+It sets columns according to the specified <cite>metrics</cite>, and starts the
+timrer. The class assumes the loss function as first logged value and
+train/validation results).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.train.loggers.LoggerPlot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.train.loggers.</span></span><span class="sig-name descname"><span class="pre">LoggerPlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.loggers.LoggerPlot" title="Link to this definition"></a></dt>
+<dd><p>Plots and saves the results as figures at every epoch.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`dir_path`</span></span></dt>
+<dd><p>Path to new/existing directory in which figures will be stored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`metric_names`</span></span></dt>
+<dd><p>Indicates which metrics to plot per epoch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`history`</span></span></dt>
+<dd><p>Contains all logged data throughout training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>pd.DataFrame</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`columns`</span></span></dt>
+<dd><p>Column names of the values that are received every log.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.train.loggers.LoggerPlot.plot_history">
+<span class="sig-name descname"><span class="pre">plot_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.loggers.LoggerPlot.plot_history" title="Link to this definition"></a></dt>
+<dd><p>Plots the history data for a given <cite>metric_name</cite>, saving the
+resulting figure to a (optionally) specified <cite>filepath</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.train.loggers.LoggerPlot.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.loggers.LoggerPlot.start" title="Link to this definition"></a></dt>
+<dd><p>This method should be called right before the training loop starts.
+It sets columns according to the specified <cite>metrics</cite>, and starts the
+timrer. The class assumes the loss function as first logged value and
+train/validation results).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.train.loggers.LoggerPrint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.train.loggers.</span></span><span class="sig-name descname"><span class="pre">LoggerPrint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.loggers.LoggerPrint" title="Link to this definition"></a></dt>
+<dd><p>Prints the results per epoch.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`epoch`</span></span></dt>
+<dd><p>Epoch counter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>int</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`metric_names`</span></span></dt>
+<dd><p>Indicates which metrics to print per epoch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`history`</span></span></dt>
+<dd><p>Contains all logged data throughout training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>pd.DataFrame</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`columns`</span></span></dt>
+<dd><p>Column names of the values that are received every log.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.train.loggers.LoggerTokenCounts">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.train.loggers.</span></span><span class="sig-name descname"><span class="pre">LoggerTokenCounts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.loggers.LoggerTokenCounts" title="Link to this definition"></a></dt>
+<dd><p>Plots, at every epoch, the true token count vs the predicted token
+counts, based on the ‘Counts’ metric.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.train.loggers.LoggerWrite">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.train.loggers.</span></span><span class="sig-name descname"><span class="pre">LoggerWrite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.loggers.LoggerWrite" title="Link to this definition"></a></dt>
+<dd><p>Writes the results to a file at every epoch.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`filepath`</span></span></dt>
+<dd><p>Path to new .csv file to which to write the results to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>str</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`metric_names`</span></span></dt>
+<dd><p>Indicates which metrics to write per epoch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`history`</span></span></dt>
+<dd><p>Contains all logged data throughout training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>pd.DataFrame</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">`columns`</span></span></dt>
+<dd><p>Column names of the values that are received every log.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>list[str]</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.train.lr_schedule">
+<span id="learning-rate-schedule"></span><h2>Learning Rate Schedule<a class="headerlink" href="#module-lncrnapy.train.lr_schedule" title="Link to this heading"></a></h2>
+<p>Simple learning rate schedule implementation.</p>
+<p>Huang et al. (2022) <a class="reference external" href="https://nlp.seas.harvard.edu/annotated-transformer">https://nlp.seas.harvard.edu/annotated-transformer</a></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.train.lr_schedule.LrSchedule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.train.lr_schedule.</span></span><span class="sig-name descname"><span class="pre">LrSchedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_steps</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.lr_schedule.LrSchedule" title="Link to this definition"></a></dt>
+<dd><p>Linearly increases the learning rate for the first warmup_steps, then
+then decreases the learning rate proportionally to 1/sqrt(step_number)</p>
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.train.masked_conv_modeling">
+<span id="masked-convolution-modeling"></span><h2>Masked Convolution Modeling<a class="headerlink" href="#module-lncrnapy.train.masked_conv_modeling" title="Link to this heading"></a></h2>
+<p>Masked Language Modeling pre-training task for nucleotide sequences that are
+encoded using Convolutional Sequence Encoding.</p>
+<p class="rubric">References</p>
+<p>MycoAI: Romeijn et al. (2024) <a class="reference external" href="https://doi.org/10.1111/1755-0998.14006">https://doi.org/10.1111/1755-0998.14006</a>
+Huang et al. (2022) <a class="reference external" href="https://nlp.seas.harvard.edu/annotated-transformer">https://nlp.seas.harvard.edu/annotated-transformer</a></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.masked_conv_modeling.epoch">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.masked_conv_modeling.</span></span><span class="sig-name descname"><span class="pre">epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mlm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_random</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.masked_conv_modeling.epoch" title="Link to this definition"></a></dt>
+<dd><p>Trains <cite>model</cite> for a single epoch.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.masked_conv_modeling.evaluate">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.masked_conv_modeling.</span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mlm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_random</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.masked_conv_modeling.evaluate" title="Link to this definition"></a></dt>
+<dd><p>Evaluation function to keep track of in-training progress for MCM.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.masked_conv_modeling.get_consecutive_indices">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.masked_conv_modeling.</span></span><span class="sig-name descname"><span class="pre">get_consecutive_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.masked_conv_modeling.get_consecutive_indices" title="Link to this definition"></a></dt>
+<dd><p>Expands <cite>indices</cite> with up to <cite>mask_size</cite> follow-up indices. Stays
+within the maximum bound as specified by <cite>max_len</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.masked_conv_modeling.get_random_nucs">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.masked_conv_modeling.</span></span><span class="sig-name descname"><span class="pre">get_random_nucs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_shape</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.masked_conv_modeling.get_random_nucs" title="Link to this definition"></a></dt>
+<dd><p>Returns a tensor of random 4D-DNA encoded nucleotides of <cite>X_shape</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.masked_conv_modeling.index_to_bool">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.masked_conv_modeling.</span></span><span class="sig-name descname"><span class="pre">index_to_bool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.masked_conv_modeling.index_to_bool" title="Link to this definition"></a></dt>
+<dd><p>Creates a boolean Tensor of specified shape, where <cite>indices</cite> are True.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.masked_conv_modeling.mask_batch">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.masked_conv_modeling.</span></span><span class="sig-name descname"><span class="pre">mask_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mlm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_random</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.masked_conv_modeling.mask_batch" title="Link to this definition"></a></dt>
+<dd><p>Maks a batch of sequence data for MCM</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.masked_conv_modeling.train_masked_conv_modeling">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.masked_conv_modeling.</span></span><span class="sig-name descname"><span class="pre">train_masked_conv_modeling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples_per_epoch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mlm=0.15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mask=0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_random=0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_steps=32000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_function=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_size=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_reading_frame=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics={'Accuracy':</span> <span class="pre">&lt;function</span> <span class="pre">accuracy_score&gt;}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.masked_conv_modeling.train_masked_conv_modeling" title="Link to this definition"></a></dt>
+<dd><p>Trains <cite>model</cite> for Masked Language Modeling task, using <cite>train_data</cite>,
+for specified amount of <cite>epochs</cite>. Assumes sequence data is inputted in
+four channels (using <cite>Data.set_tensor_features(‘4D-DNA’)</cite>), and a model of
+type <cite>MaskedConvModel</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<cite>torch.nn.Module</cite> | <cite>lncrnapy.modules.MaskedConvModel</cite>) – Neural network that is to be trained.</p></li>
+<li><p><strong>train_data</strong> (<cite>lncrnapy.data.Data</cite>) – Data to use for training, must call <cite>set_tensor_features(4D-DNA)</cite> first.
+After every training epoch, the performance of the model on a random
+subset of the training set is determined. The length of this subset is
+<cite>min(len(train_data), len(valid_data))</cite>.</p></li>
+<li><p><strong>valid_data</strong> (<cite>lncrnapy.data.Data</cite>) – Data to use for validation, must call <cite>set_tensor_features</cite> first.</p></li>
+<li><p><strong>epochs</strong> (<cite>int</cite>) – How many epochs (data run-throughs) to train for.</p></li>
+<li><p><strong>n_samples_per_epoch</strong> (<cite>int</cite>) – If specified, indicates the number of samples per training epoch. If
+None, will sample the full training set.</p></li>
+<li><p><strong>batch_size</strong> (<cite>int</cite>) – Number of examples per batch (default is 64).</p></li>
+<li><p><strong>p_mlm</strong> (<cite>float</cite>) – Probability for a nucleotide to be selected for MLM (default is 0.15).</p></li>
+<li><p><strong>p_mask</strong> (<cite>float</cite>) – Probability for a nucleotide to be masked when selected (default 0.8).</p></li>
+<li><p><strong>p_random</strong> (<cite>float</cite>) – Probability for a nucleotide to be randomly replaced when selected
+(default is 0.1).</p></li>
+<li><p><strong>warmup_steps</strong> (<cite>int</cite>) – Number of training steps in which learning rate linearly increases.
+After this amount of steps, the learning rate decreases proportional to
+the invserse square root of the step number (default is 32000).</p></li>
+<li><p><strong>loss_function</strong> (<cite>torch.nn.Module</cite>) – Loss function that is to be optimized, assuming logits (so no Softmax)
+and ignore_index=-1. Uses <cite>torch.nn.CrossEntropyLoss</cite> if None (default).</p></li>
+<li><p><strong>mask_size</strong> (<cite>int</cite>:) – Number of contiguous nucleotides that make up a mask (default is 1).</p></li>
+<li><p><strong>random_reading_frame</strong> (<cite>bool</cite>:) – If True (default), trains the model with sequences that have been
+frameshifted by a random number (between [0,kernel_size]).</p></li>
+<li><p><strong>logger</strong> (<cite>lncrnapy.train.loggers</cite>) – Logger object whose <cite>log</cite> method will be called at every epoch. If None
+(default), will use LoggerBase, which only keeps track of the history.</p></li>
+<li><p><strong>metrics</strong> (<cite>dict[str:callable]</cite>) – Metrics (name + function) that will be evaluated at every epoch.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.train.masked_token_modeling">
+<span id="masked-token-modeling"></span><h2>Masked Token Modeling<a class="headerlink" href="#module-lncrnapy.train.masked_token_modeling" title="Link to this heading"></a></h2>
+<p>Masked Language Modeling pre-training task for tokenized nucleotide
+sequences.</p>
+<p class="rubric">References</p>
+<p>MycoAI: Romeijn et al. (2024) <a class="reference external" href="https://doi.org/10.1111/1755-0998.14006">https://doi.org/10.1111/1755-0998.14006</a>
+Huang et al. (2022) <a class="reference external" href="https://nlp.seas.harvard.edu/annotated-transformer">https://nlp.seas.harvard.edu/annotated-transformer</a></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.masked_token_modeling.epoch">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.masked_token_modeling.</span></span><span class="sig-name descname"><span class="pre">epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mlm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_random</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.masked_token_modeling.epoch" title="Link to this definition"></a></dt>
+<dd><p>Trains <cite>model</cite> for a single epoch.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.masked_token_modeling.evaluate">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.masked_token_modeling.</span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mlm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_random</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.masked_token_modeling.evaluate" title="Link to this definition"></a></dt>
+<dd><p>Evaluation function to keep track of in-training progress for MLM.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.masked_token_modeling.mask_batch">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.masked_token_modeling.</span></span><span class="sig-name descname"><span class="pre">mask_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mlm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_random</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.masked_token_modeling.mask_batch" title="Link to this definition"></a></dt>
+<dd><p>Maks a batch of sequence data for MLM</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.masked_token_modeling.train_masked_token_modeling">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.masked_token_modeling.</span></span><span class="sig-name descname"><span class="pre">train_masked_token_modeling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples_per_epoch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mlm=0.15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_mask=0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_random=0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_steps=32000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_function=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics={'Accuracy':</span> <span class="pre">&lt;function</span> <span class="pre">accuracy_score&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'Counts':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'F1</span> <span class="pre">(macro)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'Precision</span> <span class="pre">(macro)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'Recall</span> <span class="pre">(macro)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.masked_token_modeling.train_masked_token_modeling" title="Link to this definition"></a></dt>
+<dd><p>Trains <cite>model</cite> for Masked Language Modeling task, using <cite>train_data</cite>,
+for specified amount of <cite>epochs</cite>. Assumes sequence data is tokenized (see
+<cite>lncrnapy.features.tokenizers</cite>) and model of type <cite>MaskedTokenModel</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<cite>torch.nn.Module</cite> | <cite>lncrnapy.modules.MaskedTokenModel</cite>) – Neural network that is to be trained.</p></li>
+<li><p><strong>train_data</strong> (<cite>lncrnapy.data.Data</cite>) – Data to use for training, must call <cite>set_tensor_features</cite> first. After
+every training epoch, the performance of the model on a subset of the
+training set is determined. The length of this subset is
+<cite>min(len(train_data), len(valid_data))</cite>.</p></li>
+<li><p><strong>valid_data</strong> (<cite>lncrnapy.data.Data</cite>) – Data to use for validation, must call <cite>set_tensor_features</cite> first.</p></li>
+<li><p><strong>epochs</strong> (<cite>int</cite>) – How many epochs (data run-throughs) to train for.</p></li>
+<li><p><strong>n_samples_per_epoch</strong> (<cite>int</cite>) – If specified, indicates the number of samples per training epoch. If
+None, will sample the full training set.</p></li>
+<li><p><strong>batch_size</strong> (<cite>int</cite>) – Number of examples per batch (default is 64).</p></li>
+<li><p><strong>p_mlm</strong> (<cite>float</cite>) – Probability for a token to be selected for MLM (default is 0.15).</p></li>
+<li><p><strong>p_mask</strong> (<cite>float</cite>) – Probability for a token to be masked when selected (default is 0.8).</p></li>
+<li><p><strong>p_random</strong> (<cite>float</cite>) – Probability for a token to be randomly replaced when selected (default
+is 0.1).</p></li>
+<li><p><strong>warmup_steps</strong> (<cite>int</cite>) – Number of training steps in which learning rate linearly increases.
+After this amount of steps, the learning rate decreases proportional to
+the invserse square root of the step number (default is 32000).</p></li>
+<li><p><strong>loss_function</strong> (<cite>torch.nn.Module</cite>) – Loss function that is to be optimized, assuming logits (so no Softmax)
+and <cite>ignore_index=utils.TOKENS[‘PAD’]</cite>. Uses <cite>torch.nn.CrossEntropyLoss</cite>
+if None (default).</p></li>
+<li><p><strong>label_smoothing</strong> (<cite>float</cite>) – How much weight should be subtracted from the target token and divided
+over the remaining tokens, for regularization (default is 0.1).</p></li>
+<li><p><strong>logger</strong> (<cite>lncrnapy.train.loggers</cite>) – Logger object whose <cite>log</cite> method will be called at every epoch. If None
+(default), will use LoggerBase, which only keeps track of the history.</p></li>
+<li><p><strong>metrics</strong> (<cite>dict[str:callable]</cite>) – Metrics (name + function) that will be evaluated at every epoch.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.train.metrics">
+<span id="metrics"></span><h2>Metrics<a class="headerlink" href="#module-lncrnapy.train.metrics" title="Link to this heading"></a></h2>
+<p>Contains predefined metrics sets, implemented as dictionaries with metric
+names as keys, and the corresponding function to calculate them as values. Note
+that all of these functions assume an input tuple: <cite>(y_true, y_pred)</cite>.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="lncrnapy.train.metrics.classification_metrics">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.metrics.</span></span><span class="sig-name descname"><span class="pre">classification_metrics</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'Accuracy':</span> <span class="pre">&lt;function</span> <span class="pre">accuracy_score&gt;,</span> <span class="pre">'F1</span> <span class="pre">(macro)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'Precision</span> <span class="pre">(ncRNA)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'Precision</span> <span class="pre">(pcRNA)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'Recall</span> <span class="pre">(ncRNA)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'Recall</span> <span class="pre">(pcRNA)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;}</span></em><a class="headerlink" href="#lncrnapy.train.metrics.classification_metrics" title="Link to this definition"></a></dt>
+<dd><p>accuracy, precision and recall (for
+pcRNA and lncRNA), and F1 (macro-averaged over both classes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Default lncRNA classification metrics</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.metrics.frame_agreement">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.metrics.</span></span><span class="sig-name descname"><span class="pre">frame_agreement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.metrics.frame_agreement" title="Link to this definition"></a></dt>
+<dd><p>Fraction of times in which <cite>y_true</cite> and <cite>y_pred</cite> agree in terms of
+reading frame</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.metrics.frame_consistency">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.metrics.</span></span><span class="sig-name descname"><span class="pre">frame_consistency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.metrics.frame_consistency" title="Link to this definition"></a></dt>
+<dd><p>Fraction of times in which <cite>y_pred</cite> agrees with itself in terms of
+reading frame</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="lncrnapy.train.metrics.mcm_metrics">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.metrics.</span></span><span class="sig-name descname"><span class="pre">mcm_metrics</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'Accuracy':</span> <span class="pre">&lt;function</span> <span class="pre">accuracy_score&gt;}</span></em><a class="headerlink" href="#lncrnapy.train.metrics.mcm_metrics" title="Link to this definition"></a></dt>
+<dd><p>accuracy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Default MCM evaluation metrics</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="lncrnapy.train.metrics.mtm_metrics">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.metrics.</span></span><span class="sig-name descname"><span class="pre">mtm_metrics</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'Accuracy':</span> <span class="pre">&lt;function</span> <span class="pre">accuracy_score&gt;,</span> <span class="pre">'Counts':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'F1</span> <span class="pre">(macro)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'Precision</span> <span class="pre">(macro)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'Recall</span> <span class="pre">(macro)':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;}</span></em><a class="headerlink" href="#lncrnapy.train.metrics.mtm_metrics" title="Link to this definition"></a></dt>
+<dd><p>accuracy, precision, recal, and F1 (macro-
+averaged), as well as counts per token.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Default MTM evaluation metrics</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="lncrnapy.train.metrics.orf_prediction_metrics">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.metrics.</span></span><span class="sig-name descname"><span class="pre">orf_prediction_metrics</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'Distribution</span> <span class="pre">(ORF</span> <span class="pre">(end))':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'Distribution</span> <span class="pre">(ORF</span> <span class="pre">(start))':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'Frame</span> <span class="pre">agreement':</span> <span class="pre">&lt;function</span> <span class="pre">frame_agreement&gt;,</span> <span class="pre">'Frame</span> <span class="pre">consistency':</span> <span class="pre">&lt;function</span> <span class="pre">frame_consistency&gt;,</span> <span class="pre">'MAE</span> <span class="pre">(ORF</span> <span class="pre">(end))':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'MAE</span> <span class="pre">(ORF</span> <span class="pre">(start))':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'RMSE</span> <span class="pre">(ORF</span> <span class="pre">(end))':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'RMSE</span> <span class="pre">(ORF</span> <span class="pre">(start))':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;}</span></em><a class="headerlink" href="#lncrnapy.train.metrics.orf_prediction_metrics" title="Link to this definition"></a></dt>
+<dd><p>Metrics designed for ORF prediction. Includes the RMSE/MAE separately for
+start and end coordinates of the ORF, as well as frame agreement and
+consistency.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.metrics.regression_distribution">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.metrics.</span></span><span class="sig-name descname"><span class="pre">regression_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.metrics.regression_distribution" title="Link to this definition"></a></dt>
+<dd><p>Calculates the distribution of values in y_pred</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="lncrnapy.train.metrics.regression_metrics">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.metrics.</span></span><span class="sig-name descname"><span class="pre">regression_metrics</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'Distribution':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'MAE':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'RMSE':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;}</span></em><a class="headerlink" href="#lncrnapy.train.metrics.regression_metrics" title="Link to this definition"></a></dt>
+<dd><p>Default regression metrics ((root) mean absolute/squared error)</p>
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.train.mixed_precision">
+<span id="mixed-precision"></span><h2>Mixed Precision<a class="headerlink" href="#module-lncrnapy.train.mixed_precision" title="Link to this heading"></a></h2>
+<p>For automatically en-/disabling mixed precision depending on whether or not
+cuda is recognized.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lncrnapy.train.mixed_precision.DummyScaler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lncrnapy.train.mixed_precision.</span></span><span class="sig-name descname"><span class="pre">DummyScaler</span></span><a class="headerlink" href="#lncrnapy.train.mixed_precision.DummyScaler" title="Link to this definition"></a></dt>
+<dd><p>A dummy gradient scaler that does not do anything and serves as a
+placeholder for when gradient scaling is not desired.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.train.mixed_precision.DummyScaler.scale">
+<span class="sig-name descname"><span class="pre">scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.mixed_precision.DummyScaler.scale" title="Link to this definition"></a></dt>
+<dd><p>Identity function</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.train.mixed_precision.DummyScaler.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.mixed_precision.DummyScaler.step" title="Link to this definition"></a></dt>
+<dd><p>Optimizer step</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.train.mixed_precision.DummyScaler.unscale_">
+<span class="sig-name descname"><span class="pre">unscale_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.mixed_precision.DummyScaler.unscale_" title="Link to this definition"></a></dt>
+<dd><p>Empty function</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.train.mixed_precision.DummyScaler.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.mixed_precision.DummyScaler.update" title="Link to this definition"></a></dt>
+<dd><p>Empty function</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.mixed_precision.get_amp_args">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.mixed_precision.</span></span><span class="sig-name descname"><span class="pre">get_amp_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.mixed_precision.get_amp_args" title="Link to this definition"></a></dt>
+<dd><p>‘Returns mixed precision keyword arguments (as dictionary) depending on
+whether or not <cite>device.type==’cuda’</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.mixed_precision.get_gradient_scaler">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.mixed_precision.</span></span><span class="sig-name descname"><span class="pre">get_gradient_scaler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.mixed_precision.get_gradient_scaler" title="Link to this definition"></a></dt>
+<dd><p>Returns gradient scaler or dummy object depending on whether or not
+<cite>device.type==’cuda’</cite>.</p>
+</dd></dl>
+
+</section>
+<section id="module-lncrnapy.train.regression">
+<span id="regression"></span><h2>Regression<a class="headerlink" href="#module-lncrnapy.train.regression" title="Link to this heading"></a></h2>
+<p>Functions for training a lncrnapy deep learning model for regression.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.regression.epoch_regressor">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.regression.</span></span><span class="sig-name descname"><span class="pre">epoch_regressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.regression.epoch_regressor" title="Link to this definition"></a></dt>
+<dd><p>Trains <cite>model</cite> for a single epoch.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.regression.evaluate_regressor">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.regression.</span></span><span class="sig-name descname"><span class="pre">evaluate_regressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standardizer=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics={'Distribution':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'MAE':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'RMSE':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.regression.evaluate_regressor" title="Link to this definition"></a></dt>
+<dd><p>Simple evaluation function to keep track of in-training progress.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.train.regression.train_regressor">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.train.regression.</span></span><span class="sig-name descname"><span class="pre">train_regressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size=64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_function=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standardizer=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples_per_epoch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics={'Distribution':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'MAE':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'RMSE':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.train.regression.train_regressor" title="Link to this definition"></a></dt>
+<dd><p>Trains <cite>model</cite> for regression task, using <cite>train_data</cite>, for specified
+amount of <cite>epochs</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<cite>torch.nn.Module</cite> | <cite>lncrnapy.modules.Classifier</cite>) – Neural network that is to be trained.</p></li>
+<li><p><strong>train_data</strong> (<cite>lncrnapy.data.Data</cite>) – Data to use for training, must call <cite>set_tensor_features</cite> first. After
+every training epoch, the performance of the model on a subset of the
+training set is determined. The length of this subset is
+<cite>min(len(train_data), len(valid_data))</cite>.</p></li>
+<li><p><strong>valid_data</strong> (<cite>lncrnapy.data.Data</cite>) – Data to use for validation, must call <cite>set_tensor_features</cite> first.</p></li>
+<li><p><strong>epochs</strong> (<cite>int</cite>) – How many epochs (data run-throughs) to train for.</p></li>
+<li><p><strong>batch_size</strong> (<cite>int</cite>) – Number of examples per batch (default is 64).</p></li>
+<li><p><strong>loss_function</strong> (<cite>torch.nn.Module</cite>) – Loss function that is to be optimized. If None, falls back to Mean
+Squared Error loss (<cite>torch.nn.MSELoss</cite>) (default is None).</p></li>
+<li><p><strong>optimizer</strong> (<cite>torch.optim</cite>) – Optimizer to update the network’s weights during training. If None
+(default), will use Adam with learning rate 0.0001.</p></li>
+<li><p><strong>standardizer</strong> (<cite>lncrnapy.train.standardizer.Standardizer</cite>) – If specified, will use this standardizer to transform the data back to
+its original scale during epoch evaluation (default is None).</p></li>
+<li><p><strong>logger</strong> (<cite>lncrnapy.train.loggers</cite>) – Logger object whose <cite>log</cite> method will be called at every epoch. If None
+(default), will use LoggerBase, which only keeps track of the history.</p></li>
+<li><p><strong>metrics</strong> (<cite>dict[str:callable]</cite>) – Metrics (name + function) that will be evaluated at every epoch.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="lncrnapy.modules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="evaluate.html" class="btn btn-neutral float-right" title="lncrnapy.evaluate" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Luuk Romeijn.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

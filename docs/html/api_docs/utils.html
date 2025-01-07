@@ -1,0 +1,185 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lncrnapy.utils &mdash; lncRNA-Py  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="lncrnapy.algorithms" href="algorithms.html" />
+    <link rel="prev" title="lncrnapy.evaluate" href="evaluate.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            lncRNA-Py
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scripts.html">Running Scripts</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="data.html">lncrnapy.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="features.html">lncrnapy.features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">lncrnapy.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="train.html">lncrnapy.train</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluate.html">lncrnapy.evaluate</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">lncrnapy.utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.utils.CLIP_NORM"><code class="docutils literal notranslate"><span class="pre">CLIP_NORM</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.utils.DEVICE"><code class="docutils literal notranslate"><span class="pre">DEVICE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.utils.NUC_TO_4D"><code class="docutils literal notranslate"><span class="pre">NUC_TO_4D</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.utils.TOKENS"><code class="docutils literal notranslate"><span class="pre">TOKENS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.utils.change_device"><code class="docutils literal notranslate"><span class="pre">change_device()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.utils.freeze"><code class="docutils literal notranslate"><span class="pre">freeze()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.utils.progress"><code class="docutils literal notranslate"><span class="pre">progress</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lncrnapy.utils.watch_progress"><code class="docutils literal notranslate"><span class="pre">watch_progress()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="algorithms.html">lncrnapy.algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="selection.html">lncrnapy.selection</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../experiments.html">Experiments</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">lncRNA-Py</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+      <li class="breadcrumb-item active">lncrnapy.utils</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/luukromeijn/rhythmnblues/blob/master/docs/api_docs/utils.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-lncrnapy.utils">
+<span id="lncrnapy-utils"></span><h1>lncrnapy.utils<a class="headerlink" href="#module-lncrnapy.utils" title="Link to this heading"></a></h1>
+<p>Constants and supporting objects for <cite>lncrnapy</cite>.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="lncrnapy.utils.CLIP_NORM">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.utils.</span></span><span class="sig-name descname"><span class="pre">CLIP_NORM</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></em><a class="headerlink" href="#lncrnapy.utils.CLIP_NORM" title="Link to this definition"></a></dt>
+<dd><p>Maximum L2-norm of gradients (all above are clipped) (default is 1.0).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="lncrnapy.utils.DEVICE">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.utils.</span></span><span class="sig-name descname"><span class="pre">DEVICE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">device(type='cpu')</span></em><a class="headerlink" href="#lncrnapy.utils.DEVICE" title="Link to this definition"></a></dt>
+<dd><p>Torch device object to use for tensor operations (GPU/CPU) Defaults to
+<cite>torch.device(‘cuda’)</cite> if available, else defaults to CPU.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="lncrnapy.utils.NUC_TO_4D">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.utils.</span></span><span class="sig-name descname"><span class="pre">NUC_TO_4D</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'A':</span> <span class="pre">tensor([1.,</span> <span class="pre">0.,</span> <span class="pre">0.,</span> <span class="pre">0.]),</span> <span class="pre">'B':</span> <span class="pre">tensor([0.0000,</span> <span class="pre">0.3333,</span> <span class="pre">0.3333,</span> <span class="pre">0.3333]),</span> <span class="pre">'C':</span> <span class="pre">tensor([0.,</span> <span class="pre">1.,</span> <span class="pre">0.,</span> <span class="pre">0.]),</span> <span class="pre">'D':</span> <span class="pre">tensor([0.3333,</span> <span class="pre">0.0000,</span> <span class="pre">0.3333,</span> <span class="pre">0.3333]),</span> <span class="pre">'G':</span> <span class="pre">tensor([0.,</span> <span class="pre">0.,</span> <span class="pre">1.,</span> <span class="pre">0.]),</span> <span class="pre">'H':</span> <span class="pre">tensor([0.3333,</span> <span class="pre">0.3333,</span> <span class="pre">0.0000,</span> <span class="pre">0.3333]),</span> <span class="pre">'K':</span> <span class="pre">tensor([0.0000,</span> <span class="pre">0.0000,</span> <span class="pre">0.5000,</span> <span class="pre">0.5000]),</span> <span class="pre">'M':</span> <span class="pre">tensor([0.5000,</span> <span class="pre">0.5000,</span> <span class="pre">0.0000,</span> <span class="pre">0.0000]),</span> <span class="pre">'N':</span> <span class="pre">tensor([0.2500,</span> <span class="pre">0.2500,</span> <span class="pre">0.2500,</span> <span class="pre">0.2500]),</span> <span class="pre">'R':</span> <span class="pre">tensor([0.5000,</span> <span class="pre">0.0000,</span> <span class="pre">0.5000,</span> <span class="pre">0.0000]),</span> <span class="pre">'S':</span> <span class="pre">tensor([0.0000,</span> <span class="pre">0.5000,</span> <span class="pre">0.5000,</span> <span class="pre">0.0000]),</span> <span class="pre">'T':</span> <span class="pre">tensor([0.,</span> <span class="pre">0.,</span> <span class="pre">0.,</span> <span class="pre">1.]),</span> <span class="pre">'V':</span> <span class="pre">tensor([0.3333,</span> <span class="pre">0.3333,</span> <span class="pre">0.3333,</span> <span class="pre">0.0000]),</span> <span class="pre">'W':</span> <span class="pre">tensor([0.5000,</span> <span class="pre">0.0000,</span> <span class="pre">0.0000,</span> <span class="pre">0.5000]),</span> <span class="pre">'Y':</span> <span class="pre">tensor([0.0000,</span> <span class="pre">0.5000,</span> <span class="pre">0.0000,</span> <span class="pre">0.5000])}</span></em><a class="headerlink" href="#lncrnapy.utils.NUC_TO_4D" title="Link to this definition"></a></dt>
+<dd><p>Mapping from nucleotide indicator to 4D_DNA representation, which is the
+format suitable for convolutional neural network layers.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="lncrnapy.utils.TOKENS">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.utils.</span></span><span class="sig-name descname"><span class="pre">TOKENS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'CLS':</span> <span class="pre">1,</span> <span class="pre">'MASK':</span> <span class="pre">0,</span> <span class="pre">'PAD':</span> <span class="pre">3,</span> <span class="pre">'SEP':</span> <span class="pre">2,</span> <span class="pre">'UNK':</span> <span class="pre">4}</span></em><a class="headerlink" href="#lncrnapy.utils.TOKENS" title="Link to this definition"></a></dt>
+<dd><p>Look-up table of special tokens and their associated values. Note that we set
+BPE to assume that MASK=0, hence this value should not be changed.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.utils.change_device">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.utils.</span></span><span class="sig-name descname"><span class="pre">change_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.utils.change_device" title="Link to this definition"></a></dt>
+<dd><p>Safely change PyTorch device, also moves certain constant variables
+contained within <cite>lncrnapy.utils</cite> to the specified device.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.utils.freeze">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.utils.</span></span><span class="sig-name descname"><span class="pre">freeze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unfreeze</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.utils.freeze" title="Link to this definition"></a></dt>
+<dd><p>(Un-)Freezes all weights in specified model.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lncrnapy.utils.progress">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.utils.</span></span><span class="sig-name descname"><span class="pre">progress</span></span><a class="headerlink" href="#lncrnapy.utils.progress" title="Link to this definition"></a></dt>
+<dd><p>Yields progress bar if <cite>tqdm</cite> library is installed.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lncrnapy.utils.watch_progress">
+<span class="sig-prename descclassname"><span class="pre">lncrnapy.utils.</span></span><span class="sig-name descname"><span class="pre">watch_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.utils.watch_progress" title="Link to this definition"></a></dt>
+<dd><p>Switches on/off the <cite>tqdm</cite> progress indicator around large for loops.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="evaluate.html" class="btn btn-neutral float-left" title="lncrnapy.evaluate" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="algorithms.html" class="btn btn-neutral float-right" title="lncrnapy.algorithms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Luuk Romeijn.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

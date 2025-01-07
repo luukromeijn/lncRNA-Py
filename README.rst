@@ -40,6 +40,13 @@ We refer to the `official documentation page
 <https://luukromeijn.github.io/lncRNA-Py/>`_ for detailed usage information 
 and also provide an `example notebook <example.ipynb>`_.
 
+Publication
+-----------
+LncRNA-Py accompanies the paper : `LncRNA-BERT: An RNA Language Model for 
+Classifying Coding and Long Non-Coding RNA <todo.com>`. Scripts and 
+descriptions of additional experiments that relate to this study are
+provided in the `experiments </experiments>`_ folder.
+
 License
 -------
 LncRNA-Py is available under the MIT license.

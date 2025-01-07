@@ -45,6 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">Running Scripts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="experiments.html">Experiments</a></li>
 </ul>
 
         </div>
@@ -75,12 +76,11 @@
 <h1>lncRNA-Py Documentation<a class="headerlink" href="#lncrna-py-documentation" title="Link to this heading"></a></h1>
 <p>lncRNA-Py is a development package for applying machine learning and deep
 learning to the problem of lncRNA classification, i.e. predicting whether a
-novel RNA transcript is coding (mRNA) or long non-coding (lncRNA).</p>
+novel RNA transcript is coding (mRNA) or long non-coding (lncRNA). The
+package accompanies the paper: <a class="reference external" href="todo.com">LncRNA-BERT: An RNA Language Model for
+Classifying Coding and Long Non-Coding RNA</a>.</p>
 <p>The main functionalities of the package are:</p>
 <ul class="simple">
-<li><p><strong>Library of predictor features</strong>: Re-implementations of a large collection of
-coding potential predictors (e.g. ORF length, pI, Fickett score, k-mer
-frequencies) used by over 40 existing lncRNA classifiers.</p></li>
 <li><p><strong>lncRNA-BERT</strong>: A Nucleotide Language Model (NLM) pre-trained on human mRNA
 and lncRNA data, achieving state-of-the-art performance when fine-tuned for
 lncRNA classification.</p></li>
@@ -88,6 +88,9 @@ lncRNA classification.</p></li>
 a more efficient and effective accomodation of long nucleotide sequences in
 comparison to K-mer Tokenization and Byte Pair Encoding. Alternative encoders
 (NUC, K-mer, BPE) are also implemented.</p></li>
+<li><p><strong>Library of predictor features</strong>: Re-implementations of a large collection of
+coding potential predictors (e.g. ORF length, pI, Fickett score, k-mer
+frequencies) used by over 40 existing lncRNA classifiers.</p></li>
 </ul>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
@@ -121,18 +124,12 @@ re-implemented features.</p>
 <li class="toctree-l2"><a class="reference internal" href="api_docs/selection.html">lncrnapy.selection</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="experiments.html">Experiments</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="experiments.html#hyperparameter-tuning">Hyperparameter Tuning</a></li>
+</ul>
+</li>
 </ul>
 </div>
-</section>
-<section id="about">
-<h2>About<a class="headerlink" href="#about" title="Link to this heading"></a></h2>
-<p>The lncRNA-Py package was developed by Luuk Romeijn as part of an MSc thesis
-internship project at the Sequencing Analysis Support Core (SASC) at Leiden
-University Medical Center (LUMC), as part of the Computer Science master’s
-program at the Leiden Insitute of Advanced Computer Science (LIACS). The
-package accompanies the thesis: <a class="reference external" href="https://theses.liacs.nl/cs">LncRNA-BERT: An RNA Language Model for
-Classifying Coding and Long Non-Coding RNA</a>. The
-project was supervised by Katy Wolstencroft (LIACS) and Hailiang Mei (LUMC).</p>
 </section>
 </section>
 

@@ -22,7 +22,4 @@ Usage
    installation
    scripts
    api
-
-.. include:: ../README.rst
-  :start-after: .. about start
-  :end-before: .. about end
+   experiments

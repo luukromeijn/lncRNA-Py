@@ -5,9 +5,7 @@ lncRNA-Py
 
 lncRNA-Py is a development package for applying machine learning and deep 
 learning to the problem of lncRNA classification, i.e. predicting whether a 
-novel RNA transcript is coding (mRNA) or long non-coding (lncRNA). The 
-package accompanies the paper: `LncRNA-BERT: An RNA Language Model for
-Classifying Coding and Long Non-Coding RNA <todo.com>`_.
+novel RNA transcript is coding (mRNA) or long non-coding (lncRNA).
 
 The main functionalities of the package are: 
 
@@ -42,8 +40,8 @@ and also provide an `example notebook <example.ipynb>`_.
 
 Publication
 -----------
-LncRNA-Py accompanies the paper : `LncRNA-BERT: An RNA Language Model for 
-Classifying Coding and Long Non-Coding RNA <todo.com>`. Scripts and 
+LncRNA-Py accompanies the paper: `LncRNA-BERT: An RNA Language Model for
+Classifying Coding and Long Non-Coding RNA <todo.com>`_. Scripts and 
 descriptions of additional experiments that relate to this study are
 provided in the `experiments </experiments>`_ folder.
 

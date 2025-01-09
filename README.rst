@@ -1,3 +1,6 @@
+.. |graph_abstr| image:: experiments/figures/graphical_abstract.jpg
+    :width: 100%
+
 lncRNA-Py
 =========
 
@@ -38,13 +41,24 @@ We refer to the `official documentation page
 <https://luukromeijn.github.io/lncRNA-Py/>`_ for detailed usage information 
 and also provide an `example notebook <example.ipynb>`_.
 
-Publication
------------
-LncRNA-Py accompanies the paper: `LncRNA-BERT: An RNA Language Model for
-Classifying Coding and Long Non-Coding RNA <todo.com>`_. Scripts and 
+.. publication start
+
+Publication: lncRNA-BERT
+------------------------
+|graph_abstr|
+
+LncRNA-Py accompanies the paper: **LncRNA-BERT: An RNA Language Model for
+Classifying Coding and Long Non-Coding RNA** (unpublished). Scripts and 
 descriptions of additional experiments that relate to this study are
-provided in the `experiments </experiments>`_ folder.
+provided in the `experiments 
+<https://github.com/luukromeijn/lncRNA-Py/tree/master/experiments>`_ folder.
+
+.. publication end
+
+.. license start
 
 License
 -------
 LncRNA-Py is available under the MIT license.
+
+.. license end

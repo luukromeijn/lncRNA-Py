@@ -101,4 +101,7 @@ rst_prolog = '''
 .. |cse_tryouts| image:: ../experiments/figures/hyppar_tuning/cse_tryouts.png
     :width: 220
 
+.. |graph_abstr| image:: ../experiments/figures/graphical_abstract.jpg
+    :width: 100%
+
 '''

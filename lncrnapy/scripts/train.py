@@ -86,8 +86,8 @@ def train(
     if freeze_network:
         base_arch.freeze()
         pooling = 'mean'
-    model = Classifier(base_arch, dropout, pooling, hidden_cls_layers, 
-                       batch_size)
+    model = Classifier(base_arch.config, base_arch, dropout, pooling, 
+                       hidden_cls_layers, batch_size)
 
     # Model/experiment name processing
     exp_name += f'_dm{d_model}_N{N}'

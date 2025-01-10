@@ -199,7 +199,7 @@ for testset in testsets:
         data = Data(hdf_filepath=f'{m_pred_dir}/' + 
                    f'CLSv2_long_test_{testset.lower()}_{methods[method]}.h5').df
         data['pred'] = 'ncRNA' 
-        data['pred'] = data['pred'].where(data['P(pcrna)'] < 0.5, 'pcRNA')
+        data['pred'] = data['pred'].where(data['P(pcRNA)'] < 0.5, 'pcRNA')
         print(lncRNA_classification_report(
             data['label'], data['pred'], method, testset, 
             f'results/scores/{method.lower()}_{testset.lower()}.csv'

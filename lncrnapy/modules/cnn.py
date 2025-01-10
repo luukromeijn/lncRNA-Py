@@ -45,7 +45,22 @@ class MycoAICNN(torch.nn.Module):
             conv.append(torch.nn.MaxPool1d(pool_size, 1))
             in_channels = out_channels
         self.conv = torch.nn.ModuleList(conv)
+        self.kernel = kernel
         self.conv_layers = conv_layers
+        self.in_channels = in_channels
+        self.pool_size = pool_size
+        self.batch_normalization = batch_normalization
+
+    @property
+    def config(self):
+        return {
+            'type': 'MycoAICNN',
+            'kernel': self.kernel, 
+            'conv_layers': self.conv_layers, 
+            'in_channels': self.in_channels, 
+            'pool_size': self.pool_size,
+            'batch_normalization': self.batch_normalization
+        }
     
     def forward(self, x):
         x = x.view(x.shape[0], -1, x.shape[-1])
@@ -73,6 +88,15 @@ class ResNet(torch.nn.Module):
         self.layer3 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = torch.nn.AvgPool1d(7, stride=1)
         self.layers = layers
+        self.in_channels = in_channels
+
+    @property
+    def config(self):
+        return {
+            'type': 'ResNet',
+            'layers': self.layers,
+            'in_channels': self.in_channels
+        }
         
     def _make_layer(self, block, planes, blocks, stride=1):
 
@@ -139,6 +163,17 @@ class CSEResNet(torch.nn.Module):
         super().__init__()
         self.conv_seq_encoding = ConvSeqEncoding(n_kernels, kernel_size)
         self.resnet = ResNet(layers, in_channels=n_kernels)
+        self.n_kernels = n_kernels
+        self.kernel_size = kernel_size
+
+    @property
+    def config(self):
+        return {
+            'type': 'CSEResNet',
+            'n_kernels': self.n_kernels,
+            'kernel_size': self.kernel_size,
+            'layers': self.resnet.layers,
+        }
 
     def forward(self, x):
         return self.resnet(self.conv_seq_encoding(x))

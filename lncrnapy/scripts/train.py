@@ -10,7 +10,7 @@ from lncrnapy.data import Data
 from lncrnapy.features import KmerTokenizer, BytePairEncoding
 from lncrnapy.train.loggers import EarlyStopping
 from lncrnapy.train.loggers import LoggerList, LoggerPlot, LoggerWrite
-from lncrnapy.modules import BERT, CSEBERT
+from lncrnapy.modules import BERT, CSEBERT, MaskedConvModel, MaskedTokenModel
 from lncrnapy.modules import Classifier
 from lncrnapy.train import train_classifier
 
@@ -38,8 +38,11 @@ def train(
     # If specified, load the pre-trained model and update hyperparameters
     if len(pretrained_model) > 0:
         exp_name += '_finetuned'
-        base_arch = torch.load(f'{model_dir}/{pretrained_model}', 
-                            utils.DEVICE).base_arch
+        if encoding_method in ['nuc', 'kmer', 'bpe']:
+            base_arch = MaskedTokenModel.from_pretrained(pretrained_model)
+        else:
+            base_arch = MaskedConvModel.from_pretrained(pretrained_model)
+        base_arch = base_arch.base_arch.to(utils.DEVICE)
         d_model = base_arch.d_model
         N = base_arch.N
         d_ff = base_arch.d_ff
@@ -64,7 +67,7 @@ def train(
         for dataset in [train_data, valid_data]:
             dataset.calculate_feature(tokenizer)
             dataset.set_tensor_features(tokenizer.name, torch.long)
-    elif encoding_method == 'conv':
+    elif encoding_method == 'cse':
         len_4d_dna = (context_length-1)*kernel_size
         for dataset in [train_data, valid_data]:
             dataset.set_tensor_features('4D-DNA', len_4d_dna=len_4d_dna)
@@ -74,7 +77,7 @@ def train(
     if len(pretrained_model) == 0:
         if encoding_method in ['nuc', 'kmer', 'bpe']:
             base_arch = BERT(tokenizer.vocab_size, d_model, N, d_ff, h)
-        elif encoding_method == 'conv':
+        elif encoding_method == 'cse':
             base_arch = CSEBERT(n_kernels, kernel_size, d_model, N, d_ff, h,
                  input_linear=input_linear, input_relu=input_relu)
     pooling = 'CLS'
@@ -109,7 +112,7 @@ def train(
             LoggerPlot(f'{results_dir}/{exp_name}'),
             LoggerWrite(f'{results_dir}/{exp_name}/history.csv'),
             EarlyStopping('F1 (macro)|valid', 
-                          filepath=f'{model_dir}/{exp_name}.pt')
+                          filepath=f'{model_dir}/{exp_name}')
         )
     )
 
@@ -147,13 +150,14 @@ args = {
         'help': 'If specified, fine-tunes this pre-trained model instead of '
                 'training one from scratch. Note that this causes model-related'
                 ' hyperparameters, such as d_model and N, to be ignored. '
-                '(str)=""',
+                'Specified by id of a model hosted on the HuggingFace Hub, or a'
+                ' path to a local directory containing model weights. (str)=""',
     },
     '--encoding_method': {
         'type': str,
-        'choices': ['conv', 'bpe', 'kmer', 'nuc'],
-        'default': 'conv',
-        'help': 'Sequence encoding method. (str="conv")'
+        'choices': ['cse', 'bpe', 'kmer', 'nuc'],
+        'default': 'cse',
+        'help': 'Sequence encoding method. (str="cse")'
     },
     '--epochs': {
         'type': int,
@@ -257,9 +261,9 @@ args = {
     '--model_dir': {
         'type': str,
         'default': '.',
-        'help': 'Directory where to save the trained model to (and load the '
-                'pre-trained model from). Model with highest macro F1-score on '
-                'the validation dataset is saved.  (str=f"{data_dir}/models")'
+        'help': 'Directory where to save the trained model to. Model with '
+                'highest macro F1-score on the validation dataset is saved. '
+                ' (str=f"{data_dir}/models")'
     }, 
     '--no_weighted_loss': {
         'action': 'store_true',

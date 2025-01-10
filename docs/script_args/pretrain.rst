@@ -2,9 +2,7 @@ Pre-training script for a Nucleotide Language Model. Several encoding methods an
 
 ::
 
-	python -m lncnrapy.scripts.pretrain [-h] [--exp_prefix EXP_PREFIX] [--encoding_method {conv,bpe,kmer,nuc}] [--epochs EPOCHS] [--n_samples_per_epoch N_SAMPLES_PER_EPOCH] [--batch_size BATCH_SIZE] [--warmup_steps WARMUP_STEPS] [--d_model D_MODEL] [--N N] [--d_ff D_FF] [--h H] [--dropout DROPOUT] [--n_kernels N_KERNELS] [--kernel_size KERNEL_SIZE] [--bpe_file BPE_FILE] [--k K] [--p_mlm P_MLM] [--p_mask P_MASK] [--p_random P_RANDOM]
-                          [--context_length CONTEXT_LENGTH] [--data_dir DATA_DIR] [--results_dir RESULTS_DIR] [--model_dir MODEL_DIR] [--mask_size MASK_SIZE] [--no_random_reading_frame] [--input_linear] [--no_input_relu] [--no_output_linear] [--output_relu]
-                          fasta_train fasta_valid
+	python -m lncnrapy.scripts.pretrain [-h] [--exp_prefix EXP_PREFIX] [--encoding_method {cse,bpe,kmer,nuc}] [--epochs EPOCHS] [--n_samples_per_epoch N_SAMPLES_PER_EPOCH] [--batch_size BATCH_SIZE] [--warmup_steps WARMUP_STEPS] [--d_model D_MODEL] [--N N] [--d_ff D_FF] [--h H] [--dropout DROPOUT] [--n_kernels N_KERNELS] [--kernel_size KERNEL_SIZE] [--bpe_file BPE_FILE] [--k K] [--p_mlm P_MLM] [--p_mask P_MASK] [--p_random P_RANDOM] [--context_length CONTEXT_LENGTH] [--data_dir DATA_DIR] [--results_dir RESULTS_DIR] [--model_dir MODEL_DIR] [--mask_size MASK_SIZE] [--no_random_reading_frame] [--input_linear] [--no_input_relu] [--no_output_linear] [--output_relu] fasta_train fasta_valid
 
 
 **Positional arguments:**
@@ -18,8 +16,8 @@ Pre-training script for a Nucleotide Language Model. Several encoding methods an
     Show help message.
   `\-\-exp_prefix` EXP_PREFIX
     Added prefix to model/experiment name. (str="MLM")
-  `\-\-encoding_method` {conv,bpe,kmer,nuc}
-    Sequence encoding method. (str="conv")
+  `\-\-encoding_method` {cse,bpe,kmer,nuc}
+    Sequence encoding method. (str="cse")
   `\-\-epochs` EPOCHS
     Number of epochs to pre-train for. (int=500)
   `\-\-n_samples_per_epoch` N_SAMPLES_PER_EPOCH
@@ -41,7 +39,7 @@ Pre-training script for a Nucleotide Language Model. Several encoding methods an
   `\-\-n_kernels` N_KERNELS
     Specifies number of kernels when convolutional sequence encoding is used. (int=768)
   `\-\-kernel_size` KERNEL_SIZE
-    Specifies kernel size when convolutional sequence encoding is used. (int=10)
+    Specifies kernel size when convolutional sequence encoding is used. (int=9)
   `\-\-bpe_file` BPE_FILE
     Filepath to BPE model generated with BPE script. Required when Byte Pair Encoding is used. (str="")
   `\-\-k` K

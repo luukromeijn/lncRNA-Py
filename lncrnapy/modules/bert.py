@@ -48,16 +48,29 @@ class BERT(torch.nn.Module):
         self.N = N
         self.d_ff = d_ff
         self.h = h
+        self.dropout = dropout
 
         # Initialize parameters with Glorot / fan_avg.
         for p in self.parameters():
             if p.dim() > 1:
                 torch.nn.init.xavier_uniform_(p)
 
+    @property
+    def config(self):
+        return {
+            'type': 'BERT',
+            'vocab_size': self.vocab_size,
+            'd_model': self.d_model,
+            'N': self.N,
+            'd_ff': self.d_ff,
+            'h': self.h,
+            'dropout': self.dropout
+        }
+
     def forward(self, src):
         '''Given a source, retrieve encoded representation'''
         src_mask = (src != utils.TOKENS['PAD']).unsqueeze(-2) # Mask padding
-        src_embedding = self.embedder(src) * math.sqrt(self.d_model) # Get embedding
+        src_embedding = self.embedder(src) * math.sqrt(self.d_model)
         src_embedding = self.pos_encoder(src_embedding)
         return self.encoder(src_embedding, src_mask)
 
@@ -271,7 +284,7 @@ class CSEBERT(torch.nn.Module):
     ----------
     ViT: Dosovitskiy et al. (2020) https://doi.org/10.48550/arXiv.2010.11929'''
 
-    def __init__(self, n_kernels, kernel_size=10, d_model=768, N=12, d_ff=None, 
+    def __init__(self, n_kernels, kernel_size=9, d_model=768, N=12, d_ff=None, 
                  h=None, dropout=0.1, input_linear=None, input_relu=True, 
                  n_hidden_kernels=0):
         '''Initializes `CSEBERT`.
@@ -281,7 +294,7 @@ class CSEBERT(torch.nn.Module):
         n_kernels: int
             Number of kernels to learn from the data.
         kernel_size: int
-            Number of nucleotides that make up a single kernel (default is 10).
+            Number of nucleotides that make up a single kernel (default is 9).
         d_model: int
             Dimension of sequence repr. (embedding) in model (default is 768)
         N: int
@@ -313,25 +326,43 @@ class CSEBERT(torch.nn.Module):
                         kernel_size, input_linear, input_relu, n_hidden_kernels)
         self.positional_encoder = PositionalEncoding(d_model, dropout)
         self.encoder = Encoder(d_model, d_ff, h, N, dropout)
-        self.kernel_size = kernel_size
         self.n_kernels = n_kernels
+        self.kernel_size = kernel_size
         self.d_model = d_model
         self.N = N
         self.d_ff = d_ff
         self.h = h
+        self.dropout = dropout
         self.input_linear = input_linear
         self.input_relu = input_relu
+        self.n_hidden_kernels = n_hidden_kernels
 
         # Initialize parameters with Glorot / fan_avg.
         for p in self.parameters():
             if p.dim() > 1:
                 torch.nn.init.xavier_uniform_(p)
 
+    @property
+    def config(self):
+        return {
+            'type': 'CSEBERT',
+            'n_kernels': self.n_kernels,
+            'kernel_size': self.kernel_size,
+            'd_model': self.d_model,
+            'N': self.N,
+            'd_ff': self.d_ff,
+            'h': self.h,
+            'dropout': self.dropout,
+            'input_linear': self.input_linear,
+            'input_relu': self.input_relu,
+            'n_hidden_kernels': self.n_hidden_kernels
+        }
+
     def forward(self, src):
         '''Given a source, retrieve encoded representation'''
 
         src_lengths = ( # Calculate start of zero-padding in convolved output...
-            torch.count_nonzero(src.sum(axis=1), dim=1) / self.kernel_size
+            (torch.count_nonzero(src.sum(axis=1), dim=1) / self.kernel_size)
         ).to(torch.int32).unsqueeze(-1) # ... and round down to nearest int
         
         # Embed using CSE and add positional encoding
@@ -356,7 +387,7 @@ class CSEBERT(torch.nn.Module):
             y = y[:,0,:] # CLS is first input position
         else:
             len_seqs = ( # Length of CSE-encoded sequences
-                torch.count_nonzero(src.sum(axis=1), dim=1) / self.kernel_size
+                (torch.count_nonzero(src.sum(axis=1), dim=1) / self.kernel_size)
             ).to(torch.int32).unsqueeze(-1)
             hide = ~( # Set True part of the zero-padding...
                 torch.arange(y.shape[1], device=utils.DEVICE) <= len_seqs)

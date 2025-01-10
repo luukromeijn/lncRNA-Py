@@ -38,38 +38,44 @@ def test_logger_log(logger):
 
 def test_train_classifier_cnn(data):
     kmers = KmerFreqs(3)
-    model = Classifier(MycoAICNN())
+    base_arch = MycoAICNN()
+    model = Classifier(base_arch.config, base_arch)
     data.calculate_feature(kmers)
     data.set_tensor_features(kmers.name)
     train_classifier(model, data, data, 1)
 
 def test_train_classifier_bert(data):
     kmers = KmerTokenizer(3)
-    model = Classifier(BERT(kmers.vocab_size, N=1))
+    base_arch = BERT(kmers.vocab_size, N=1)
+    model = Classifier(base_arch.config, base_arch)
     data.calculate_feature(kmers)
     data.set_tensor_features(kmers.name, torch.long)
     train_classifier(model, data, data, 1)
 
 def test_train_classifier_csebert(data):
-    model = Classifier(CSEBERT(12, N=1))
+    base_arch = CSEBERT(12, N=1)
+    model = Classifier()
     data.set_tensor_features('4D-DNA')
     train_classifier(model, data, data, 1)
 
 def test_train_masked_token_modeling(data):
     kmers = KmerTokenizer(3)
-    model = MaskedTokenModel(BERT(kmers.vocab_size, N=1))
+    base_arch = BERT(kmers.vocab_size, N=1)
+    model = MaskedTokenModel(base_arch.config, base_arch)
     data.calculate_feature(kmers)
     data.set_tensor_features(kmers.name, torch.long)
     train_masked_token_modeling(model, data, data, 1)
 
 def test_train_masked_conv_modeling(data):
-    model = MaskedConvModel(CSEBERT(12, N=1))
+    base_arch = CSEBERT(12, N=1)
+    model = MaskedConvModel(base_arch.config, base_arch)
     data.set_tensor_features('4D-DNA')
     train_masked_conv_modeling(model, data, data, 1)
 
 def test_train_regression(data):
     kmers = KmerTokenizer(3)
-    model = Regressor(BERT(kmers.vocab_size, N=1), n_features=2)
+    base_arch = BERT(kmers.vocab_size, N=1)
+    model = Regressor(base_arch.config, base_arch, n_features=2)
     orf = ORFCoordinates()
     data.calculate_feature(kmers)
     data.calculate_feature(orf)

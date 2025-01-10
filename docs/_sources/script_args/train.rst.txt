@@ -49,7 +49,7 @@ Trains (or fine-tunes) a model (optionally pre-trained) for lncRNA classificatio
   `\-\-n_kernels` N_KERNELS
     Specifies number of kernels when convolutional sequence encoding is used. (int=768)
   `\-\-kernel_size` KERNEL_SIZE
-    Specifies kernel size when convolutional sequence encoding is used. (int=10)
+    Specifies kernel size when convolutional sequence encoding is used. (int=9)
   `\-\-bpe_file` BPE_FILE
     Filepath to BPE model generated with BPE script. Required when Byte Pair Encoding is used. (str="")
   `\-\-k` K

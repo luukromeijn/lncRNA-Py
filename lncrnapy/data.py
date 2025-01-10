@@ -40,8 +40,9 @@ class Data(Dataset):
     `y_dtype`: type
         Data type for y.'''
 
-    def __init__(self, fasta_filepath=None, hdf_filepath=None):
-        '''Initializes `Data` object based on FASTA and/or .h5 file(s).
+    def __init__(self, fasta_filepath=None, hdf_filepath=None, 
+                 csv_filepath=None):
+        '''Initializes `Data` object based on FASTA and/or .h5/.csv file(s).
         
         Arguments
         ---------
@@ -51,11 +52,20 @@ class Data(Dataset):
         `hdf_filepath`: `str`
             When `hdf_filepath` is provided, will load features from this file, 
             retrieving the sequences from the provided FASTA files using their 
+            sequence IDs.
+        `csv_filepath`: `str`
+            When `csv_filepath` is provided, will load features from this file, 
+            retrieving the sequences from the provided FASTA files using their 
             sequence IDs.'''
         
         print("Importing data...")
+        if hdf_filepath is not None and csv_filepath is not None:
+            raise ValueError("Data cannot be imported from .h5 and .csv file. "
+                             "Can only import tabular data from one file.")
         if hdf_filepath is not None:
-            self.df = self._read_hdf(hdf_filepath, fasta_filepath)
+            self.df = self._read_tabular(hdf_filepath, fasta_filepath, 'hdf')
+        elif csv_filepath is not None:
+            self.df = self._read_tabular(csv_filepath, fasta_filepath, 'csv')
         elif fasta_filepath is not None:
             self.df = self._read_fasta(fasta_filepath)
         else:
@@ -131,13 +141,17 @@ class Data(Dataset):
         )
         return encoding
 
-    def _read_hdf(self, hdf_filepath, fasta_filepath):
-        '''Loads features from `hdf_filepath`, retrieving sequences from 
-        `fasta_filepath` using their sequence IDs.'''
+    def _read_tabular(self, tabular_filepath, fasta_filepath, tabular_type):
+        '''Loads features from `tabular_filepath`, retrieving sequences from 
+        `fasta_filepath` using their sequence IDs. `tabular_filepath` can be
+        csv or hdf file.'''
 
         files = ([fasta_filepath] if type(fasta_filepath) == str 
                  else fasta_filepath)
-        data = pd.read_hdf(hdf_filepath)
+        if tabular_type == 'csv':
+            data = pd.read_csv(tabular_filepath)
+        else: # tabular_type == 'hdf':
+            data = pd.read_hdf(tabular_filepath)
 
         if fasta_filepath is not None:
             seq_dict = {}

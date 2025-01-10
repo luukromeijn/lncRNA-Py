@@ -23,3 +23,7 @@ Usage
    scripts
    api
    experiments
+
+.. include:: ../README.rst
+  :start-after: .. publication start
+  :end-before: .. license end

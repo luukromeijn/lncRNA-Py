@@ -52,12 +52,16 @@
 .. |cse_tryouts| image:: figures/hyppar_tuning/cse_tryouts.png
     :width: 220
 
+.. |graph_abstr| image:: figures/graphical_abstract.jpg
+    :width: 100%
 
 Experiments
 ===========
 This folder contains documentation and scripts of experiments that were conducted for `LncRNA-BERT: An RNA Language Model for Classifying Coding and Long Non-Coding RNA <todo.com>`_.
 
 .. experiments start
+
+|graph_abstr|
 
 .. Final lncRNA-BERT Models
 .. ------------------------

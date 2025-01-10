@@ -68,6 +68,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.set_random_reading_frame"><code class="docutils literal notranslate"><span class="pre">Data.set_random_reading_frame()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.set_tensor_features"><code class="docutils literal notranslate"><span class="pre">Data.set_tensor_features()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.test_features"><code class="docutils literal notranslate"><span class="pre">Data.test_features()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.to_csv"><code class="docutils literal notranslate"><span class="pre">Data.to_csv()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.to_fasta"><code class="docutils literal notranslate"><span class="pre">Data.to_fasta()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.to_hdf"><code class="docutils literal notranslate"><span class="pre">Data.to_hdf()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#lncrnapy.data.Data.train_test_split"><code class="docutils literal notranslate"><span class="pre">Data.train_test_split()</span></code></a></li>
@@ -394,6 +395,22 @@ lncRNA.</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="lncrnapy.data.Data.to_csv">
+<span class="sig-name descname"><span class="pre">to_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_or_buf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">except_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['sequence']</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.to_csv" title="Link to this definition"></a></dt>
+<dd><p>Write data to .csv file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path_or_buf</strong> – Target file or buffer.</p></li>
+<li><p><strong>except_columns</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>:</em>) – Column names specified here won’t be exported (default is
+[‘sequence’])</p></li>
+<li><p><strong>kwargs</strong> – Any keyword argument accepted by <cite>pd.DataFrame.to_csv</cite></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="lncrnapy.data.Data.to_fasta">
 <span class="sig-name descname"><span class="pre">to_fasta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fasta_filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lncrnapy.data.Data.to_fasta" title="Link to this definition"></a></dt>
 <dd><p>Writes sequence data to FASTA file(s) specified by <cite>fasta_filepath</cite>,
@@ -411,7 +428,7 @@ filepaths for for coding and non-coding transcripts, respectively.</p>
 <li><p><strong>path_or_buf</strong> – Target file or buffer.</p></li>
 <li><p><strong>except_columns</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>:</em>) – Column names specified here won’t be exported (default is
 [‘sequence’])</p></li>
-<li><p><strong>kwargs</strong> – Any keyword argument accepted by <cite>pd.DataFrame.to_csv</cite></p></li>
+<li><p><strong>kwargs</strong> – Any keyword argument accepted by <cite>pd.DataFrame.to_hdf</cite></p></li>
 </ul>
 </dd>
 </dl>

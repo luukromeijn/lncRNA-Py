@@ -72,43 +72,41 @@
            <div itemprop="articleBody">
              
   <p>Retrieves sequence embeddings by specified model for input dataset.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">lncnrapy</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">embeddings</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">output_file</span> <span class="n">OUTPUT_FILE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">output_plot_file</span> <span class="n">OUTPUT_PLOT_FILE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">encoding_method</span> <span class="p">{</span><span class="n">conv</span><span class="p">,</span><span class="n">bpe</span><span class="p">,</span><span class="n">kmer</span><span class="p">,</span><span class="n">nuc</span><span class="p">}]</span> <span class="p">[</span><span class="o">--</span><span class="n">bpe_file</span> <span class="n">BPE_FILE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">k</span> <span class="n">K</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">pooling</span> <span class="p">{</span><span class="n">CLS</span><span class="p">,</span><span class="n">mean</span><span class="p">,</span><span class="nb">max</span><span class="p">}]</span> <span class="p">[</span><span class="o">--</span><span class="n">dim_red</span> <span class="p">{</span><span class="n">tsne</span><span class="p">,</span><span class="n">pca</span><span class="p">,</span><span class="n">umap</span><span class="p">,</span><span class="kc">None</span><span class="p">}]</span> <span class="p">[</span><span class="o">--</span><span class="n">batch_size</span> <span class="n">BATCH_SIZE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">context_length</span> <span class="n">CONTEXT_LENGTH</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">data_dir</span> <span class="n">DATA_DIR</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">results_dir</span> <span class="n">RESULTS_DIR</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">model_dir</span> <span class="n">MODEL_DIR</span><span class="p">]</span> <span class="n">fasta_file</span> <span class="p">[</span><span class="n">fasta_file</span> <span class="o">...</span><span class="p">]</span> <span class="n">model_file</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">lncnrapy</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">embeddings</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">model_file</span> <span class="n">MODEL_FILE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">output_file</span> <span class="n">OUTPUT_FILE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">output_plot_file</span> <span class="n">OUTPUT_PLOT_FILE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">encoding_method</span> <span class="p">{</span><span class="n">cse</span><span class="p">,</span><span class="n">bpe</span><span class="p">,</span><span class="n">kmer</span><span class="p">,</span><span class="n">nuc</span><span class="p">}]</span> <span class="p">[</span><span class="o">--</span><span class="n">bpe_file</span> <span class="n">BPE_FILE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">k</span> <span class="n">K</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">pooling</span> <span class="p">{</span><span class="n">CLS</span><span class="p">,</span><span class="n">mean</span><span class="p">,</span><span class="nb">max</span><span class="p">}]</span> <span class="p">[</span><span class="o">--</span><span class="n">dim_red</span> <span class="p">{</span><span class="n">tsne</span><span class="p">,</span><span class="n">pca</span><span class="p">,</span><span class="n">umap</span><span class="p">,</span><span class="kc">None</span><span class="p">}]</span> <span class="p">[</span><span class="o">--</span><span class="n">batch_size</span> <span class="n">BATCH_SIZE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">context_length</span> <span class="n">CONTEXT_LENGTH</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">data_dir</span> <span class="n">DATA_DIR</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">results_dir</span> <span class="n">RESULTS_DIR</span><span class="p">]</span> <span class="n">fasta_file</span> <span class="p">[</span><span class="n">fasta_file</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
 <dl class="simple">
 <dt><strong>Positional arguments:</strong></dt><dd><dl class="simple">
 <dt><cite>fasta_file</cite></dt><dd><p>Path to FASTA file of RNA sequences or pair of paths to two FASTA files containing protein- and non-coding RNAs, respectively. (str)</p>
 </dd>
-<dt><cite>model_file</cite></dt><dd><p>(Pre-)trained model to get sequence embeddings from. (str)</p>
-</dd>
 </dl>
 </dd>
 <dt><strong>Optional arguments</strong></dt><dd><dl class="simple">
 <dt><cite>-h, --help</cite></dt><dd><p>Show help message.</p>
 </dd>
-<dt><cite>--output_file</cite> OUTPUT_FILE</dt><dd><p>Name of hdf output file. (str)</p>
+<dt><cite>--model_file</cite> MODEL_FILE</dt><dd><p>(Pre-)trained model, specified by id of a model hosted on the HuggingFace Hub, or a path to a local directory containing model weights. (str=”luukromeijn/lncRNA-BERT-kmer-k3-pretrained”)</p>
+</dd>
+<dt><cite>--output_file</cite> OUTPUT_FILE</dt><dd><p>Name of .csv/.h5 output file. (str)</p>
 </dd>
 <dt><cite>--output_plot_file</cite> OUTPUT_PLOT_FILE</dt><dd><p>If specified, plots the first two dimensions of the (reduced) sequence embeddings and saves them to this file. (str)</p>
 </dd>
-<dt><cite>--encoding_method</cite> {conv,bpe,kmer,nuc}</dt><dd><p>Sequence encoding method. (str=”conv”)</p>
+<dt><cite>--encoding_method</cite> {cse,bpe,kmer,nuc}</dt><dd><p>Sequence encoding method. (str=”kmer”)</p>
 </dd>
 <dt><cite>--bpe_file</cite> BPE_FILE</dt><dd><p>Filepath to BPE model generated with BPE script. Required when Byte Pair Encoding is used. (str=””)</p>
 </dd>
-<dt><cite>--k</cite> K</dt><dd><p>Specifies k when k-mer encoding is used. (int=6)</p>
+<dt><cite>--k</cite> K</dt><dd><p>Specifies k when K-mer Tokenization is used. (int=3)</p>
 </dd>
 <dt><cite>--pooling</cite> {CLS,mean,max}</dt><dd><p>Type of pooling to apply. If “CLS”, will extract embeddings from CLS token. (str=”mean”)</p>
 </dd>
-<dt><cite>--dim_red</cite> {tsne,pca,umap,None}</dt><dd><p>Type of dimensionality reduction to apply to retrieved embeddings. If None, will not reduce dimensions. (str=None)</p>
+<dt><cite>--dim_red</cite> {tsne,pca,umap,None}</dt><dd><p>Type of dimensionality reduction to apply to retrieved embeddings. If None, will not reduce dimensions. (str=tsne)</p>
 </dd>
 <dt><cite>--batch_size</cite> BATCH_SIZE</dt><dd><p>Number of samples per prediction step. (int=8)</p>
 </dd>
 <dt><cite>--context_length</cite> CONTEXT_LENGTH</dt><dd><p>Number of input positions. For cse/k-mer encoding, this translates to a maximum of (768-1)*k input nucleotides. (int=768)</p>
 </dd>
-<dt><cite>--data_dir</cite> DATA_DIR</dt><dd><p>Parent directory to use for any of the paths specified in these arguments. (str=””)</p>
+<dt><cite>--data_dir</cite> DATA_DIR</dt><dd><p>Parent directory to use for any of the paths specified in these arguments (except for <cite>–model_file</cite>). (str=””)</p>
 </dd>
 <dt><cite>--results_dir</cite> RESULTS_DIR</dt><dd><p>Parent directory to use for the results folder of this script. (str=””)</p>
-</dd>
-<dt><cite>--model_dir</cite> MODEL_DIR</dt><dd><p>Directory where to and load the (pre-)trained model from. (str=f”{data_dir}/models”)</p>
 </dd>
 </dl>
 </dd>

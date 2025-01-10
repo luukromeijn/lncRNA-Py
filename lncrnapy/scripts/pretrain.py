@@ -49,7 +49,7 @@ def pretrain(
         for dataset in [train_data, valid_data]:
             dataset.calculate_feature(tokenizer)
             dataset.set_tensor_features(tokenizer.name, torch.long)
-    elif encoding_method == 'conv':
+    elif encoding_method == 'cse':
         len_4d_dna = (context_length-1)*kernel_size
         for dataset in [train_data, valid_data]:
             dataset.set_tensor_features('4D-DNA', len_4d_dna=len_4d_dna)
@@ -60,7 +60,7 @@ def pretrain(
         base_arch = BERT(tokenizer.vocab_size, d_model, N, d_ff, h)
         model = MaskedTokenModel(base_arch, dropout, batch_size)
         pretrain_function = train_masked_token_modeling
-    elif encoding_method == 'conv':
+    elif encoding_method == 'cse':
         base_arch = CSEBERT(
             n_kernels, kernel_size, d_model, N, d_ff, h, 
             input_linear=input_linear, input_relu=input_relu
@@ -94,7 +94,7 @@ def pretrain(
             LoggerWrite(f'{results_dir}/{exp_name}/history.csv', 
                         ['Loss', 'Accuracy']),
             EarlyStopping('Accuracy|valid', 
-                          filepath=f'{model_dir}/{exp_name}.pt')
+                          filepath=f'{model_dir}/{exp_name}')
         )
     )
 
@@ -120,9 +120,9 @@ args = {
     },
     '--encoding_method': {
         'type': str,
-        'choices': ['conv', 'bpe', 'kmer', 'nuc'],
-        'default': 'conv',
-        'help': 'Sequence encoding method. (str="conv")'
+        'choices': ['cse', 'bpe', 'kmer', 'nuc'],
+        'default': 'cse',
+        'help': 'Sequence encoding method. (str="cse")'
     },
     '--epochs': {
         'type': int,

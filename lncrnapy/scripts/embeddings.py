@@ -8,7 +8,7 @@ import torch
 from lncrnapy import utils
 from lncrnapy.data import Data
 from lncrnapy.features import KmerTokenizer, BytePairEncoding
-from lncrnapy.modules import CSEBERT
+from lncrnapy.modules import CSEBERT, Classifier
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 import umap
@@ -24,7 +24,7 @@ dim_red_functions = {
 def embeddings(
         fasta_file, model_file, output_file, output_plot_file, encoding_method, 
         bpe_file, k, pooling, dim_red, batch_size, context_length, data_dir, 
-        results_dir, model_dir, 
+        results_dir,
     ):
     '''RNA sequence embedding function as called by embeddings script. Run
     `lncrnapy.scripts.embeddings --help` for usage info.'''
@@ -33,10 +33,12 @@ def embeddings(
     fasta_file = [f'{data_dir}/{filepath}' for filepath in fasta_file]
     fasta_file = fasta_file[0] if len(fasta_file) == 1 else fasta_file
     data = Data(fasta_file) 
+    except_columns = ['sequence']
     
     # Loading the model
-    model = torch.load(f'{model_dir}/{model_file}', utils.DEVICE)
+    model = Classifier.from_pretrained(model_file)
     model.pred_batch_size = batch_size
+    model = model.to(utils.DEVICE)
     if type(model.base_arch) == CSEBERT:
         kernel_size = model.base_arch.kernel_size
     print("Model loaded.")
@@ -52,14 +54,18 @@ def embeddings(
                                          context_length)
         data.calculate_feature(tokenizer)
         data.set_tensor_features(tokenizer.name, torch.long)
-    elif encoding_method == 'conv':
+        except_columns += tokenizer.name
+    elif encoding_method == 'cse':
         len_4d_dna = (context_length-1)*kernel_size
         data.set_tensor_features('4D-DNA', len_4d_dna=len_4d_dna)
 
     # Retrieving and saving the embeddings (+ dimensionality reduction)
     dim_red = dim_red_functions[dim_red] if dim_red != 'None' else None
     model.latent_space(data, inplace=True, pooling=pooling, dim_red=dim_red)
-    data.to_hdf(f'{results_dir}/{output_file}')                                 # NOTE: I guess .csv option would be nice here
+    if output_file.endswith('.h5'):
+        data.to_hdf(f'{results_dir}/{output_file}', except_columns)
+    else:
+        data.to_csv(f'{results_dir}/{output_file}', except_columns)
     if output_plot_file is not None:
         data.plot_feature_scatter('L0', 'L1', 
                                   filepath=f'{results_dir}/{output_plot_file}')
@@ -76,14 +82,19 @@ args = {
                 'FASTA files containing protein- and non-coding RNAs, '
                 'respectively. (str)'
     }, 
-    'model_file': {
+    '--model_file': {
         'type': str, 
-        'help': '(Pre-)trained model to get sequence embeddings from. (str)',
+        'default': 'luukromeijn/lncRNA-BERT-kmer-k3-pretrained',
+        'help': '(Pre-)trained model, specified by id of a model hosted on'
+                ' the HuggingFace Hub, or a path to a local directory '
+                'containing model weights. '
+                '(str="luukromeijn/lncRNA-BERT-kmer-k3-pretrained")'
+        
     },
     '--output_file': {
         'type': str, 
         'default': 'embeddings.h5',
-        'help': 'Name of hdf output file. (str)',
+        'help': 'Name of .csv/.h5 output file. (str)',
     },
     '--output_plot_file': {
         'type': str, 
@@ -93,9 +104,9 @@ args = {
     },
     '--encoding_method': {
         'type': str,
-        'choices': ['conv', 'bpe', 'kmer', 'nuc'],
-        'default': 'conv',
-        'help': 'Sequence encoding method. (str="conv")'
+        'choices': ['cse', 'bpe', 'kmer', 'nuc'],
+        'default': 'kmer',
+        'help': 'Sequence encoding method. (str="kmer")'
     },
     '--bpe_file': {
         'type': str,
@@ -105,8 +116,8 @@ args = {
     },
     '--k': {
         'type': int,
-        'default': 6,
-        'help': 'Specifies k when k-mer encoding is used. (int=6)'
+        'default': 3,
+        'help': 'Specifies k when K-mer Tokenization is used. (int=3)'
     },
     '--pooling': {
         'type': str,
@@ -120,7 +131,7 @@ args = {
         'default': 'tsne',
         'choices': ['tsne', 'pca', 'umap', 'None'],
         'help': 'Type of dimensionality reduction to apply to retrieved '
-                'embeddings. If None, will not reduce dimensions. (str=None)'
+                'embeddings. If None, will not reduce dimensions. (str=tsne)'
     },
     '--batch_size': {
         'type': int,
@@ -138,7 +149,7 @@ args = {
         'type': str,
         'default': '.',
         'help': 'Parent directory to use for any of the paths specified in '
-                'these arguments. (str="")'
+                'these arguments (except for `--model_file`). (str="")'
     }, 
     '--results_dir': {
         'type': str,
@@ -146,12 +157,6 @@ args = {
         'help': 'Parent directory to use for the results folder of this script.'
                 ' (str="")'
     }, 
-    '--model_dir': {
-        'type': str,
-        'default': '.',
-        'help': 'Directory where to and load the (pre-)trained model from. ' 
-                '(str=f"{data_dir}/models")'
-    },
 }
 
 
@@ -168,10 +173,9 @@ if __name__ == '__main__':
         raise ValueError(
             "Please use --bpe_file flag to specify BPE model file."
         )
-    p.model_dir = f'{p.data_dir}/models' if p.model_dir=='.' else p.model_dir
     
     embeddings( # Call
         p.fasta_file, p.model_file, p.output_file, p.output_plot_file, 
         p.encoding_method, p.bpe_file, p.k, p.pooling, p.dim_red, p.batch_size, 
-        p.context_length, p.data_dir, p.results_dir, p.model_dir,
+        p.context_length, p.data_dir, p.results_dir
     )

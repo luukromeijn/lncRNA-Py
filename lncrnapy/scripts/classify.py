@@ -10,12 +10,12 @@ import torch
 from lncrnapy import utils
 from lncrnapy.data import Data
 from lncrnapy.features import KmerTokenizer, BytePairEncoding
-from lncrnapy.modules import CSEBERT
+from lncrnapy.modules import Classifier, CSEBERT
 
 
 def classify(
         fasta_file, model_file, output_file, encoding_method, bpe_file, k, 
-        batch_size, context_length, data_dir, results_dir, model_dir, 
+        batch_size, context_length, data_dir, results_dir,
     ):
     '''lncRNA sequence classification function as called by classify script. Run
     `lncrnapy.scripts.classify --help` for usage info.'''
@@ -26,8 +26,9 @@ def classify(
     data = Data(fasta_file) 
     
     # Loading the model
-    model = torch.load(f'{model_dir}/{model_file}', utils.DEVICE)
+    model = Classifier.from_pretrained(model_file)
     model.pred_batch_size = batch_size
+    model = model.to(utils.DEVICE)
     if type(model.base_arch) == CSEBERT:
         kernel_size = model.base_arch.kernel_size
     print("Model loaded.")
@@ -44,7 +45,7 @@ def classify(
                                          context_length)
         data.calculate_feature(tokenizer)
         data.set_tensor_features(tokenizer.name, torch.long)
-    elif encoding_method == 'conv':
+    elif encoding_method == 'cse':
         len_4d_dna = (context_length-1)*kernel_size
         data.set_tensor_features('4D-DNA', len_4d_dna=len_4d_dna)
 
@@ -52,7 +53,13 @@ def classify(
     model.predict(data, inplace=True, return_logits=False)
     t1 = time.time()
     print(f"Classified {len(data)} sequences in {round((t1-t0)/60, 2)} min.")
-    data.to_hdf(f'{results_dir}/{output_file}')                                 # NOTE: I guess .csv option would be nice here
+    data.df['class'] = 'ncRNA' 
+    data.df['class'] = data.df['class'].where(data.df['P(pcRNA)']<0.5, 'pcRNA')
+    if output_file.endswith('.h5'):
+        data.to_hdf(f'{results_dir}/{output_file}')
+    else:
+        data.df = data.df[['id', 'P(pcRNA)', 'class']]
+        data.to_csv(f'{results_dir}/{output_file}')
 
 
 description = 'Performs lncRNA classification, classifying RNA sequences as ' \
@@ -66,20 +73,25 @@ args = {
                 'FASTA files containing protein- and non-coding RNAs, '
                 'respectively. (str)'
     }, 
-    'model_file': {
+    '--model_file': {
         'type': str, 
-        'help': 'Trained classifier model. (str)',
+        'default': 'luukromeijn/lncRNA-BERT-kmer-k3-finetuned',
+        'help': 'Trained classifier model, specified by id of a model hosted on'
+                ' the HuggingFace Hub, or a path to a local directory '
+                'containing model weights. '
+                '(str="luukromeijn/lncRNA-BERT-kmer-k3-finetuned")',
+        
     },
     '--output_file': {
         'type': str, 
-        'default': 'classification.h5',
-        'help': 'Name of hdf output file. (str)',
+        'default': 'classification.csv',
+        'help': 'Name of .csv/.h5 output file. (str)',
     },
     '--encoding_method': {
         'type': str,
-        'choices': ['conv', 'bpe', 'kmer', 'nuc'],
-        'default': 'conv',
-        'help': 'Sequence encoding method. (str="conv")'
+        'choices': ['cse', 'bpe', 'kmer', 'nuc'],
+        'default': 'kmer',
+        'help': 'Sequence encoding method. (str="kmer")'
     },
     '--bpe_file': {
         'type': str,
@@ -89,8 +101,8 @@ args = {
     },
     '--k': {
         'type': int,
-        'default': 6,
-        'help': 'Specifies k when k-mer encoding is used. (int=6)'
+        'default': 3,
+        'help': 'Specifies k when K-mer Tokenization is used. (int=3)'
     },
     '--batch_size': {
         'type': int,
@@ -108,7 +120,7 @@ args = {
         'type': str,
         'default': '.',
         'help': 'Parent directory to use for any of the paths specified in '
-                'these arguments. (str="")'
+                'these arguments (except for `--model_file`). (str="")'
     }, 
     '--results_dir': {
         'type': str,
@@ -116,12 +128,6 @@ args = {
         'help': 'Parent directory to use for the results folder of this script.'
                 ' (str="")'
     }, 
-    '--model_dir': {
-        'type': str,
-        'default': '.',
-        'help': 'Directory where to and load the classifier from. ' 
-                '(str=f"{data_dir}/models")'
-    },
 }
 
 
@@ -138,10 +144,9 @@ if __name__ == '__main__':
         raise ValueError(
             "Please use --bpe_file flag to specify BPE model file."
         )
-    p.model_dir = f'{p.data_dir}/models' if p.model_dir=='.' else p.model_dir
     
     classify( # Call
         p.fasta_file, p.model_file, p.output_file, p.encoding_method, 
         p.bpe_file, p.k, p.batch_size, p.context_length, p.data_dir, 
-        p.results_dir, p.model_dir,
+        p.results_dir,
     )

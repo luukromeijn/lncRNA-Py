@@ -6,10 +6,12 @@ import torch
 from torch.utils.data import DataLoader
 from sklearn.manifold import TSNE
 from lncrnapy.modules.bert import BERT, CSEBERT
+from lncrnapy.modules.cnn import MycoAICNN, ResNet, CSEResNet
 from lncrnapy.data import reduce_dimensionality
+from huggingface_hub import PyTorchModelHubMixin
 
 
-class WrapperBase(torch.nn.Module):
+class WrapperBase(torch.nn.Module, PyTorchModelHubMixin):
     '''Base class for all wrapper modules in `lncrnapy`.
     
     Attributes
@@ -24,17 +26,32 @@ class WrapperBase(torch.nn.Module):
         Data column name for latent space columns (only defined after calling
         `latent_space` method.)'''
 
-    def __init__(self, base_arch, pred_batch_size=8):
+    def __init__(self, base_arch_config, base_arch=None, pred_batch_size=8):
         '''Initializes the module for a given base architecture.
         
         Arguments
         ---------
+        `base_arch_config`: `dict`
+            Configuration property of the base architecture (retrieve this 
+            through `base_arch.config`), specifying what type of base
+            architecture this wrapper contains. Must be used in combination 
+            with a matching `base_arch` by the user. 
         `base_arch`: `torch.nn.Module`
             PyTorch module to be used as base architecture of the classifier.
         `pred_batch_size`: `int`
             Batch size used by the `predict` method (default is 64).'''
         
         super().__init__()
+        archs = {
+            'BERT': BERT,
+            'CSEBERT': CSEBERT,
+            'MycoAICNN': MycoAICNN,
+            'ResNet': ResNet,
+            'CSEResNet': CSEResNet
+        }
+        if base_arch is None:
+            base_arch = archs[base_arch_config.pop('type')]
+            base_arch = base_arch(**base_arch_config)
         self.base_arch = base_arch
         self.pred_batch_size = pred_batch_size
 
@@ -123,9 +140,9 @@ class Classifier(WrapperBase):
     '''Wrapper class that uses a base architecture to perform binary
     classification.'''
 
-    def __init__(self, base_arch, dropout=0.0, pooling='CLS', hidden_layers=[],
-                 pred_batch_size=8):
-        super().__init__(base_arch, pred_batch_size)
+    def __init__(self, base_arch_config, base_arch=None, dropout=0.0, 
+                 pooling='CLS', hidden_layers=[], pred_batch_size=8):
+        super().__init__(base_arch_config, base_arch, pred_batch_size)
         self.dropout = torch.nn.Dropout(p=dropout)
         self.hidden_layers = torch.nn.ModuleList([
             torch.nn.ModuleList([torch.nn.LazyLinear(nodes), torch.nn.ReLU()])
@@ -133,12 +150,18 @@ class Classifier(WrapperBase):
         ])
         self.output = torch.nn.LazyLinear(1) 
         self.sigmoid = torch.nn.Sigmoid()
-        if type(base_arch) == BERT or type(base_arch) == CSEBERT:
+        if type(self.base_arch) == BERT or type(self.base_arch) == CSEBERT:
             self._forward_base_arch = self._forward_base_arch_bert
             self.pooling = pooling
+            in_features = self.base_arch.d_model
+            self.hidden_layers = torch.nn.ModuleList()
+            for n_nodes in hidden_layers:
+                self.hidden_layers.append(torch.nn.Linear(in_features, n_nodes))
+                in_features = n_nodes
+            self.output = torch.nn.Linear(in_features, 1)
         else:
             self._forward_base_arch = self.base_arch
-        self.data_columns = 'P(pcrna)'
+        self.data_columns = 'P(pcRNA)'
 
     def forward(self, X, return_logits=True):
         X = self.dropout(self._forward_base_arch(X))
@@ -164,10 +187,14 @@ class MaskedTokenModel(WrapperBase):
     '''Wrapper class for model that performs Masked Language Modeling with 
     tokenized sequences as input.'''
 
-    def __init__(self, base_arch, dropout=0.0, pred_batch_size=8):
-        super().__init__(base_arch, pred_batch_size)
+    def __init__(self, base_arch_config, base_arch=None, dropout=0.0, 
+                 pred_batch_size=8):
+        super().__init__(base_arch_config, base_arch, pred_batch_size)
+        if type(self.base_arch) != BERT:
+            raise TypeError("Base architecture should be of type BERT.")
         self.dropout = torch.nn.Dropout(p=dropout)
-        self.mlm_layer = torch.nn.Linear(base_arch.d_model,base_arch.vocab_size)
+        self.mlm_layer = torch.nn.Linear(self.base_arch.d_model,
+                                         self.base_arch.vocab_size)
 
     def forward(self, X):
         return self.mlm_layer(self.dropout(self.base_arch(X)))
@@ -177,13 +204,18 @@ class MaskedConvModel(WrapperBase):
     '''Wrapper class for model that performs Masked Language Modeling with 
     cse-encoded sequences as input.'''
 
-    def __init__(self, base_arch, dropout=0.0, n_hidden_kernels=0, 
-                 output_linear=True, output_relu=False, 
+    def __init__(self, base_arch_config, base_arch=None, dropout=0.0, 
+                 n_hidden_kernels=0, output_linear=True, output_relu=False, 
                  pred_batch_size=8):
         '''Initializes `MaskedConvModel` object.
         
         Arguments
         ---------
+        `base_arch_config`: `dict`
+            Configuration property of the base architecture (retrieve this 
+            through `base_arch.config`), specifying what type of base
+            architecture this wrapper contains. Must be used in combination 
+            with a matching `base_arch` by the user. 
         `base_arch`: `lncrnapy.modules.CSEBERT`
             PyTorch module to be used as base architecture of the model.
         `dropout`: `float`
@@ -204,24 +236,25 @@ class MaskedConvModel(WrapperBase):
         `pred_batch_size`: `int`
             Batch size used by the `predict` method (default is 64).'''
         
-        super().__init__(base_arch, pred_batch_size)
+        super().__init__(base_arch_config, base_arch, pred_batch_size)
         self.dropout = torch.nn.Dropout(p=dropout)
-        if type(base_arch) != CSEBERT:
+        if type(self.base_arch) != CSEBERT:
             raise TypeError("Base architecture should be of type CSEBERT.")
         if output_linear:
-            self.linear = torch.nn.Linear(base_arch.d_model,base_arch.n_kernels)
-            in_channels = base_arch.n_kernels
+            self.linear = torch.nn.Linear(self.base_arch.d_model,
+                                          self.base_arch.n_kernels)
+            in_channels = self.base_arch.d_model
         else:
             self.linear = False
-            in_channels = base_arch.d_model
-        kernel_size = base_arch.kernel_size
+            in_channels = self.base_arch.n_kernels
+        kernel_size = self.base_arch.kernel_size
         self.transposed_conv_layers = torch.nn.ModuleList()
         
         # Defining the hidden kernel layer (if specified by user)
         if n_hidden_kernels > 0:
             if kernel_size % 3 != 0:
-                raise AttributeError('base_arch.kernel_size should be multiple'+
-                                     ' of 3 when n_hidden_kernels > 0.')
+                raise AttributeError("base_arch.kernel_size should " +
+                                  'be multiple of 3 when n_hidden_kernels > 0.')
             self.transposed_conv_layers.append(
                 torch.nn.ConvTranspose1d(
                     in_channels=in_channels, out_channels=n_hidden_kernels,
@@ -256,11 +289,10 @@ class Regressor(WrapperBase):
     '''Wrapper class for model that performs linear regression on the base 
     architecture embedding.'''
 
-    def __init__(self, base_arch, n_features=1, fcn_layers=[], dropout=0.0, 
-                 pred_batch_size=8, pooling='CLS'):
-        super().__init__(base_arch, pred_batch_size)
+    def __init__(self, base_arch_config, base_arch=None, n_features=1, 
+                 fcn_layers=[], dropout=0.0, pred_batch_size=8, pooling='CLS'):
+        super().__init__(base_arch_config, base_arch, pred_batch_size)
         self.dropout = torch.nn.Dropout(p=dropout)
-        self.output = torch.nn.LazyLinear(n_features)
         self.fcn_layers = torch.nn.ModuleList([torch.nn.LazyLinear(n_nodes) 
                                                for n_nodes in fcn_layers])
         self.output = torch.nn.LazyLinear(n_features)
@@ -268,6 +300,12 @@ class Regressor(WrapperBase):
         if type(base_arch) == BERT or type(base_arch) == CSEBERT:
             self._forward_base_arch = self._forward_base_arch_bert
             self.pooling = pooling
+            in_features = self.base_arch.d_model
+            self.fcn_layers = torch.nn.ModuleList()
+            for n_nodes in fcn_layers:
+                self.fcn_layers.append(torch.nn.Linear(in_features, n_nodes))
+                in_features = n_nodes
+            self.output = torch.nn.Linear(in_features, n_features)
         else:
             self._forward_base_arch = self.base_arch
 

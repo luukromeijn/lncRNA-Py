@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from lncrnapy import utils
 from lncrnapy.data import Data
 from lncrnapy.features import KmerTokenizer, BytePairEncoding
-from lncrnapy.modules import CSEBERT
+from lncrnapy.modules import CSEBERT, MaskedConvModel, MaskedTokenModel
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 import umap
@@ -26,8 +26,7 @@ dim_red_functions = {
 def frameshifts(
         fasta_file, model_file, max_shift, output_file, output_plot_file, 
         encoding_method, bpe_file, k, pooling, dim_red, batch_size, 
-        context_length, random_state, coding_only, data_dir, results_dir, 
-        model_dir, 
+        context_length, random_state, coding_only, data_dir, results_dir
     ):
 
     np.random.seed(random_state)
@@ -48,8 +47,12 @@ def frameshifts(
         data.df = pd.concat([data.df, to_add], axis=0, ignore_index=True)
     
     # Loading the model
-    model = torch.load(f'{model_dir}/{model_file}', utils.DEVICE)
+    if encoding_method in ['nuc', 'kmer', 'bpe']:
+        model = MaskedTokenModel.from_pretrained(model_file)
+    else:
+        model = MaskedConvModel.from_pretrained(model_file)
     model.pred_batch_size = batch_size
+    model = model.to(utils.DEVICE)
     if type(model.base_arch) == CSEBERT:
         kernel_size = model.base_arch.kernel_size
     print("Model loaded.")
@@ -65,7 +68,7 @@ def frameshifts(
                                          context_length)
         data.calculate_feature(tokenizer)
         data.set_tensor_features(tokenizer.name, torch.long)
-    elif encoding_method == 'conv':
+    elif encoding_method == 'cse':
         len_4d_dna = (context_length-1)*kernel_size
         data.set_tensor_features('4D-DNA', len_4d_dna=len_4d_dna)
 
@@ -98,13 +101,18 @@ args = {
                 'FASTA files containing protein- and non-coding RNAs, '
                 'respectively. (str)'
     }, 
-    'model_file': {
-        'type': str, 
-        'help': '(Pre-)trained model to get sequence embeddings from. (str)',
-    },
     'max_shift': {
         'type': int, 
         'help': 'Number of simulated frameshifts. (int)',
+    },
+    '--model_file': {
+        'type': str, 
+        'default': 'luukromeijn/lncRNA-BERT-CSE-k9-pretrained',
+        'help': '(Pre-)trained model, specified by id of a model hosted on'
+                ' the HuggingFace Hub, or a path to a local directory '
+                'containing model weights. '
+                '(str="luukromeijn/lncRNA-BERT-CSE-k9-pretrained")'
+        
     },
     '--output_file': {
         'type': str, 
@@ -118,9 +126,9 @@ args = {
     },
     '--encoding_method': {
         'type': str,
-        'choices': ['conv', 'bpe', 'kmer', 'nuc'],
-        'default': 'conv',
-        'help': 'Sequence encoding method. (str="conv")'
+        'choices': ['cse', 'bpe', 'kmer', 'nuc'],
+        'default': 'cse',
+        'help': 'Sequence encoding method. (str="cse")'
     },
     '--bpe_file': {
         'type': str,
@@ -130,8 +138,8 @@ args = {
     },
     '--k': {
         'type': int,
-        'default': 6,
-        'help': 'Specifies k when k-mer encoding is used. (int=6)'
+        'default': 9,
+        'help': 'Specifies k when k-mer encoding is used. (int=9)'
     },
     '--pooling': {
         'type': str,
@@ -181,12 +189,6 @@ args = {
         'help': 'Parent directory to use for the results folder of this script.'
                 ' (str="")'
     }, 
-    '--model_dir': {
-        'type': str,
-        'default': '.',
-        'help': 'Directory where to and load the (pre-)trained model from. ' 
-                '(str=f"{data_dir}/models")'
-    },
 }
 
 
@@ -205,11 +207,10 @@ if __name__ == '__main__':
         raise ValueError(
             "Please use --bpe_file flag to specify BPE model file."
         )
-    p.model_dir = f'{p.data_dir}/models' if p.model_dir=='.' else p.model_dir
     
     frameshifts( # Call
         p.fasta_file, p.model_file, p.max_shift, p.output_file, 
         p.output_plot_file, p.encoding_method, p.bpe_file, p.k, p.pooling, 
         p.dim_red, p.batch_size, p.context_length, p.random_state, 
-        p.coding_only, p.data_dir, p.results_dir, p.model_dir, 
+        p.coding_only, p.data_dir, p.results_dir
     )

@@ -8,7 +8,7 @@ import torch
 from lncrnapy import utils
 from lncrnapy.data import Data
 from lncrnapy.features import KmerTokenizer, BytePairEncoding
-from lncrnapy.modules import CSEBERT, Classifier
+from lncrnapy.modules import CSEBERT, MaskedConvModel, MaskedTokenModel, Classifier
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 import umap
@@ -36,7 +36,12 @@ def embeddings(
     except_columns = ['sequence']
     
     # Loading the model
-    model = Classifier.from_pretrained(model_file)
+    if pooling == 'CLS':
+        model = Classifier.from_pretrained(model_file)
+    elif encoding_method in ['nuc', 'kmer', 'bpe']:
+        model = MaskedTokenModel.from_pretrained(model_file)
+    else: # CSE
+        model = MaskedConvModel.from_pretrained(model_file)
     model.pred_batch_size = batch_size
     model = model.to(utils.DEVICE)
     if type(model.base_arch) == CSEBERT:

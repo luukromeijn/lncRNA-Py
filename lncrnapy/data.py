@@ -256,11 +256,28 @@ class Data(Dataset):
             Column names specified here won't be exported (default is 
             ['sequence'])
         kwargs: 
-            Any keyword argument accepted by `pd.DataFrame.to_csv`'''
+            Any keyword argument accepted by `pd.DataFrame.to_hdf`'''
         
         data = self.df[[column for column in self.df.columns
                         if column not in except_columns]]
         data.to_hdf(path_or_buf, index=False, key='data', mode='w', **kwargs)
+
+    def to_csv(self, path_or_buf, except_columns=['sequence'], **kwargs):
+        '''Write data to .csv file.
+        
+        Arguments
+        ---------
+        path_or_buf:
+            Target file or buffer.
+        except_columns: list[str]:
+            Column names specified here won't be exported (default is 
+            ['sequence'])
+        kwargs: 
+            Any keyword argument accepted by `pd.DataFrame.to_csv`'''
+        
+        data = self.df[[column for column in self.df.columns
+                        if column not in except_columns]]
+        data.to_csv(path_or_buf, index=False, **kwargs)
 
     def to_fasta(self, fasta_filepath):
         '''Writes sequence data to FASTA file(s) specified by `fasta_filepath`,

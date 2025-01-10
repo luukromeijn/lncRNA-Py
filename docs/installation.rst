@@ -2,7 +2,10 @@ Installation
 ============
 
 LncRNA-Py can be installed via GitHub and 
-`conda <https://www.anaconda.com/download/success>`_.
+`conda <https://www.anaconda.com/download/success>`_. Alternatively, one can use
+our Google Colab example notebooks [`1 <https://colab.research.google.com/drive/1NSsFYvQQbwhH0yf7wEVfjxyvqG-bUrUS?usp=sharing>`_, 
+`2 <https://colab.research.google.com/drive/17yX2LYX5ohe2_dFd1OQi29FjeyeqyzdR?usp=sharing>`_] 
+as starting points.
 
 :: 
     
@@ -48,7 +51,9 @@ Others:
 
     conda install pytables -c conda-forge -y
     conda install numpy pandas scikit-learn -c conda-forge -y
-    conda install matplotlib biopython -c conda-forge -y
+    conda install matplotlib biopython huggingface_hub -c conda-forge -y
+    conda install anaconda::safetensors
+    conda install hugging
     pip install umap-learn sentencepiece
 
 Optional Dependencies

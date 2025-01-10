@@ -16,6 +16,10 @@ Usage
   :start-after: .. usage intro start
   :end-before: .. usage intro end
 
+We provide two example notebooks, one for using our 
+`pre-written scripts <https://colab.research.google.com/drive/1NSsFYvQQbwhH0yf7wEVfjxyvqG-bUrUS?usp=sharing>`_, 
+and a second one that introduces the `API <https://colab.research.google.com/drive/17yX2LYX5ohe2_dFd1OQi29FjeyeqyzdR?usp=sharing>`_.
+
 .. toctree::
    :maxdepth: 2
 

@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, os.path.abspath('..'))
 
 project = 'lncRNA-Py'
-copyright = '2024, Luuk Romeijn'
+copyright = '2025, Luuk Romeijn'
 author = 'Luuk Romeijn'
 
 # -- General configuration ---------------------------------------------------

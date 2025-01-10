@@ -224,9 +224,9 @@ args = {
     },
     '--kernel_size': {
         'type': int,
-        'default': 10,
+        'default': 9,
         'help': 'Specifies kernel size when convolutional sequence encoding is '
-            	'used. (int=10)'
+            	'used. (int=9)'
     },
     '--bpe_file': {
         'type': str,

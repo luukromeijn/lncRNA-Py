@@ -5,7 +5,7 @@ predictor feature library, as well as granting them a more flexible and
 customizable experience than the pre-written scripts.
 
 The basics are explained in our interactive `example notebook 
-<https://github.com/luukromeijn/rhythmnblues/blob/master/example.ipynb>`_, a 
+<https://colab.research.google.com/drive/17yX2LYX5ohe2_dFd1OQi29FjeyeqyzdR?usp=sharing>`_, a 
 detailed documentation can be accessed through the following links:  
 
 .. toctree::

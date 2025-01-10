@@ -58,16 +58,18 @@ def pretrain(
     # Initializing the model
     if encoding_method in ['nuc', 'kmer', 'bpe']:
         base_arch = BERT(tokenizer.vocab_size, d_model, N, d_ff, h)
-        model = MaskedTokenModel(base_arch, dropout, batch_size)
+        model = MaskedTokenModel(base_arch.config, base_arch, dropout, 
+                                 batch_size)
         pretrain_function = train_masked_token_modeling
     elif encoding_method == 'cse':
         base_arch = CSEBERT(
             n_kernels, kernel_size, d_model, N, d_ff, h, 
             input_linear=input_linear, input_relu=input_relu
         )
-        model = MaskedConvModel(base_arch, dropout, pred_batch_size=batch_size,
-                                 output_linear=output_linear, 
-                                 output_relu=output_relu)
+        model = MaskedConvModel(base_arch.config, base_arch, dropout, 
+                                pred_batch_size=batch_size,
+                                output_linear=output_linear, 
+                                output_relu=output_relu)
         pretrain_function = partial(train_masked_conv_modeling, 
                                     mask_size=mask_size, 
                                     random_reading_frame=random_reading_frame) 

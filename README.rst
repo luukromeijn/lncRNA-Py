@@ -49,8 +49,9 @@ Publication: lncRNA-BERT
 ------------------------
 |graph_abstr|
 
-LncRNA-Py accompanies the paper: **LncRNA-BERT: An RNA Language Model for
-Classifying Coding and Long Non-Coding RNA** (unpublished). Scripts and 
+LncRNA-Py accompanies the paper: `LncRNA-BERT: An RNA Language Model for
+Classifying Coding and Long Non-Coding RNA 
+<https://doi.org/10.1101/2025.01.09.632168>`_. Scripts and 
 descriptions of additional experiments that relate to this study are
 provided in the `experiments 
 <https://github.com/luukromeijn/lncRNA-Py/tree/master/experiments>`_ folder.

@@ -46,6 +46,7 @@
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">Running Scripts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Experiments</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#main-experiments">Main Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hyperparameter-tuning">Hyperparameter Tuning</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#bert-configuration">BERT configuration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#masked-language-modeling">Masked Language Modeling</a></li>
@@ -85,9 +86,20 @@
 <h1>Experiments<a class="headerlink" href="#experiments" title="Link to this heading"></a></h1>
 <p>This page contains descriptions of experiments that were conducted
 during the development of lncRNA-BERT, in addition to the experiments
-reported in <strong>LncRNA-BERT: An RNA Language Model for Classifying Coding and Long
-Non-Coding RNA</strong> (unpublished).</p>
+reported in <a class="reference external" href="https://doi.org/10.1101/2025.01.09.632168">LncRNA-BERT: An RNA Language Model for Classifying Coding and Long
+Non-Coding RNA</a>.</p>
 <p><a class="reference internal" href="_images/graphical_abstract.jpg"><img alt="graph_abstr" src="_images/graphical_abstract.jpg" style="width: 100%;" /></a></p>
+<section id="main-experiments">
+<h2>Main Experiments<a class="headerlink" href="#main-experiments" title="Link to this heading"></a></h2>
+<p>In our <a class="reference external" href="https://doi.org/10.1101/2025.01.09.632168">paper</a>, we carry out
+experiments that compare different pre-training data configurations as well as
+different encoding methods. Scripts to reproduce these experiments can be found
+in the <a class="reference external" href="https://github.com/luukromeijn/lncRNA-Py/tree/master/experiments">experiments</a> folder in
+our repository. This folder also contains scripts for training the final
+lncRNA-BERT models (with 3-mer tokenization or Convolutional Sequence Encoding).
+Note that each of these bash scripts call upon the regular Python <a class="reference external" href="scripts.html">scripts</a> that
+are part of the <code class="docutils literal notranslate"><span class="pre">lncrnapy</span></code> package.</p>
+</section>
 <section id="hyperparameter-tuning">
 <h2>Hyperparameter Tuning<a class="headerlink" href="#hyperparameter-tuning" title="Link to this heading"></a></h2>
 <p>Hyperparameter tuning was carried out at several stages during the development of lncRNA-BERT.

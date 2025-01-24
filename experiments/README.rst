@@ -57,27 +57,27 @@
 
 Experiments
 ===========
-This folder contains documentation and scripts of experiments that were conducted for `LncRNA-BERT: An RNA Language Model for Classifying Coding and Long Non-Coding RNA <todo.com>`_.
+This folder contains documentation and scripts of experiments that were 
+conducted for `LncRNA-BERT: An RNA Language Model for Classifying Coding and 
+Long Non-Coding RNA <https://doi.org/10.1101/2025.01.09.632168>`_.
 
 .. experiments start
 
 |graph_abstr|
 
-.. Final lncRNA-BERT Models
-.. ------------------------
-.. TODO
+Main Experiments
+----------------
+In our `paper <https://doi.org/10.1101/2025.01.09.632168>`_, we carry out 
+experiments that compare different pre-training data configurations as well as 
+different encoding methods. Scripts to reproduce these experiments can be found
+in the `experiments 
+<https://github.com/luukromeijn/lncRNA-Py/tree/master/experiments>`_ folder in 
+our repository. This folder also contains scripts for training the final 
+lncRNA-BERT models (with 3-mer tokenization or Convolutional Sequence Encoding).
+Note that each of these bash scripts call upon the regular Python `scripts 
+<scripts.html>`_ that 
+are part of the ``lncrnapy`` package.
 
-.. Encoding Methods
-.. ----------------
-.. TODO
-
-.. Pre-Training
-.. ------------
-.. TODO
-
-.. Data Preprocessing
-.. ------------------
-.. TODO
 
 Hyperparameter Tuning
 ---------------------
